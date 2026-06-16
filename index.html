@@ -494,6 +494,96 @@
     /* Error */
     .error-msg { font-size:13px; color:var(--red); margin-top:6px; font-weight:500; text-align:center; min-height:18px; }
 
+    /* ── AVATAR CIRCLE ───────────────────────────────────────── */
+    .avatar-circle {
+      border-radius:50%; display:flex; align-items:center; justify-content:center;
+      flex-shrink:0; border:1.5px solid rgba(255,255,255,0.22);
+      font-size:20px; width:40px; height:40px;
+    }
+    .avatar-circle.lg  { width:72px;  height:72px;  font-size:36px; border-width:2px; }
+    .avatar-circle.xl  { width:84px;  height:84px;  font-size:42px; border-width:2.5px; }
+
+    /* ── AVATAR PICKER ───────────────────────────────────────── */
+    .avatar-preview-wrap { text-align:center; margin-bottom:18px; }
+    .emoji-grid {
+      display:grid; grid-template-columns:repeat(6,1fr); gap:7px; margin-top:6px;
+    }
+    .emoji-cell {
+      aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-size:20px; cursor:pointer; border:2px solid transparent;
+      background:var(--glass-inner); transition:transform .15s, border-color .15s;
+    }
+    .emoji-cell.sel { border-color:var(--accent); transform:scale(1.18); }
+    .emoji-cell:active { transform:scale(.92); }
+
+    .color-grid {
+      display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:6px;
+    }
+    .color-dot {
+      aspect-ratio:1; border-radius:50%; cursor:pointer;
+      border:3px solid transparent; box-shadow:0 2px 6px rgba(0,0,0,.22);
+      transition:transform .15s, border-color .15s;
+    }
+    .color-dot.sel  { border-color:white; transform:scale(1.2); }
+    .color-dot:active { transform:scale(.9); }
+
+    /* ── RECOVERY CODE BOXES ─────────────────────────────────── */
+    .rc-row { display:flex; gap:8px; justify-content:center; margin:20px 0 10px; }
+    .rc-box {
+      padding:10px 14px; border-radius:12px;
+      background:var(--accent-light); border:2px solid var(--accent);
+      font-size:17px; font-weight:900; color:var(--accent);
+      letter-spacing:4px; font-family:monospace;
+    }
+
+    /* ── PROFILE VIEW ────────────────────────────────────────── */
+    .pv-avatar-wrap  { text-align:center; margin-bottom:12px; }
+    .pv-name         { font-size:22px; font-weight:800; color:var(--text-1); text-align:center; }
+    .pv-badge        {
+      display:inline-block; margin-top:4px; margin-bottom:4px;
+      font-size:11px; font-weight:700; letter-spacing:.4px;
+      background:var(--accent-light); color:var(--accent);
+      border:1px solid rgba(124,58,237,.25); padding:2px 8px; border-radius:20px;
+    }
+    .rc-blur-wrap { position:relative; margin-bottom:6px; }
+    .rc-blur {
+      font-family:monospace; font-size:16px; font-weight:700;
+      padding:12px 14px; background:var(--input-bg);
+      border:1.5px solid var(--input-border); border-radius:var(--r-md);
+      letter-spacing:3px; filter:blur(5px); cursor:pointer; user-select:none;
+      transition:filter .25s;
+    }
+    .rc-blur.revealed { filter:none; }
+    .rc-reveal-btn {
+      position:absolute; right:10px; top:50%; transform:translateY(-50%);
+      background:none; border:none; cursor:pointer; font-size:16px; opacity:.55;
+      padding:4px; line-height:1;
+    }
+
+    /* ── TOGGLE LINK ─────────────────────────────────────────── */
+    .toggle-link {
+      background:none; border:none; color:var(--accent);
+      font-size:13px; font-weight:600; cursor:pointer;
+      font-family:inherit; text-decoration:underline; padding:4px; opacity:.8;
+    }
+    .toggle-link:active { opacity:1; }
+
+    /* ── MY PROFILE BTN ──────────────────────────────────────── */
+    .my-profile-btn {
+      position:absolute; right:0; top:calc(env(safe-area-inset-top) + 50px);
+      width:38px; height:38px; border-radius:50%;
+      border:2.5px solid rgba(255,255,255,0.3);
+      display:none; align-items:center; justify-content:center;
+      font-size:20px; cursor:pointer; transition:transform .15s;
+      font-family:inherit; background:transparent;
+    }
+    .my-profile-btn.visible { display:flex; }
+    .my-profile-btn:active { transform:scale(.88); }
+
+    /* ── INVITE SECTION ──────────────────────────────────────── */
+    .invite-card { border-radius:var(--r-xl); padding:16px 18px; margin-top:10px; text-align:center; }
+    .invite-hint { font-size:13px; color:var(--text-2); margin-bottom:12px; }
+
     /* ══════════════════════════════════════════════════════════ */
     /*  WRAPPED  — Spotify-style fullscreen weekly story         */
     /* ══════════════════════════════════════════════════════════ */
@@ -693,10 +783,11 @@
 <div class="screen hidden" id="screen-app">
   <div class="app-inner">
 
-    <div class="header">
+    <div class="header" style="position:relative">
       <div class="header-icon" id="header-icon">🏋️</div>
       <h1 class="header-title">GymLate</h1>
       <div class="admin-badge hidden" id="admin-badge">ADMIN</div>
+      <button class="my-profile-btn" id="my-profile-btn" title="Mein Profil"></button>
     </div>
 
     <div class="group-pill glass" id="group-pill">
@@ -736,9 +827,9 @@
         </div>
         <div id="people-list"></div>
       </div>
-      <div class="add-person-card glass">
-        <input type="text" class="form-ctrl" id="new-name" maxlength="30" autocomplete="off" autocorrect="off" spellcheck="false">
-        <div class="add-row"><button class="btn btn-primary btn-full" id="add-person-btn"></button></div>
+      <div class="invite-card glass">
+        <div class="invite-hint" id="invite-hint-txt"></div>
+        <button class="btn btn-primary btn-full" id="invite-btn"></button>
       </div>
       <div class="leave-section"><button class="leave-btn" id="leave-btn"></button></div>
 
@@ -864,6 +955,145 @@
   </div>
 </div>
 
+<!-- Profile Setup (new user OR login) -->
+<div class="overlay" id="modal-profile-setup">
+  <div class="modal glass">
+    <!-- Avatar preview -->
+    <div class="avatar-preview-wrap">
+      <div class="avatar-circle xl" id="psu-preview" style="display:inline-flex;background:#7c3aed">💪</div>
+    </div>
+
+    <!-- NEW USER mode -->
+    <div id="psu-new-mode">
+      <h2 class="modal-title" id="psu-title"></h2>
+      <div class="form-grp">
+        <label class="form-lbl" id="psu-name-lbl"></label>
+        <input type="text" class="form-ctrl" id="psu-name" maxlength="30" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl" id="psu-emoji-lbl"></label>
+        <div class="emoji-grid" id="psu-emoji-grid"></div>
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl" id="psu-color-lbl"></label>
+        <div class="color-grid" id="psu-color-grid"></div>
+      </div>
+      <div class="error-msg" id="psu-error"></div>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" id="psu-cancel"></button>
+        <button class="btn btn-primary" id="psu-submit-new"></button>
+      </div>
+      <div style="text-align:center;margin-top:14px">
+        <button class="toggle-link" id="psu-to-login"></button>
+      </div>
+    </div>
+
+    <!-- LOGIN mode -->
+    <div id="psu-login-mode" style="display:none">
+      <h2 class="modal-title" id="psu-login-title"></h2>
+      <p class="modal-sub" id="psu-login-sub"></p>
+      <div class="form-grp">
+        <label class="form-lbl" id="psu-login-name-lbl"></label>
+        <input type="text" class="form-ctrl" id="psu-login-name" maxlength="30" autocomplete="off" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl" id="psu-rc-lbl"></label>
+        <input type="text" class="form-ctrl" id="psu-rc-input" maxlength="14"
+               style="letter-spacing:3px;font-family:monospace;font-size:17px;font-weight:700"
+               autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="AAAA-BBBB-CCCC">
+      </div>
+      <div class="error-msg" id="psu-login-error"></div>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" id="psu-login-cancel"></button>
+        <button class="btn btn-primary" id="psu-submit-login"></button>
+      </div>
+      <div style="text-align:center;margin-top:14px">
+        <button class="toggle-link" id="psu-to-new"></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recovery Code -->
+<div class="overlay" id="modal-recovery-code">
+  <div class="modal glass">
+    <div class="success-check">🔑</div>
+    <div class="success-title" id="rc-title"></div>
+    <div class="success-sub" id="rc-sub"></div>
+    <div class="rc-row" id="rc-boxes"></div>
+    <button class="copy-code-btn" id="rc-copy"></button>
+    <button class="btn btn-primary btn-full" id="rc-done"></button>
+  </div>
+</div>
+
+<!-- Profile View -->
+<div class="overlay" id="modal-profile-view">
+  <div class="modal glass">
+    <div class="pv-avatar-wrap">
+      <div class="avatar-circle xl" id="pv-avatar" style="display:inline-flex"></div>
+    </div>
+    <div class="pv-name" id="pv-name"></div>
+    <div style="text-align:center;margin-bottom:16px">
+      <span class="pv-badge" id="pv-creator-badge" style="display:none"></span>
+    </div>
+    <div class="stat-row" style="margin-bottom:16px">
+      <div class="card glass stat-card">
+        <div class="stat-val red" id="pv-stat-count">0</div>
+        <div class="stat-lbl" id="pv-stat-count-lbl"></div>
+      </div>
+      <div class="card glass stat-card">
+        <div class="stat-val" id="pv-stat-mins">0</div>
+        <div class="stat-lbl" id="pv-stat-mins-lbl"></div>
+      </div>
+    </div>
+    <!-- Own profile: recovery code + edit -->
+    <div id="pv-own-section" style="display:none">
+      <div class="form-grp">
+        <label class="form-lbl" id="pv-rc-lbl"></label>
+        <div class="rc-blur-wrap">
+          <div class="rc-blur" id="pv-rc-value"></div>
+          <button class="rc-reveal-btn" id="pv-rc-reveal">👁</button>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-full" id="pv-edit-btn" style="margin-bottom:8px"></button>
+    </div>
+    <!-- Creator kicking another user -->
+    <div id="pv-kick-section" style="display:none;margin-top:4px">
+      <button class="leave-btn" id="pv-kick-btn"></button>
+    </div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-ghost btn-full" id="pv-close"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Profile (reuses profile setup structure, different mode) -->
+<div class="overlay" id="modal-edit-profile">
+  <div class="modal glass">
+    <div class="avatar-preview-wrap">
+      <div class="avatar-circle xl" id="ep-preview" style="display:inline-flex;background:#7c3aed">💪</div>
+    </div>
+    <h2 class="modal-title" id="ep-title"></h2>
+    <div class="form-grp">
+      <label class="form-lbl" id="ep-name-lbl"></label>
+      <input type="text" class="form-ctrl" id="ep-name" maxlength="30" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl" id="ep-emoji-lbl"></label>
+      <div class="emoji-grid" id="ep-emoji-grid"></div>
+    </div>
+    <div class="form-grp">
+      <label class="form-lbl" id="ep-color-lbl"></label>
+      <div class="color-grid" id="ep-color-grid"></div>
+    </div>
+    <div class="error-msg" id="ep-error"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" id="ep-cancel"></button>
+      <button class="btn btn-primary" id="ep-submit"></button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════ -->
 <!--  SCRIPT                                              -->
 <!-- ══════════════════════════════════════════════════════ -->
@@ -897,6 +1127,32 @@ const TRANS = {
     admTitle:'🔐 Admin-Modus', admAdd:'🧪 Testdaten letzte Woche', admWeekOn:'👁 Aktuelle Woche zeigen', admWeekOff:'🙈 Aktuelle Woche ausblenden', admDel:'🗑 Testdaten löschen', admReplay:'📺 Wrapped nochmal', admExit:'Admin verlassen',
     toastAdmIn:'Admin-Modus aktiviert 🔐', toastAdmOut:'Admin-Modus beendet', toastAdded:'Testdaten erstellt ✓', toastCleared:'Testdaten gelöscht ✓',
     noMembersForTest:'Erst Personen hinzufügen!',
+    // Profile setup
+    psuTitle:'Dein Profil erstellen', psuNameLbl:'Dein Name', psuEmojiLbl:'Avatar', psuColorLbl:'Farbe',
+    psuCreate:'Profil erstellen', psuToLogin:'Bereits registriert? Einloggen →',
+    psuLoginTitle:'Willkommen zurück!', psuLoginSub:'Gib deinen Namen und Recovery Code ein.',
+    psuLoginNameLbl:'Dein Name', psuRcLbl:'Recovery Code', psuLoginBtn:'Einloggen',
+    psuToNew:'Neu hier? Profil erstellen →', psuCancel:'Abbrechen',
+    psuErrName:'Bitte Namen eingeben.', psuErrTaken:'Dieser Name ist bereits vergeben.',
+    psuErrWrongCode:'Falscher Recovery Code.', psuErrNotFound:'Nutzer nicht gefunden.',
+    // Recovery code modal
+    rcTitle:'Recovery Code sichern!', rcSub:'Ohne diesen Code kannst du dich auf neuen Geräten nicht einloggen.',
+    rcCopy:'📋 Code kopieren', rcDone:'Ich hab\'s gespeichert! →',
+    // Profile view
+    pvRcLbl:'Recovery Code (geheim)', pvReveal:'👁 anzeigen', pvHide:'🙈 verbergen',
+    pvEditBtn:'✎ Profil bearbeiten', pvKickBtn:'🚫 Aus Gruppe entfernen',
+    pvKickConfirm: n => `"${n}" wirklich aus der Gruppe entfernen?`,
+    pvCreatorBadge:'Gruppenersteller', pvStatCount:'Verspätungen', pvStatMins:'Min. gesamt',
+    pvClose:'Schließen',
+    // Edit profile
+    epTitle:'Profil bearbeiten', epNameLbl:'Name', epEmojiLbl:'Avatar', epColorLbl:'Farbe',
+    epCancel:'Abbrechen', epSave:'Speichern',
+    // Misc
+    toastKicked:'Mitglied entfernt ✓', toastProfileSaved:'Profil gespeichert ✓',
+    inviteHint:'Teile den Code, damit andere der Gruppe beitreten können.',
+    inviteBtn:'📨 Code teilen',
+    kicked:'Du wurdest aus der Gruppe entfernt.',
+    errNameTaken:'Dieser Name ist bereits vergeben.',
     // Wrapped
     wS1a:'DIESE', wS1b:'WOCHE',
     wS2label:'ihr wart', wS2sub:'mal zu spät',
@@ -931,6 +1187,32 @@ const TRANS = {
     admTitle:'🔐 Admin Mode', admAdd:'🧪 Create last week\'s test data', admWeekOn:'👁 Show current week', admWeekOff:'🙈 Hide current week', admDel:'🗑 Delete test data', admReplay:'📺 Replay Wrapped', admExit:'Exit admin mode',
     toastAdmIn:'Admin mode activated 🔐', toastAdmOut:'Admin mode exited', toastAdded:'Test data created ✓', toastCleared:'Test data deleted ✓',
     noMembersForTest:'Please add people first!',
+    // Profile setup
+    psuTitle:'Create your profile', psuNameLbl:'Your name', psuEmojiLbl:'Avatar', psuColorLbl:'Color',
+    psuCreate:'Create Profile', psuToLogin:'Already registered? Log in →',
+    psuLoginTitle:'Welcome back!', psuLoginSub:'Enter your name and recovery code.',
+    psuLoginNameLbl:'Your name', psuRcLbl:'Recovery Code', psuLoginBtn:'Log in',
+    psuToNew:'New here? Create profile →', psuCancel:'Cancel',
+    psuErrName:'Please enter a name.', psuErrTaken:'This name is already taken.',
+    psuErrWrongCode:'Wrong recovery code.', psuErrNotFound:'User not found.',
+    // Recovery code modal
+    rcTitle:'Save your Recovery Code!', rcSub:'Without this code you can\'t log in on new devices.',
+    rcCopy:'📋 Copy Code', rcDone:'I\'ve saved it! →',
+    // Profile view
+    pvRcLbl:'Recovery Code (secret)', pvReveal:'👁 reveal', pvHide:'🙈 hide',
+    pvEditBtn:'✎ Edit Profile', pvKickBtn:'🚫 Remove from group',
+    pvKickConfirm: n => `Really remove "${n}" from the group?`,
+    pvCreatorBadge:'Group Creator', pvStatCount:'Late arrivals', pvStatMins:'Total mins',
+    pvClose:'Close',
+    // Edit profile
+    epTitle:'Edit Profile', epNameLbl:'Name', epEmojiLbl:'Avatar', epColorLbl:'Color',
+    epCancel:'Cancel', epSave:'Save',
+    // Misc
+    toastKicked:'Member removed ✓', toastProfileSaved:'Profile saved ✓',
+    inviteHint:'Share the code so others can join the group.',
+    inviteBtn:'📨 Share Code',
+    kicked:'You were removed from the group.',
+    errNameTaken:'This name is already taken.',
     // Wrapped
     wS1a:'THIS', wS1b:'WEEK',
     wS2label:'you were late', wS2sub:'times',
@@ -975,13 +1257,17 @@ const api = {
     if (!res.ok) { const e=new Error(d.error||'error'); e.status=res.status; throw e; }
     return d;
   },
-  createGroup: n    => api.req('POST', '/groups', {name:n}),
-  joinGroup:   c    => api.req('POST', '/groups/join', {code:c}),
-  getGroup:    id   => api.req('GET',  `/groups/${id}`),
-  addMember:  (g,n) => api.req('POST',   `/groups/${g}/members`, {name:n}),
-  delMember:  (g,n) => api.req('DELETE', `/groups/${g}/members/${encodeURIComponent(n)}`),
-  addEntry:   (g,d) => api.req('POST',   `/groups/${g}/entries`, d),
-  delEntry:   (g,e) => api.req('DELETE', `/groups/${g}/entries/${e}`),
+  createGroup:    n       => api.req('POST', '/groups', {name:n}),
+  joinGroup:      c       => api.req('POST', '/groups/join', {code:c}),
+  getGroup:       id      => api.req('GET',  `/groups/${id}`),
+  addMember:     (g,n)    => api.req('POST',   `/groups/${g}/members`, {name:n}),
+  delMember:     (g,n)    => api.req('DELETE', `/groups/${g}/members/${encodeURIComponent(n)}`),
+  addEntry:      (g,d)    => api.req('POST',   `/groups/${g}/entries`, d),
+  delEntry:      (g,e)    => api.req('DELETE', `/groups/${g}/entries/${e}`),
+  registerUser:  (g,d)    => api.req('POST',   `/groups/${g}/users`, d),
+  loginUser:     (g,d)    => api.req('POST',   `/groups/${g}/users/login`, d),
+  updateUser:    (g,u,d)  => api.req('PATCH',  `/groups/${g}/users/${u}`, d),
+  kickUser:      (g,u,d)  => api.req('DELETE', `/groups/${g}/users/${u}`, d),
 };
 
 // ════════════════════════════════════════════════════════
@@ -991,10 +1277,22 @@ let group = null, data = null, pollTimer = null;
 let adminMode         = false;
 let adminShowCurWeek  = false;
 let testEntryIds      = [];
+let userProfile       = null;   // { userId, name, avatarEmoji, avatarColor, recoveryCode, isCreator }
+let pendingGroup      = null;   // group waiting for profile setup
 
 function saveGroup(g) { group={id:g.id,code:g.code,name:g.name}; localStorage.setItem('gymGroup',JSON.stringify(group)); }
 function loadGroup()  { try { group=JSON.parse(localStorage.getItem('gymGroup')||'null'); } catch { group=null; } }
 function clearGroup() { group=null; data=null; localStorage.removeItem('gymGroup'); }
+
+function saveUser(gid, u) { userProfile=u; localStorage.setItem('gymUser_'+gid, JSON.stringify(u)); }
+function loadUser(gid)    { try { userProfile=JSON.parse(localStorage.getItem('gymUser_'+gid)||'null'); } catch { userProfile=null; } }
+function clearUser(gid)   { userProfile=null; localStorage.removeItem('gymUser_'+gid); }
+
+// Avatar constants
+const AVATAR_EMOJIS = ['💪','🏋️','🔥','⚡','🦁','🐺','🦊','🦅','🎯','👊','🏃','🧗','🚴','🤸','🏊','🥊','🌟','❄️','🌊','🌙','☀️','💥','🎮','🧠'];
+const AVATAR_COLORS = ['#7c3aed','#db2777','#dc2626','#ea580c','#ca8a04','#16a34a','#0891b2','#2563eb','#7e22ce','#475569'];
+let selEmoji = '💪', selColor = '#7c3aed';
+let epSelEmoji = '💪', epSelColor = '#7c3aed';
 
 // ════════════════════════════════════════════════════════
 //  UTILS
@@ -1153,12 +1451,14 @@ function renderPeople() {
   const emEl=document.getElementById('people-empty'), lEl=document.getElementById('people-list');
   if (!data.people.length) { emEl.style.display=''; lEl.innerHTML=''; return; }
   emEl.style.display='none';
-  lEl.innerHTML = data.people.map((n,i)=>`
-    <div class="person-row animate" style="animation-delay:${i*35}ms">
-      <div class="avatar">${esc(initials(n))}</div>
-      <div class="person-name">${esc(n)}</div>
-      <button class="icon-btn del-person-btn" data-name="${esc(n)}">×</button>
-    </div>`).join('');
+  const isCreator = userProfile?.isCreator;
+  lEl.innerHTML = data.people.map((p,i)=>{
+    const isMe = userProfile && p.id === userProfile.userId;
+    return `<div class="person-row animate" style="animation-delay:${i*35}ms;cursor:pointer" data-uid="${esc(p.id)}">
+      <div class="avatar-circle" style="background:${esc(p.avatarColor)}">${esc(p.avatarEmoji)}</div>
+      <div class="person-name">${esc(p.name)}${isMe ? ' <span style="font-size:11px;color:var(--accent);font-weight:700">(Du)</span>' : ''}${p.isCreator ? ' <span style="font-size:10px;color:var(--text-3)">★</span>' : ''}</div>
+    </div>`;
+  }).join('');
 }
 
 // ════════════════════════════════════════════════════════
@@ -1209,9 +1509,30 @@ async function enterGroup(g) {
   } catch {
     clearGroup(); showLoading(false); showScreen('landing'); return;
   }
+  // Sync isCreator from server (may have changed)
+  if (userProfile) {
+    const me = data.people.find(p => p.id === userProfile.userId);
+    if (!me) {
+      clearUser(g.id); userProfile = null;
+      showLoading(false); showScreen('landing');
+      setTimeout(() => showToast(T.kicked), 300);
+      return;
+    }
+    userProfile.isCreator = me.isCreator;
+    saveUser(g.id, userProfile);
+  }
   showLoading(false);
+  updateMyProfileBtn();
   applyI18n(); renderAll(); startPolling(); showScreen('app');
   setTimeout(() => { if (shouldShowWrapped()) showWrapped(); }, 500);
+}
+
+function updateMyProfileBtn() {
+  const btn = document.getElementById('my-profile-btn');
+  if (!userProfile) { btn.classList.remove('visible'); return; }
+  btn.classList.add('visible');
+  btn.textContent = userProfile.avatarEmoji;
+  btn.style.background = userProfile.avatarColor;
 }
 
 // ════════════════════════════════════════════════════════
@@ -1289,7 +1610,7 @@ document.getElementById('adm-week-btn').addEventListener('click', () => {
 
 document.getElementById('adm-add-btn').addEventListener('click', async () => {
   if (!data?.people?.length) { showToast(T.noMembersForTest); return; }
-  const people   = data.people;
+  const people   = data.people.map(p => p.name);
   const lastMon  = addDays(mondayOf(todayStr()), -7);
   const schedule = [
     { person: people[0 % people.length], date: addDays(lastMon, 0), mins: 12 },
@@ -1337,8 +1658,24 @@ function applyI18n() {
   set('ml-title',T.mlTitle); set('ml-lbl-person',T.mlLblPerson); set('ml-lbl-date',T.mlLblDate); set('ml-lbl-mins',T.mlLblMins); set('ml-cancel',T.mlCancel); set('ml-save',T.mlSave);
   set('ma-title',T.maTitle); set('ma-lbl',T.maLbl); set('ma-cancel',T.maCancel); set('ma-submit',T.maSubmit);
   set('adm-title',T.admTitle); set('adm-add-btn',T.admAdd); set('adm-del-btn',T.admDel); set('adm-exit-btn',T.admExit); set('adm-replay-btn',T.admReplay);
-  const np = document.getElementById('new-name'); if(np) np.placeholder = T.namePlaceholder;
   set('pill-hint', T.pillHint);
+  // Profile setup
+  set('psu-title',T.psuTitle); set('psu-name-lbl',T.psuNameLbl); set('psu-emoji-lbl',T.psuEmojiLbl); set('psu-color-lbl',T.psuColorLbl);
+  set('psu-submit-new',T.psuCreate); set('psu-to-login',T.psuToLogin); set('psu-cancel',T.psuCancel);
+  set('psu-login-title',T.psuLoginTitle); set('psu-login-sub',T.psuLoginSub);
+  set('psu-login-name-lbl',T.psuLoginNameLbl); set('psu-rc-lbl',T.psuRcLbl);
+  set('psu-submit-login',T.psuLoginBtn); set('psu-to-new',T.psuToNew); set('psu-login-cancel',T.psuCancel);
+  // Recovery code
+  set('rc-title',T.rcTitle); set('rc-sub',T.rcSub); set('rc-copy',T.rcCopy); set('rc-done',T.rcDone);
+  // Profile view
+  set('pv-rc-lbl',T.pvRcLbl); set('pv-edit-btn',T.pvEditBtn); set('pv-kick-btn',T.pvKickBtn);
+  set('pv-stat-count-lbl',T.pvStatCount); set('pv-stat-mins-lbl',T.pvStatMins);
+  set('pv-creator-badge',T.pvCreatorBadge); set('pv-close',T.pvClose);
+  // Edit profile
+  set('ep-title',T.epTitle); set('ep-name-lbl',T.epNameLbl); set('ep-emoji-lbl',T.epEmojiLbl); set('ep-color-lbl',T.epColorLbl);
+  set('ep-cancel',T.epCancel); set('ep-submit',T.epSave);
+  // Invite
+  set('invite-hint-txt',T.inviteHint); set('invite-btn',T.inviteBtn);
 }
 
 // ════════════════════════════════════════════════════════
@@ -1359,7 +1696,7 @@ document.getElementById('mc-submit').addEventListener('click', async () => {
     closeOv('modal-create');
     document.getElementById('ms-code-boxes').innerHTML = g.code.split('').map(c=>`<div class="code-char">${esc(c)}</div>`).join('');
     document.getElementById('ms-copy').onclick    = ()=>copyToClipboard(g.code);
-    document.getElementById('ms-continue').onclick = ()=>{ closeOv('modal-success'); enterGroup(g); };
+    document.getElementById('ms-continue').onclick = ()=>{ closeOv('modal-success'); pendingGroup=g; openProfileSetup(); };
     openOv('modal-success');
   } catch { document.getElementById('mc-error').textContent=T.errServer; }
   finally  { document.getElementById('mc-submit').disabled=false; }
@@ -1380,7 +1717,7 @@ document.getElementById('mj-submit').addEventListener('click', async ()=>{
   const code=document.getElementById('mj-code').value.trim().toUpperCase();
   if(code.length<6){document.getElementById('mj-error').textContent=T.errShort;return;}
   document.getElementById('mj-submit').disabled=true;
-  try { const g=await api.joinGroup(code); closeOv('modal-join'); enterGroup(g); }
+  try { const g=await api.joinGroup(code); closeOv('modal-join'); pendingGroup=g; openProfileSetup(); }
   catch(e){ document.getElementById('mj-error').textContent=e.status===404?T.errNotFound:T.errServer; }
   finally { document.getElementById('mj-submit').disabled=false; }
 });
@@ -1392,7 +1729,7 @@ document.getElementById('mj-code').addEventListener('keydown',e=>{if(e.key==='En
 document.getElementById('fab').addEventListener('click',()=>{
   if (!data?.people?.length){showToast(T.noPeople);return;}
   const sel=document.getElementById('ml-person');
-  sel.innerHTML=data.people.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
+  sel.innerHTML=data.people.map(p=>`<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
   document.getElementById('ml-date').value=todayStr();
   document.getElementById('ml-mins').value='10';
   document.getElementById('ml-error').textContent='';
@@ -1418,27 +1755,307 @@ document.getElementById('pill-code').addEventListener('click',()=>{ if(data?.cod
 
 document.getElementById('leave-btn').addEventListener('click',()=>{
   if (!confirm(T.confirmLeave())) return;
-  stopPolling(); exitAdmin(); clearGroup(); showScreen('landing');
+  stopPolling(); exitAdmin();
+  if (group) clearUser(group.id);
+  clearGroup(); showScreen('landing');
 });
 
-async function addPerson() {
-  const inp=document.getElementById('new-name'), name=inp.value.trim();
-  if(!name||!data) return;
-  try { await api.addMember(data.id,name); inp.value=''; await refresh(); }
-  catch(e){ showToast(e.status===409?`"${name}" gibt es schon`:T.errServer); }
-}
-document.getElementById('add-person-btn').addEventListener('click', addPerson);
-document.getElementById('new-name').addEventListener('keydown',e=>{if(e.key==='Enter')addPerson();});
+document.getElementById('invite-btn').addEventListener('click', () => {
+  if (!data) return;
+  copyToClipboard(data.code);
+});
 
 document.addEventListener('click', async e => {
   const eb = e.target.closest('.del-entry-btn');
   if (eb && data) { try{await api.delEntry(data.id,eb.dataset.id); await refresh();}catch{showToast(T.errServer);} return; }
-  const pb = e.target.closest('.del-person-btn');
-  if (pb && data) {
-    const n=pb.dataset.name;
-    if(!confirm(T.confirmDel(n))) return;
-    try{await api.delMember(data.id,n); await refresh();}catch{showToast(T.errServer);}
+  // Tap on person row → open profile
+  const pr = e.target.closest('.person-row[data-uid]');
+  if (pr && data) { openProfileView(pr.dataset.uid); return; }
+});
+
+// ════════════════════════════════════════════════════════
+//  PROFILE SETUP MODAL
+// ════════════════════════════════════════════════════════
+function buildAvatarPicker(gridId, previewId, onChangeEmoji, onChangeColor, initEmoji, initColor) {
+  const eg = document.getElementById(gridId+'-emoji-grid') || document.getElementById(gridId);
+  if (!eg) return;
+  eg.innerHTML = AVATAR_EMOJIS.map(em =>
+    `<div class="emoji-cell${em===initEmoji?' sel':''}" data-emoji="${em}">${em}</div>`
+  ).join('');
+  eg.querySelectorAll('.emoji-cell').forEach(c => {
+    c.addEventListener('click', () => {
+      eg.querySelectorAll('.emoji-cell').forEach(x=>x.classList.remove('sel'));
+      c.classList.add('sel');
+      onChangeEmoji(c.dataset.emoji);
+    });
+  });
+}
+
+function buildColorPicker(gridId, onChangeColor, initColor) {
+  const cg = document.getElementById(gridId+'-color-grid') || document.getElementById(gridId);
+  if (!cg) return;
+  cg.innerHTML = AVATAR_COLORS.map(col =>
+    `<div class="color-dot${col===initColor?' sel':''}" data-color="${col}" style="background:${col}"></div>`
+  ).join('');
+  cg.querySelectorAll('.color-dot').forEach(c => {
+    c.addEventListener('click', () => {
+      cg.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('sel'));
+      c.classList.add('sel');
+      onChangeColor(c.dataset.color);
+    });
+  });
+}
+
+function openProfileSetup() {
+  selEmoji = '💪'; selColor = '#7c3aed';
+  document.getElementById('psu-preview').textContent = selEmoji;
+  document.getElementById('psu-preview').style.background = selColor;
+  document.getElementById('psu-name').value = '';
+  document.getElementById('psu-error').textContent = '';
+  document.getElementById('psu-login-name').value = '';
+  document.getElementById('psu-rc-input').value = '';
+  document.getElementById('psu-login-error').textContent = '';
+
+  // Build emoji grid
+  const eg = document.getElementById('psu-emoji-grid');
+  eg.innerHTML = AVATAR_EMOJIS.map(em =>
+    `<div class="emoji-cell${em===selEmoji?' sel':''}" data-emoji="${em}">${em}</div>`
+  ).join('');
+  eg.querySelectorAll('.emoji-cell').forEach(c => {
+    c.addEventListener('click', () => {
+      eg.querySelectorAll('.emoji-cell').forEach(x=>x.classList.remove('sel'));
+      c.classList.add('sel');
+      selEmoji = c.dataset.emoji;
+      document.getElementById('psu-preview').textContent = selEmoji;
+    });
+  });
+
+  // Build color grid
+  const cg = document.getElementById('psu-color-grid');
+  cg.innerHTML = AVATAR_COLORS.map(col =>
+    `<div class="color-dot${col===selColor?' sel':''}" data-color="${col}" style="background:${col}"></div>`
+  ).join('');
+  cg.querySelectorAll('.color-dot').forEach(c => {
+    c.addEventListener('click', () => {
+      cg.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('sel'));
+      c.classList.add('sel');
+      selColor = c.dataset.color;
+      document.getElementById('psu-preview').style.background = selColor;
+    });
+  });
+
+  showMode('new');
+  openOv('modal-profile-setup');
+  setTimeout(() => document.getElementById('psu-name').focus(), 350);
+}
+
+function showMode(mode) {
+  document.getElementById('psu-new-mode').style.display   = mode==='new'   ? '' : 'none';
+  document.getElementById('psu-login-mode').style.display = mode==='login' ? '' : 'none';
+  document.getElementById('psu-preview').style.display = mode==='new' ? 'inline-flex' : 'none';
+  if (mode==='login') setTimeout(() => document.getElementById('psu-login-name').focus(), 100);
+}
+
+document.getElementById('psu-to-login').addEventListener('click',   () => showMode('login'));
+document.getElementById('psu-to-new').addEventListener('click',     () => showMode('new'));
+document.getElementById('psu-cancel').addEventListener('click',     () => closeOv('modal-profile-setup'));
+document.getElementById('psu-login-cancel').addEventListener('click',() => closeOv('modal-profile-setup'));
+document.getElementById('modal-profile-setup').addEventListener('click', e => { if(e.target===e.currentTarget) closeOv('modal-profile-setup'); });
+
+// Format recovery code input as XXXX-XXXX-XXXX
+document.getElementById('psu-rc-input').addEventListener('input', e => {
+  let v = e.target.value.toUpperCase().replace(/[^A-Z2-9]/g,'');
+  if (v.length > 4)  v = v.slice(0,4) + '-' + v.slice(4);
+  if (v.length > 9)  v = v.slice(0,9) + '-' + v.slice(9);
+  e.target.value = v.slice(0,14);
+});
+
+document.getElementById('psu-submit-new').addEventListener('click', async () => {
+  const name = document.getElementById('psu-name').value.trim();
+  const errEl = document.getElementById('psu-error');
+  if (!name) { errEl.textContent = T.psuErrName; return; }
+  errEl.textContent = '';
+  document.getElementById('psu-submit-new').disabled = true;
+  try {
+    const r = await api.registerUser(pendingGroup.id, { name, avatarEmoji: selEmoji, avatarColor: selColor });
+    saveUser(pendingGroup.id, { userId:r.userId, name:r.name, avatarEmoji:r.avatarEmoji, avatarColor:r.avatarColor, recoveryCode:r.recoveryCode, isCreator:r.isCreator });
+    closeOv('modal-profile-setup');
+    showRecoveryCode(r.recoveryCode);
+  } catch(e) {
+    errEl.textContent = e.status===409 ? T.psuErrTaken : T.errServer;
+  } finally { document.getElementById('psu-submit-new').disabled = false; }
+});
+document.getElementById('psu-name').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('psu-submit-new').click(); });
+
+document.getElementById('psu-submit-login').addEventListener('click', async () => {
+  const name = document.getElementById('psu-login-name').value.trim();
+  const code = document.getElementById('psu-rc-input').value.trim();
+  const errEl = document.getElementById('psu-login-error');
+  if (!name || !code) { errEl.textContent = T.psuErrName; return; }
+  errEl.textContent = '';
+  document.getElementById('psu-submit-login').disabled = true;
+  try {
+    const r = await api.loginUser(pendingGroup.id, { name, recoveryCode: code });
+    saveUser(pendingGroup.id, { userId:r.userId, name:r.name, avatarEmoji:r.avatarEmoji, avatarColor:r.avatarColor, recoveryCode: code.replace(/-/g,'').toUpperCase(), isCreator:r.isCreator });
+    closeOv('modal-profile-setup');
+    enterGroup(pendingGroup);
+  } catch(e) {
+    errEl.textContent = e.status===401 ? T.psuErrWrongCode : (e.status===404 ? T.psuErrNotFound : T.errServer);
+  } finally { document.getElementById('psu-submit-login').disabled = false; }
+});
+
+// ════════════════════════════════════════════════════════
+//  RECOVERY CODE MODAL
+// ════════════════════════════════════════════════════════
+function showRecoveryCode(code) {
+  const parts = code.split('-');
+  document.getElementById('rc-boxes').innerHTML = parts.map(p =>
+    `<div class="rc-box">${esc(p)}</div>`
+  ).join('');
+  document.getElementById('rc-copy').onclick = () => copyToClipboard(code);
+  document.getElementById('rc-done').onclick = () => { closeOv('modal-recovery-code'); enterGroup(pendingGroup); };
+  openOv('modal-recovery-code');
+}
+
+// ════════════════════════════════════════════════════════
+//  PROFILE VIEW MODAL
+// ════════════════════════════════════════════════════════
+let viewingUserId = null;
+
+function openProfileView(userId) {
+  viewingUserId = userId;
+  const user = data?.people?.find(p => p.id === userId);
+  if (!user) return;
+
+  const isOwnProfile   = userProfile && userProfile.userId === userId;
+  const isCreatorView  = userProfile?.isCreator && !isOwnProfile;
+
+  document.getElementById('pv-avatar').textContent = user.avatarEmoji;
+  document.getElementById('pv-avatar').style.background = user.avatarColor;
+  document.getElementById('pv-name').textContent = user.name;
+
+  const badge = document.getElementById('pv-creator-badge');
+  badge.style.display = user.isCreator ? '' : 'none';
+
+  const userEntries = (data?.entries||[]).filter(e => e.person === user.name);
+  document.getElementById('pv-stat-count').textContent = userEntries.length;
+  document.getElementById('pv-stat-mins').textContent  = userEntries.reduce((s,e)=>s+e.mins,0);
+
+  const ownSection  = document.getElementById('pv-own-section');
+  const kickSection = document.getElementById('pv-kick-section');
+  ownSection.style.display  = isOwnProfile  ? '' : 'none';
+  kickSection.style.display = isCreatorView ? '' : 'none';
+
+  if (isOwnProfile && userProfile.recoveryCode) {
+    const rc = userProfile.recoveryCode;
+    const rcEl = document.getElementById('pv-rc-value');
+    rcEl.textContent = rc;
+    rcEl.classList.remove('revealed');
+    document.getElementById('pv-rc-reveal').textContent = '👁';
+    document.getElementById('pv-rc-reveal').onclick = () => {
+      const revealed = rcEl.classList.toggle('revealed');
+      document.getElementById('pv-rc-reveal').textContent = revealed ? '🙈' : '👁';
+    };
+    rcEl.onclick = () => {
+      const revealed = rcEl.classList.toggle('revealed');
+      document.getElementById('pv-rc-reveal').textContent = revealed ? '🙈' : '👁';
+    };
   }
+
+  openOv('modal-profile-view');
+}
+
+document.getElementById('pv-close').addEventListener('click', () => closeOv('modal-profile-view'));
+document.getElementById('modal-profile-view').addEventListener('click', e => { if(e.target===e.currentTarget) closeOv('modal-profile-view'); });
+
+document.getElementById('pv-edit-btn').addEventListener('click', () => {
+  closeOv('modal-profile-view');
+  openEditProfile();
+});
+
+document.getElementById('pv-kick-btn').addEventListener('click', async () => {
+  const user = data?.people?.find(p => p.id === viewingUserId);
+  if (!user) return;
+  if (!confirm(T.pvKickConfirm(user.name))) return;
+  try {
+    await api.kickUser(group.id, viewingUserId, { actorUserId: userProfile.userId, actorRecoveryCode: userProfile.recoveryCode });
+    closeOv('modal-profile-view');
+    await refresh();
+    showToast(T.toastKicked);
+  } catch { showToast(T.errServer); }
+});
+
+document.getElementById('my-profile-btn').addEventListener('click', () => {
+  if (userProfile) openProfileView(userProfile.userId);
+});
+
+// ════════════════════════════════════════════════════════
+//  EDIT PROFILE MODAL
+// ════════════════════════════════════════════════════════
+function openEditProfile() {
+  if (!userProfile) return;
+  epSelEmoji = userProfile.avatarEmoji;
+  epSelColor = userProfile.avatarColor;
+
+  const prev = document.getElementById('ep-preview');
+  prev.textContent = epSelEmoji;
+  prev.style.background = epSelColor;
+  document.getElementById('ep-name').value = userProfile.name;
+  document.getElementById('ep-error').textContent = '';
+
+  const eg = document.getElementById('ep-emoji-grid');
+  eg.innerHTML = AVATAR_EMOJIS.map(em =>
+    `<div class="emoji-cell${em===epSelEmoji?' sel':''}" data-emoji="${em}">${em}</div>`
+  ).join('');
+  eg.querySelectorAll('.emoji-cell').forEach(c => {
+    c.addEventListener('click', () => {
+      eg.querySelectorAll('.emoji-cell').forEach(x=>x.classList.remove('sel'));
+      c.classList.add('sel');
+      epSelEmoji = c.dataset.emoji;
+      prev.textContent = epSelEmoji;
+    });
+  });
+
+  const cg = document.getElementById('ep-color-grid');
+  cg.innerHTML = AVATAR_COLORS.map(col =>
+    `<div class="color-dot${col===epSelColor?' sel':''}" data-color="${col}" style="background:${col}"></div>`
+  ).join('');
+  cg.querySelectorAll('.color-dot').forEach(c => {
+    c.addEventListener('click', () => {
+      cg.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('sel'));
+      c.classList.add('sel');
+      epSelColor = c.dataset.color;
+      prev.style.background = epSelColor;
+    });
+  });
+
+  openOv('modal-edit-profile');
+  setTimeout(() => document.getElementById('ep-name').focus(), 350);
+}
+
+document.getElementById('ep-cancel').addEventListener('click', () => closeOv('modal-edit-profile'));
+document.getElementById('modal-edit-profile').addEventListener('click', e => { if(e.target===e.currentTarget) closeOv('modal-edit-profile'); });
+
+document.getElementById('ep-submit').addEventListener('click', async () => {
+  const newName = document.getElementById('ep-name').value.trim();
+  const errEl   = document.getElementById('ep-error');
+  if (!newName) { errEl.textContent = T.psuErrName; return; }
+  errEl.textContent = '';
+  document.getElementById('ep-submit').disabled = true;
+  try {
+    await api.updateUser(group.id, userProfile.userId, {
+      name: newName, avatarEmoji: epSelEmoji, avatarColor: epSelColor,
+      recoveryCode: userProfile.recoveryCode
+    });
+    userProfile.name = newName; userProfile.avatarEmoji = epSelEmoji; userProfile.avatarColor = epSelColor;
+    saveUser(group.id, userProfile);
+    closeOv('modal-edit-profile');
+    await refresh();
+    updateMyProfileBtn();
+    showToast(T.toastProfileSaved);
+  } catch(e) {
+    errEl.textContent = e.status===409 ? T.errNameTaken : T.errServer;
+  } finally { document.getElementById('ep-submit').disabled = false; }
 });
 
 // ════════════════════════════════════════════════════════
@@ -1683,12 +2300,33 @@ applyI18n();
 async function init() {
   showLoading(true); loadGroup();
   if (group) {
+    loadUser(group.id);
     try {
       data = await api.getGroup(group.id);
-      applyI18n(); renderAll(); startPolling(); showLoading(false); showScreen('app');
-      setTimeout(() => { if (shouldShowWrapped()) showWrapped(); }, 700);
+    } catch(e) {
+      if (e.status===404) clearGroup();
+      showLoading(false); showScreen('landing'); return;
+    }
+    if (!userProfile) {
+      // Stored group but no user — show profile setup
+      showLoading(false);
+      pendingGroup = group;
+      applyI18n(); showScreen('landing'); openProfileSetup();
       return;
-    } catch(e) { if(e.status===404) clearGroup(); }
+    }
+    // Check if user is still in the group (not kicked)
+    const me = data.people.find(p => p.id === userProfile.userId);
+    if (!me) {
+      clearUser(group.id); userProfile = null;
+      showLoading(false); showScreen('landing');
+      setTimeout(() => showToast(T.kicked), 300); return;
+    }
+    userProfile.isCreator = me.isCreator;
+    saveUser(group.id, userProfile);
+    updateMyProfileBtn();
+    applyI18n(); renderAll(); startPolling(); showLoading(false); showScreen('app');
+    setTimeout(() => { if (shouldShowWrapped()) showWrapped(); }, 700);
+    return;
   }
   showLoading(false); showScreen('landing');
 }

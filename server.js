@@ -7,7 +7,6 @@ const path     = require('path');
 const zlib     = require('zlib');
 
 // ── PWA Icon Generator (pure Node.js, no dependencies) ──────────────────────
-// Generates a purple-gradient PNG with a white dumbbell silhouette
 function generateIconPNG(size) {
   function crc32(buf) {
     const T = (() => {
@@ -30,7 +29,6 @@ function generateIconPNG(size) {
     return Buffer.concat([u32(data.length), t, data, u32(crc32(c))]);
   }
 
-  // Dumbbell geometry
   const cx = size / 2, cy = size / 2;
   const plateR = size * 0.17;
   const armLen = size * 0.23;
@@ -47,10 +45,9 @@ function generateIconPNG(size) {
   const rows = [];
   for (let y = 0; y < size; y++) {
     const row = Buffer.alloc(1 + size * 3);
-    row[0] = 0; // PNG filter: None
+    row[0] = 0;
     for (let x = 0; x < size; x++) {
-      const t = (x / (size - 1) + y / (size - 1)) / 2; // diagonal gradient 0→1
-      // Diagonal gradient: #7c3aed → #c084fc
+      const t = (x / (size - 1) + y / (size - 1)) / 2;
       const pr = Math.round(0x7c + (0xc0 - 0x7c) * t);
       const pg = Math.round(0x3a + (0x84 - 0x3a) * t);
       const pb = Math.round(0xed + (0xfc - 0xed) * t);
@@ -99,6 +96,18 @@ db.exec(`
     UNIQUE(group_id, name COLLATE NOCASE)
   );
 
+  CREATE TABLE IF NOT EXISTS users (
+    id            TEXT PRIMARY KEY,
+    group_id      TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
+    name          TEXT NOT NULL,
+    recovery_code TEXT NOT NULL,
+    avatar_emoji  TEXT NOT NULL DEFAULT '🏋️',
+    avatar_color  TEXT NOT NULL DEFAULT '#7c3aed',
+    is_creator    INTEGER NOT NULL DEFAULT 0,
+    created_at    INTEGER NOT NULL,
+    UNIQUE(group_id, name COLLATE NOCASE)
+  );
+
   CREATE TABLE IF NOT EXISTS entries (
     id         TEXT PRIMARY KEY,
     group_id   TEXT NOT NULL REFERENCES groups(id) ON DELETE CASCADE,
@@ -109,12 +118,21 @@ db.exec(`
   );
 `);
 
-// ── Code generator ───────────────────────────────────────────────────────────
-const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I to avoid confusion
+// Migrations for existing databases
+try { db.exec(`ALTER TABLE groups ADD COLUMN creator_user_id TEXT`); } catch(e) {}
+
+// ── Code generators ──────────────────────────────────────────────────────────
+const ALPHA = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 function genCode() {
   const bytes = crypto.randomBytes(6);
   return Array.from(bytes, b => ALPHA[b % ALPHA.length]).join('');
+}
+
+function genRecoveryCode() {
+  return [0, 1, 2].map(() =>
+    Array.from(crypto.randomBytes(4), b => ALPHA[b % ALPHA.length]).join('')
+  ).join('-');
 }
 
 function uniqueCode() {
@@ -123,6 +141,41 @@ function uniqueCode() {
   do { code = genCode(); } while (exists.get(code));
   return code;
 }
+
+// ── Startup migration: members → users ──────────────────────────────────────
+const _doMigrate = db.transaction(() => {
+  const unmigrated = db.prepare(`
+    SELECT m.id, m.group_id, m.name, m.created_at
+    FROM members m
+    LEFT JOIN users u ON u.group_id = m.group_id AND u.name = m.name COLLATE NOCASE
+    WHERE u.id IS NULL
+  `).all();
+
+  const insertUser = db.prepare(`
+    INSERT OR IGNORE INTO users (id, group_id, name, recovery_code, avatar_emoji, avatar_color, is_creator, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, 0, ?)
+  `);
+
+  for (const m of unmigrated) {
+    insertUser.run(m.id, m.group_id, m.name, genRecoveryCode(), '🏋️', '#7c3aed', m.created_at);
+  }
+
+  // Set creators for groups that have users but no creator yet
+  const groupsNoCreator = db.prepare(`
+    SELECT g.id FROM groups g
+    WHERE g.creator_user_id IS NULL
+    AND EXISTS (SELECT 1 FROM users u WHERE u.group_id = g.id)
+  `).all();
+
+  for (const g of groupsNoCreator) {
+    const first = db.prepare(`SELECT id FROM users WHERE group_id = ? ORDER BY created_at LIMIT 1`).get(g.id);
+    if (first) {
+      db.prepare(`UPDATE groups SET creator_user_id = ? WHERE id = ? AND creator_user_id IS NULL`).run(first.id, g.id);
+      db.prepare(`UPDATE users SET is_creator = 1 WHERE id = ?`).run(first.id);
+    }
+  }
+});
+_doMigrate();
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '16kb' }));
@@ -160,16 +213,141 @@ app.post('/api/groups/join', (req, res) => {
 });
 
 app.get('/api/groups/:id', (req, res) => {
-  const g = db.prepare('SELECT id,code,name FROM groups WHERE id = ?').get(req.params.id);
+  const g = db.prepare('SELECT id,code,name,creator_user_id FROM groups WHERE id = ?').get(req.params.id);
   if (!g) return res.status(404).json({ error: 'not_found' });
-  const people  = db.prepare('SELECT name FROM members WHERE group_id = ? ORDER BY created_at')
-                    .all(req.params.id).map(r => r.name);
+  const people = db.prepare(`
+    SELECT id, name, avatar_emoji, avatar_color, is_creator
+    FROM users WHERE group_id = ? ORDER BY created_at
+  `).all(req.params.id).map(u => ({
+    id: u.id,
+    name: u.name,
+    avatarEmoji: u.avatar_emoji,
+    avatarColor: u.avatar_color,
+    isCreator: u.is_creator === 1,
+  }));
   const entries = db.prepare('SELECT id,person,date,mins,ts FROM entries WHERE group_id = ? ORDER BY date DESC, ts DESC')
-                    .all(req.params.id);
-  res.json({ ...g, people, entries });
+    .all(req.params.id);
+  res.json({ id: g.id, code: g.code, name: g.name, people, entries });
 });
 
-// ── Members ──────────────────────────────────────────────────────────────────
+// ── Users ────────────────────────────────────────────────────────────────────
+
+// Register new user in a group
+app.post('/api/groups/:id/users', (req, res) => {
+  const { id } = req.params;
+  const name        = String(req.body?.name        ?? '').trim().slice(0, 30);
+  const avatarEmoji = String(req.body?.avatarEmoji ?? '🏋️');
+  const avatarColor = String(req.body?.avatarColor ?? '#7c3aed');
+
+  if (!name) return res.status(400).json({ error: 'name_required' });
+  const g = db.prepare('SELECT id, creator_user_id FROM groups WHERE id = ?').get(id);
+  if (!g) return res.status(404).json({ error: 'not_found' });
+
+  const userId      = crypto.randomUUID();
+  const recoveryCode = genRecoveryCode();
+  const isCreator   = g.creator_user_id === null ? 1 : 0;
+
+  try {
+    db.prepare(`
+      INSERT INTO users (id, group_id, name, recovery_code, avatar_emoji, avatar_color, is_creator, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(userId, id, name, recoveryCode, avatarEmoji, avatarColor, isCreator, Date.now());
+
+    // Keep members table in sync for backward compat
+    db.prepare(`INSERT OR IGNORE INTO members (id, group_id, name, created_at) VALUES (?,?,?,?)`)
+      .run(userId, id, name, Date.now());
+
+    if (isCreator) {
+      db.prepare(`UPDATE groups SET creator_user_id = ? WHERE id = ? AND creator_user_id IS NULL`).run(userId, id);
+    }
+
+    res.json({ userId, name, avatarEmoji, avatarColor, recoveryCode, isCreator: isCreator === 1 });
+  } catch(e) {
+    if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') return res.status(409).json({ error: 'already_exists' });
+    throw e;
+  }
+});
+
+// Login existing user with recovery code
+app.post('/api/groups/:id/users/login', (req, res) => {
+  const { id } = req.params;
+  const name         = String(req.body?.name         ?? '').trim();
+  const recoveryCode = String(req.body?.recoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
+
+  if (!name || !recoveryCode) return res.status(400).json({ error: 'missing_fields' });
+
+  const user = db.prepare(`
+    SELECT id, name, avatar_emoji, avatar_color, is_creator, recovery_code
+    FROM users WHERE group_id = ? AND name = ? COLLATE NOCASE
+  `).get(id, name);
+
+  if (!user) return res.status(404).json({ error: 'user_not_found' });
+  if (user.recovery_code.replace(/-/g, '') !== recoveryCode) return res.status(401).json({ error: 'wrong_code' });
+
+  res.json({
+    userId:      user.id,
+    name:        user.name,
+    avatarEmoji: user.avatar_emoji,
+    avatarColor: user.avatar_color,
+    isCreator:   user.is_creator === 1,
+  });
+});
+
+// Update user profile (name, avatar) — requires recovery code
+app.patch('/api/groups/:id/users/:uid', (req, res) => {
+  const { id, uid } = req.params;
+  const recoveryCode = String(req.body?.recoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
+
+  const user = db.prepare('SELECT id, recovery_code, name FROM users WHERE id = ? AND group_id = ?').get(uid, id);
+  if (!user) return res.status(404).json({ error: 'not_found' });
+  if (user.recovery_code.replace(/-/g, '') !== recoveryCode) return res.status(401).json({ error: 'unauthorized' });
+
+  const newName  = req.body?.name        ? String(req.body.name).trim().slice(0, 30)  : null;
+  const newEmoji = req.body?.avatarEmoji ? String(req.body.avatarEmoji)                : null;
+  const newColor = req.body?.avatarColor ? String(req.body.avatarColor)                : null;
+
+  const sets = []; const params = [];
+  if (newName)  { sets.push('name = ?');         params.push(newName); }
+  if (newEmoji) { sets.push('avatar_emoji = ?'); params.push(newEmoji); }
+  if (newColor) { sets.push('avatar_color = ?'); params.push(newColor); }
+  if (!sets.length) return res.json({ ok: true });
+
+  params.push(uid, id);
+  try {
+    db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ? AND group_id = ?`).run(...params);
+    if (newName && newName !== user.name) {
+      db.prepare('UPDATE entries SET person = ? WHERE group_id = ? AND person = ?').run(newName, id, user.name);
+      db.prepare('UPDATE members SET name = ? WHERE group_id = ? AND name = ?').run(newName, id, user.name);
+    }
+    res.json({ ok: true });
+  } catch(e) {
+    if (e.code === 'SQLITE_CONSTRAINT_UNIQUE') return res.status(409).json({ error: 'name_taken' });
+    throw e;
+  }
+});
+
+// Kick user — requires actor to be creator
+app.delete('/api/groups/:id/users/:uid', (req, res) => {
+  const { id, uid } = req.params;
+  const actorId   = String(req.body?.actorUserId       ?? '');
+  const actorCode = String(req.body?.actorRecoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
+
+  const actor = db.prepare('SELECT id, recovery_code, is_creator FROM users WHERE id = ? AND group_id = ?').get(actorId, id);
+  if (!actor) return res.status(401).json({ error: 'unauthorized' });
+  if (actor.recovery_code.replace(/-/g, '') !== actorCode) return res.status(401).json({ error: 'unauthorized' });
+  if (!actor.is_creator) return res.status(403).json({ error: 'not_creator' });
+  if (uid === actorId) return res.status(400).json({ error: 'cannot_kick_self' });
+
+  const target = db.prepare('SELECT id, name FROM users WHERE id = ? AND group_id = ?').get(uid, id);
+  if (!target) return res.status(404).json({ error: 'not_found' });
+
+  db.prepare('DELETE FROM users   WHERE id = ? AND group_id = ?').run(uid, id);
+  db.prepare('DELETE FROM members WHERE group_id = ? AND name = ?').run(id, target.name);
+
+  res.json({ ok: true });
+});
+
+// ── Members (legacy, kept for compatibility) ─────────────────────────────────
 
 app.post('/api/groups/:id/members', (req, res) => {
   const { id } = req.params;
@@ -178,8 +356,12 @@ app.post('/api/groups/:id/members', (req, res) => {
   if (!db.prepare('SELECT 1 FROM groups WHERE id = ?').get(id))
     return res.status(404).json({ error: 'not_found' });
   try {
+    const uid = crypto.randomUUID();
     db.prepare('INSERT INTO members (id,group_id,name,created_at) VALUES (?,?,?,?)')
-      .run(crypto.randomUUID(), id, name, Date.now());
+      .run(uid, id, name, Date.now());
+    // Also create user record
+    db.prepare(`INSERT OR IGNORE INTO users (id,group_id,name,recovery_code,avatar_emoji,avatar_color,is_creator,created_at) VALUES (?,?,?,?,?,?,0,?)`)
+      .run(uid, id, name, genRecoveryCode(), '🏋️', '#7c3aed', Date.now());
     res.json({ ok: true });
   } catch {
     res.status(409).json({ error: 'already_exists' });
@@ -188,6 +370,8 @@ app.post('/api/groups/:id/members', (req, res) => {
 
 app.delete('/api/groups/:id/members/:name', (req, res) => {
   db.prepare('DELETE FROM members WHERE group_id = ? AND name = ?')
+    .run(req.params.id, req.params.name);
+  db.prepare('DELETE FROM users WHERE group_id = ? AND name = ?')
     .run(req.params.id, req.params.name);
   res.json({ ok: true });
 });
