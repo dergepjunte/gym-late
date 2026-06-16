@@ -12,21 +12,22 @@
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'Segoe UI', sans-serif;
       min-height: 100dvh;
       -webkit-font-smoothing: antialiased;
+      background: #e9e4f8;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #09060f; }
     }
 
     /* ── THEME ───────────────────────────────────────────────── */
     :root {
-      --blob1: #c084fc; --blob2: #67e8f9; --blob3: #f9a8d4; --blob4: #86efac;
-      --bg-base: #f5f0ff;
+      --glass-bg:     rgba(255,255,255,0.36);
+      --glass-border: rgba(255,255,255,0.68);
+      --glass-top:    rgba(255,255,255,0.88);
+      --glass-shadow: rgba(80,30,160,0.09);
+      --glass-inner:  rgba(255,255,255,0.60);
 
-      --glass-bg:     rgba(255,255,255,0.28);
-      --glass-border: rgba(255,255,255,0.55);
-      --glass-top:    rgba(255,255,255,0.78);
-      --glass-shadow: rgba(80,30,160,0.10);
-      --glass-inner:  rgba(255,255,255,0.55);
-
-      --input-bg:     rgba(255,255,255,0.38);
-      --input-border: rgba(255,255,255,0.65);
+      --input-bg:     rgba(255,255,255,0.45);
+      --input-border: rgba(255,255,255,0.72);
 
       --text-1: rgba(0,0,0,0.85);
       --text-2: rgba(0,0,0,0.50);
@@ -39,25 +40,23 @@
       --red:          #ef4444;
       --red-light:    rgba(239,68,68,0.12);
       --green:        #22c55e;
+      --gold:         #f59e0b;
 
-      --divider:  rgba(0,0,0,0.06);
-      --blur: 28px;
+      --divider:  rgba(0,0,0,0.07);
+      --blur: 24px;
       --r-xl: 28px; --r-lg: 20px; --r-md: 14px; --r-sm: 10px;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --blob1: #6b21a8; --blob2: #164e63; --blob3: #9d174d; --blob4: #14532d;
-        --bg-base: #0d0618;
-
-        --glass-bg:     rgba(255,255,255,0.06);
-        --glass-border: rgba(255,255,255,0.11);
-        --glass-top:    rgba(255,255,255,0.18);
+        --glass-bg:     rgba(255,255,255,0.07);
+        --glass-border: rgba(255,255,255,0.12);
+        --glass-top:    rgba(255,255,255,0.20);
         --glass-shadow: rgba(0,0,0,0.55);
-        --glass-inner:  rgba(255,255,255,0.07);
+        --glass-inner:  rgba(255,255,255,0.08);
 
-        --input-bg:     rgba(255,255,255,0.08);
-        --input-border: rgba(255,255,255,0.14);
+        --input-bg:     rgba(255,255,255,0.09);
+        --input-border: rgba(255,255,255,0.15);
 
         --text-1: rgba(255,255,255,0.93);
         --text-2: rgba(255,255,255,0.52);
@@ -70,46 +69,27 @@
         --red:          #f87171;
         --red-light:    rgba(248,113,113,0.14);
         --green:        #4ade80;
+        --gold:         #fbbf24;
 
-        --divider: rgba(255,255,255,0.07);
+        --divider: rgba(255,255,255,0.08);
       }
     }
-
-    /* ── BACKGROUND ──────────────────────────────────────────── */
-    .bg {
-      position: fixed; inset: 0;
-      background: var(--bg-base);
-      z-index: 0; overflow: hidden;
-    }
-    .blob {
-      position: absolute; border-radius: 50%;
-      filter: blur(70px); will-change: transform;
-    }
-    .b1{width:450px;height:450px;background:var(--blob1);top:-120px;right:-100px;opacity:.65;animation:f1 15s ease-in-out infinite}
-    .b2{width:380px;height:380px;background:var(--blob2);bottom:5%;left:-100px;opacity:.55;animation:f2 18s ease-in-out infinite}
-    .b3{width:280px;height:280px;background:var(--blob3);top:35%;right:10%;opacity:.50;animation:f3 12s ease-in-out infinite}
-    .b4{width:220px;height:220px;background:var(--blob4);bottom:20%;right:30%;opacity:.40;animation:f4 20s ease-in-out infinite}
-    @keyframes f1{0%,100%{transform:translate(0,0) scale(1)} 40%{transform:translate(-30px,25px) scale(1.06)} 70%{transform:translate(18px,-12px) scale(.94)}}
-    @keyframes f2{0%,100%{transform:translate(0,0) scale(1)} 35%{transform:translate(25px,-35px) scale(1.09)} 65%{transform:translate(-12px,22px) scale(.93)}}
-    @keyframes f3{0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-22px,32px) scale(1.12)}}
-    @keyframes f4{0%,100%{transform:translate(0,0) scale(1)} 30%{transform:translate(18px,-20px) scale(1.08)} 70%{transform:translate(-10px,15px) scale(.95)}}
 
     /* ── GLASS ───────────────────────────────────────────────── */
     .glass {
       background: var(--glass-bg);
-      backdrop-filter: blur(var(--blur)) saturate(1.9) brightness(1.05);
-      -webkit-backdrop-filter: blur(var(--blur)) saturate(1.9) brightness(1.05);
+      backdrop-filter: blur(var(--blur)) saturate(1.8);
+      -webkit-backdrop-filter: blur(var(--blur)) saturate(1.8);
       border: 1px solid var(--glass-border);
       border-top-color: var(--glass-top);
-      box-shadow: 0 4px 30px var(--glass-shadow), inset 0 1px 0 var(--glass-inner);
+      box-shadow: 0 4px 28px var(--glass-shadow), inset 0 1px 0 var(--glass-inner);
     }
 
     /* ── SCREENS ─────────────────────────────────────────────── */
     .screen {
       position: relative; z-index: 1;
       min-height: 100dvh;
-      display: flex; flex-direction: column;
-      align-items: center;
+      display: flex; flex-direction: column; align-items: center;
     }
     .screen.hidden { display: none; }
 
@@ -118,107 +98,69 @@
       justify-content: center;
       padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
     }
-
-    .landing-hero {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-    .landing-icon { font-size: 56px; line-height: 1; margin-bottom: 10px; }
+    .landing-hero { text-align: center; margin-bottom: 32px; }
+    .landing-icon { font-size: 60px; line-height: 1; margin-bottom: 12px; }
     .landing-title {
-      font-size: 44px; font-weight: 900; letter-spacing: -1.5px;
+      font-size: 46px; font-weight: 900; letter-spacing: -1.5px;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
     .landing-sub { font-size: 15px; color: var(--text-2); margin-top: 4px; }
-
-    .landing-card {
-      width: 100%; max-width: 420px;
-      border-radius: var(--r-xl);
-      padding: 24px 20px;
-    }
-
+    .landing-card { width: 100%; max-width: 420px; border-radius: var(--r-xl); padding: 24px 20px; }
     .or-divider {
       display: flex; align-items: center; gap: 12px;
-      margin: 14px 0;
-      color: var(--text-3); font-size: 13px; font-weight: 500;
+      margin: 14px 0; color: var(--text-3); font-size: 13px; font-weight: 500;
     }
-    .or-divider::before,.or-divider::after {
-      content: ''; flex: 1; height: 1px;
-      background: var(--divider);
-    }
+    .or-divider::before,.or-divider::after { content:''; flex:1; height:1px; background:var(--divider); }
 
-    /* ── APP SCREEN ──────────────────────────────────────────── */
-    #screen-app {
-      justify-content: flex-start;
-    }
-
-    .app-inner {
-      width: 100%; max-width: 500px;
-      padding: 0 16px;
-      display: flex; flex-direction: column;
-    }
+    /* ── APP ─────────────────────────────────────────────────── */
+    #screen-app { justify-content: flex-start; }
+    .app-inner { width: 100%; max-width: 500px; padding: 0 16px; display: flex; flex-direction: column; }
 
     /* ── HEADER ──────────────────────────────────────────────── */
-    .header {
-      padding: calc(env(safe-area-inset-top) + 48px) 0 10px;
-      text-align: center;
-    }
-    .header-icon { font-size: 40px; line-height: 1; margin-bottom: 4px; }
+    .header { padding: calc(env(safe-area-inset-top) + 46px) 0 10px; text-align: center; }
+    .header-icon { font-size: 40px; line-height: 1; margin-bottom: 4px; cursor: pointer; user-select: none; display: inline-block; }
     .header-title {
       font-size: 34px; font-weight: 900; letter-spacing: -1px;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
     }
+    .admin-badge {
+      display: inline-block;
+      font-size: 11px; font-weight: 700; letter-spacing: .5px;
+      background: rgba(239,68,68,.15); color: var(--red);
+      border: 1px solid rgba(239,68,68,.3);
+      padding: 2px 8px; border-radius: 20px; margin-top: 4px;
+    }
+    .admin-badge.hidden { display: none; }
 
     /* ── GROUP PILL ──────────────────────────────────────────── */
     .group-pill {
       display: flex; align-items: center; gap: 8px;
-      border-radius: 40px;
-      padding: 7px 14px;
-      margin: 10px auto 16px;
-      width: fit-content; max-width: 100%;
+      border-radius: 40px; padding: 7px 14px;
+      margin: 10px auto 16px; width: fit-content; max-width: 100%;
     }
-    .pill-name {
-      font-size: 13px; font-weight: 700;
-      color: var(--text-1);
-      white-space: nowrap; overflow: hidden;
-      text-overflow: ellipsis; max-width: 150px;
-    }
-    .pill-dot { font-size: 10px; color: var(--text-3); }
+    .pill-name { font-size: 13px; font-weight: 700; color: var(--text-1); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px; }
+    .pill-dot  { font-size: 10px; color: var(--text-3); }
     .pill-code-btn {
-      background: var(--accent-light);
-      border: 1.5px solid var(--accent);
-      color: var(--accent);
-      font-size: 13px; font-weight: 800;
-      letter-spacing: 2px;
-      padding: 3px 10px; border-radius: 20px;
-      cursor: pointer; font-family: inherit;
+      background: var(--accent-light); border: 1.5px solid var(--accent); color: var(--accent);
+      font-size: 13px; font-weight: 800; letter-spacing: 2px;
+      padding: 3px 10px; border-radius: 20px; cursor: pointer; font-family: inherit;
       transition: transform .15s, opacity .15s;
     }
     .pill-code-btn:active { transform: scale(.92); opacity: .7; }
-    .pill-copy-hint {
-      font-size: 11px; color: var(--text-3);
-    }
+    .pill-copy-hint { font-size: 11px; color: var(--text-3); }
 
     /* ── SECTION LABEL ───────────────────────────────────────── */
     .sec-label {
       font-size: 12px; font-weight: 600; letter-spacing: .6px;
-      text-transform: uppercase; color: var(--text-3);
-      margin: 16px 0 7px 4px;
+      text-transform: uppercase; color: var(--text-3); margin: 16px 0 7px 4px;
     }
 
     /* ── STATS ───────────────────────────────────────────────── */
     .stat-row { display: flex; gap: 10px; }
-    .stat-card {
-      flex: 1; border-radius: var(--r-lg);
-      padding: 18px 14px 16px; text-align: center;
-    }
-    .stat-val {
-      font-size: 34px; font-weight: 900; letter-spacing: -1px;
-      color: var(--text-1); line-height: 1;
-    }
+    .stat-card { flex:1; border-radius: var(--r-lg); padding: 18px 14px 16px; text-align: center; }
+    .stat-val { font-size: 34px; font-weight: 900; letter-spacing:-1px; color: var(--text-1); line-height:1; }
     .stat-val.red { color: var(--red); }
     .stat-lbl { font-size: 12px; color: var(--text-2); margin-top: 4px; font-weight: 500; }
 
@@ -226,309 +168,326 @@
     .card { border-radius: var(--r-xl); overflow: hidden; }
 
     /* ── ENTRIES ─────────────────────────────────────────────── */
-    .entry {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 18px;
-      border-bottom: 1px solid var(--divider);
-    }
+    .entry { display: flex; align-items: center; gap: 12px; padding: 11px 18px; border-bottom: 1px solid var(--divider); }
     .entry:last-child { border-bottom: none; }
-
     .avatar {
       width: 40px; height: 40px; border-radius: 50%;
-      background: var(--accent-light);
-      display: flex; align-items: center; justify-content: center;
+      background: var(--accent-light); display: flex; align-items: center; justify-content: center;
       font-size: 14px; font-weight: 700; color: var(--accent);
       flex-shrink: 0; border: 1.5px solid var(--glass-border);
     }
-    .entry-info { flex: 1; min-width: 0; }
-    .entry-name {
-      font-size: 15px; font-weight: 600; color: var(--text-1);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .entry-meta { font-size: 12px; color: var(--text-2); margin-top: 1px; }
-
+    .entry-info { flex:1; min-width:0; }
+    .entry-name { font-size:15px; font-weight:600; color:var(--text-1); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .entry-meta { font-size:12px; color:var(--text-2); margin-top:1px; }
     .late-badge {
-      font-size: 13px; font-weight: 700; color: var(--red);
-      background: var(--red-light); padding: 4px 10px;
-      border-radius: 20px; white-space: nowrap;
-      border: 1px solid rgba(239,68,68,.18);
+      font-size:13px; font-weight:700; color:var(--red);
+      background:var(--red-light); padding:4px 10px; border-radius:20px;
+      white-space:nowrap; border:1px solid rgba(239,68,68,.18);
     }
     .icon-btn {
-      width: 30px; height: 30px; border-radius: 50%;
-      border: none; background: var(--red-light);
-      color: var(--red); cursor: pointer; font-size: 16px;
-      display: flex; align-items: center; justify-content: center;
-      transition: transform .15s; flex-shrink: 0; font-family: inherit;
+      width:30px; height:30px; border-radius:50%; border:none;
+      background:var(--red-light); color:var(--red); cursor:pointer; font-size:16px;
+      display:flex; align-items:center; justify-content:center;
+      transition:transform .15s; flex-shrink:0; font-family:inherit;
     }
-    .icon-btn:active { transform: scale(.88); }
+    .icon-btn:active { transform:scale(.88); }
 
     /* ── EMPTY ───────────────────────────────────────────────── */
-    .empty { text-align: center; padding: 36px 24px; }
-    .empty-ico { font-size: 40px; margin-bottom: 8px; }
-    .empty-txt { font-size: 15px; color: var(--text-2); font-weight: 500; }
-    .empty-sub { font-size: 13px; color: var(--text-3); margin-top: 4px; }
+    .empty { text-align:center; padding:36px 24px; }
+    .empty-ico { font-size:40px; margin-bottom:8px; }
+    .empty-txt { font-size:15px; color:var(--text-2); font-weight:500; }
+    .empty-sub { font-size:13px; color:var(--text-3); margin-top:4px; }
 
     /* ── TAB PANE ────────────────────────────────────────────── */
-    .tab-pane { display: none; padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
-    .tab-pane.active { display: block; }
+    .tab-pane { display:none; padding-bottom:calc(110px + env(safe-area-inset-bottom)); }
+    .tab-pane.active { display:block; }
 
     /* ── FAB ─────────────────────────────────────────────────── */
     #fab {
-      position: fixed;
-      bottom: calc(88px + env(safe-area-inset-bottom));
-      right: max(16px, calc(50vw - 234px));
-      width: 58px; height: 58px; border-radius: 50%;
-      border: none;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      color: white; font-size: 28px; line-height: 1;
-      cursor: pointer;
-      box-shadow: 0 6px 24px var(--accent-glow), 0 2px 8px rgba(0,0,0,.2);
-      transition: transform .2s cubic-bezier(.34,1.56,.64,1);
-      z-index: 20; display: flex; align-items: center; justify-content: center;
+      position:fixed; bottom:calc(88px + env(safe-area-inset-bottom));
+      right:max(16px, calc(50vw - 234px));
+      width:58px; height:58px; border-radius:50%; border:none;
+      background:linear-gradient(135deg, var(--accent), var(--accent-2));
+      color:white; font-size:28px; cursor:pointer;
+      box-shadow:0 6px 24px var(--accent-glow), 0 2px 8px rgba(0,0,0,.2);
+      transition:transform .2s cubic-bezier(.34,1.56,.64,1);
+      z-index:20; display:flex; align-items:center; justify-content:center;
     }
-    #fab:active { transform: scale(.88); }
-    #fab.hidden { display: none; }
+    #fab:active { transform:scale(.88); }
+    #fab.hidden { display:none; }
 
     /* ── BOTTOM NAV ──────────────────────────────────────────── */
     .bottom-nav {
-      position: fixed; bottom: 0; left: 50%;
-      transform: translateX(-50%);
-      width: 100%; max-width: 500px;
-      padding: 8px 16px calc(10px + env(safe-area-inset-bottom));
-      z-index: 30;
+      position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+      width:100%; max-width:500px;
+      padding:8px 16px calc(10px + env(safe-area-inset-bottom)); z-index:30;
     }
-    .nav-bar { display: flex; border-radius: var(--r-xl); padding: 6px; gap: 2px; }
+    .nav-bar { display:flex; border-radius:var(--r-xl); padding:6px; gap:2px; }
     .nav-btn {
-      flex: 1; display: flex; flex-direction: column;
-      align-items: center; gap: 3px; padding: 8px 4px;
-      border: none; background: transparent; border-radius: var(--r-md);
-      cursor: pointer; font-family: inherit; transition: background .2s;
+      flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+      padding:8px 4px; border:none; background:transparent; border-radius:var(--r-md);
+      cursor:pointer; font-family:inherit; transition:background .2s;
     }
-    .nav-btn.active { background: var(--glass-inner); }
-    .nav-ico { font-size: 22px; transition: transform .2s; }
-    .nav-btn.active .nav-ico { transform: scale(1.1); }
-    .nav-lbl { font-size: 11px; font-weight: 500; color: var(--text-2); }
-    .nav-btn.active .nav-lbl { color: var(--accent); font-weight: 700; }
+    .nav-btn.active { background:var(--glass-inner); }
+    .nav-ico { font-size:22px; transition:transform .2s; }
+    .nav-btn.active .nav-ico { transform:scale(1.1); }
+    .nav-lbl { font-size:11px; font-weight:500; color:var(--text-2); }
+    .nav-btn.active .nav-lbl { color:var(--accent); font-weight:700; }
 
-    /* ── HISTORY ─────────────────────────────────────────────── */
-    .week-block { margin-bottom: 20px; }
+    /* ── HISTORY: LAYOUT ─────────────────────────────────────── */
+    .week-block { margin-bottom: 22px; }
+
     .recap-hero {
-      padding: 18px 18px 14px; text-align: center;
-      border-bottom: 1px solid var(--divider); margin-bottom: 0;
-    }
-    .recap-trophy { font-size: 32px; margin-bottom: 4px; }
-    .recap-name { font-size: 17px; font-weight: 800; color: var(--text-1); }
-    .recap-role { font-size: 13px; color: var(--text-2); margin-top: 2px; }
-    .rank-row {
-      display: flex; align-items: center;
-      gap: 12px; padding: 11px 18px;
+      padding: 22px 18px 18px; text-align: center;
       border-bottom: 1px solid var(--divider);
+      position: relative; overflow: hidden;
     }
-    .rank-row:last-child { border-bottom: none; }
-    .rank-no { font-size: 20px; width: 30px; text-align: center; flex-shrink: 0; }
+    .recap-trophy-wrap { margin-bottom: 8px; }
+    .recap-trophy { font-size: 44px; display: inline-block; }
+    .recap-name  { font-size: 20px; font-weight: 800; color: var(--text-1); }
+    .recap-role  { font-size: 13px; color: var(--text-2); margin-top: 3px; }
+
+    .rank-row {
+      display:flex; align-items:center; gap:12px;
+      padding:12px 18px; border-bottom:1px solid var(--divider);
+      position: relative;
+    }
+    .rank-row:last-child { border-bottom:none; }
+    .rank-no { font-size:20px; width:30px; text-align:center; flex-shrink:0; }
+
+    /* Gold shimmer strip */
+    .rank-row.rank-gold::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(90deg, rgba(251,191,36,0.10) 0%, transparent 60%);
+      pointer-events: none;
+    }
 
     /* ── PEOPLE ──────────────────────────────────────────────── */
     .person-row {
-      display: flex; align-items: center;
-      gap: 12px; padding: 11px 18px;
-      border-bottom: 1px solid var(--divider);
+      display:flex; align-items:center; gap:12px;
+      padding:11px 18px; border-bottom:1px solid var(--divider);
     }
-    .person-row:last-child { border-bottom: none; }
-    .person-name {
-      flex: 1; font-size: 15px; font-weight: 600; color: var(--text-1);
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-    }
+    .person-row:last-child { border-bottom:none; }
+    .person-name { flex:1; font-size:15px; font-weight:600; color:var(--text-1); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 
-    .add-person-card { border-radius: var(--r-xl); padding: 16px 18px; margin-top: 10px; }
-    .add-row { display: flex; gap: 10px; margin-top: 12px; }
-
-    .leave-section { margin-top: 20px; }
+    .add-person-card { border-radius:var(--r-xl); padding:16px 18px; margin-top:10px; }
+    .add-row { display:flex; gap:10px; margin-top:12px; }
+    .leave-section { margin-top: 12px; }
     .leave-btn {
-      width: 100%; padding: 14px;
-      border-radius: var(--r-md); border: none; font-family: inherit;
-      font-size: 15px; font-weight: 600; cursor: pointer;
-      color: var(--red);
-      background: var(--red-light);
-      border: 1.5px solid rgba(239,68,68,.2);
+      width:100%; padding:14px; border-radius:var(--r-md); border:none;
+      font-family:inherit; font-size:15px; font-weight:600; cursor:pointer;
+      color:var(--red); background:var(--red-light); border:1.5px solid rgba(239,68,68,.2);
+      transition:transform .15s, opacity .15s;
+    }
+    .leave-btn:active { transform:scale(.96); opacity:.8; }
+
+    /* ── ADMIN PANEL ─────────────────────────────────────────── */
+    .admin-panel {
+      border-radius: var(--r-xl); padding: 16px 18px; margin-top: 12px;
+      border-color: rgba(239,68,68,0.28) !important;
+      border-top-color: rgba(239,68,68,0.35) !important;
+    }
+    .admin-panel-title {
+      font-size: 12px; font-weight: 700; letter-spacing: .6px;
+      text-transform: uppercase; color: var(--red); margin-bottom: 12px;
+    }
+    .admin-btn {
+      width: 100%; padding: 13px; border-radius: var(--r-md); border: none;
+      font-family: inherit; font-size: 14px; font-weight: 600;
+      cursor: pointer; text-align: center; margin-bottom: 8px;
       transition: transform .15s, opacity .15s;
     }
-    .leave-btn:active { transform: scale(.96); opacity: .8; }
+    .admin-btn:last-child { margin-bottom: 0; }
+    .admin-btn:active { transform: scale(.96); opacity: .8; }
+    .admin-btn-add  { background: var(--accent-light); color: var(--accent); border: 1.5px solid var(--accent); }
+    .admin-btn-week { background: rgba(251,191,36,.12); color: var(--gold);  border: 1.5px solid rgba(251,191,36,.4); }
+    .admin-btn-week.active { background: rgba(251,191,36,.25); }
+    .admin-btn-del  { background: var(--red-light);    color: var(--red);    border: 1.5px solid rgba(239,68,68,.3); }
+    .admin-btn-exit { background: var(--glass-inner);  color: var(--text-2); border: 1px solid var(--glass-border); }
 
     /* ── MODALS ──────────────────────────────────────────────── */
     .overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.35);
-      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-      z-index: 100;
-      display: flex; align-items: flex-end; justify-content: center;
-      padding: 0 12px calc(12px + env(safe-area-inset-bottom));
-      opacity: 0; pointer-events: none;
-      transition: opacity .25s ease;
+      position:fixed; inset:0; background:rgba(0,0,0,.35);
+      backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+      z-index:100; display:flex; align-items:flex-end; justify-content:center;
+      padding:0 12px calc(12px + env(safe-area-inset-bottom));
+      opacity:0; pointer-events:none; transition:opacity .25s ease;
     }
-    .overlay.open { opacity: 1; pointer-events: all; }
-
+    .overlay.open { opacity:1; pointer-events:all; }
     .modal {
-      width: 100%; max-width: 500px;
-      border-radius: var(--r-xl); padding: 28px 22px 22px;
-      transform: translateY(50px) scale(.96);
-      transition: transform .35s cubic-bezier(.34,1.56,.64,1);
+      width:100%; max-width:500px; border-radius:var(--r-xl); padding:28px 22px 22px;
+      transform:translateY(50px) scale(.96);
+      transition:transform .35s cubic-bezier(.34,1.56,.64,1);
     }
-    .overlay.open .modal { transform: translateY(0) scale(1); }
+    .overlay.open .modal { transform:translateY(0) scale(1); }
+    .modal-title { font-size:20px; font-weight:800; letter-spacing:-.4px; color:var(--text-1); margin-bottom:20px; }
+    .modal-sub   { font-size:14px; color:var(--text-2); margin-top:-14px; margin-bottom:20px; }
 
-    .modal-title {
-      font-size: 20px; font-weight: 800; letter-spacing: -.4px;
-      color: var(--text-1); margin-bottom: 20px;
-    }
-    .modal-sub {
-      font-size: 14px; color: var(--text-2); margin-top: -14px; margin-bottom: 20px;
-    }
-
-    .form-grp { margin-bottom: 14px; }
+    .form-grp { margin-bottom:14px; }
     .form-lbl {
-      display: block; font-size: 12px; font-weight: 600;
-      color: var(--text-2); text-transform: uppercase; letter-spacing: .4px;
-      margin-bottom: 6px;
+      display:block; font-size:12px; font-weight:600;
+      color:var(--text-2); text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;
     }
     .form-ctrl {
-      width: 100%; padding: 13px 14px;
-      border-radius: var(--r-md);
-      border: 1.5px solid var(--input-border);
-      background: var(--input-bg);
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-      font-size: 16px; font-weight: 500; color: var(--text-1);
-      font-family: inherit; outline: none; -webkit-appearance: none; appearance: none;
-      transition: border-color .2s, box-shadow .2s;
+      width:100%; padding:13px 14px; border-radius:var(--r-md);
+      border:1.5px solid var(--input-border); background:var(--input-bg);
+      backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+      font-size:16px; font-weight:500; color:var(--text-1);
+      font-family:inherit; outline:none; -webkit-appearance:none; appearance:none;
+      transition:border-color .2s, box-shadow .2s;
     }
-    .form-ctrl:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-light);
-    }
-    @media (prefers-color-scheme: dark) { .form-ctrl { color-scheme: dark; } }
-
-    .select-wrap { position: relative; }
-    .select-wrap::after {
-      content: '▾'; position: absolute; right: 14px; top: 50%;
-      transform: translateY(-50%); color: var(--text-2); pointer-events: none; font-size: 13px;
-    }
-
-    .modal-row { display: flex; gap: 10px; margin-bottom: 14px; }
-    .modal-row .form-grp { flex: 1; margin-bottom: 0; }
-
-    .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+    .form-ctrl:focus { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-light); }
+    @media (prefers-color-scheme: dark) { .form-ctrl { color-scheme:dark; } }
+    .select-wrap { position:relative; }
+    .select-wrap::after { content:'▾'; position:absolute; right:14px; top:50%; transform:translateY(-50%); color:var(--text-2); pointer-events:none; font-size:13px; }
+    .modal-row { display:flex; gap:10px; margin-bottom:14px; }
+    .modal-row .form-grp { flex:1; margin-bottom:0; }
+    .modal-btns { display:flex; gap:10px; margin-top:20px; }
 
     /* ── BUTTONS ─────────────────────────────────────────────── */
     .btn {
-      flex: 1; padding: 15px; border-radius: var(--r-md);
-      border: none; font-family: inherit;
-      font-size: 16px; font-weight: 700; cursor: pointer;
-      transition: transform .15s, opacity .15s;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
+      flex:1; padding:15px; border-radius:var(--r-md); border:none;
+      font-family:inherit; font-size:16px; font-weight:700; cursor:pointer;
+      transition:transform .15s, opacity .15s;
+      display:flex; align-items:center; justify-content:center; gap:8px;
     }
-    .btn:active { transform: scale(.94); opacity: .85; }
-    .btn-xl { padding: 17px; font-size: 17px; border-radius: var(--r-lg); }
+    .btn:active { transform:scale(.94); opacity:.85; }
+    .btn-xl  { padding:17px; font-size:17px; border-radius:var(--r-lg); }
+    .btn-primary { background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:white; box-shadow:0 4px 16px var(--accent-glow); }
+    .btn-ghost   { background:var(--glass-bg); color:var(--text-1); border:1.5px solid var(--glass-border); backdrop-filter:blur(8px); }
+    .btn-full    { width:100%; flex:none; }
 
-    .btn-primary {
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      color: white;
-      box-shadow: 0 4px 16px var(--accent-glow);
-    }
-    .btn-ghost {
-      background: var(--glass-bg); color: var(--text-1);
-      border: 1.5px solid var(--glass-border);
-      backdrop-filter: blur(8px);
-    }
-    .btn-full { width: 100%; flex: none; }
-
-    /* ── SUCCESS MODAL (group created) ───────────────────────── */
-    .success-check { font-size: 48px; text-align: center; margin-bottom: 8px; }
-    .success-title { font-size: 22px; font-weight: 800; color: var(--text-1); text-align: center; }
-    .success-sub { font-size: 14px; color: var(--text-2); text-align: center; margin-top: 4px; }
-
-    .code-boxes {
-      display: flex; gap: 8px; justify-content: center;
-      margin: 22px 0 10px;
-    }
+    /* ── SUCCESS MODAL ───────────────────────────────────────── */
+    .success-check { font-size:48px; text-align:center; margin-bottom:8px; }
+    .success-title { font-size:22px; font-weight:800; color:var(--text-1); text-align:center; }
+    .success-sub   { font-size:14px; color:var(--text-2); text-align:center; margin-top:4px; }
+    .code-boxes { display:flex; gap:8px; justify-content:center; margin:22px 0 10px; }
     .code-char {
-      width: 44px; height: 52px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 22px; font-weight: 900;
-      color: var(--accent); background: var(--accent-light);
-      border: 2px solid var(--accent); border-radius: 12px;
+      width:44px; height:52px; display:flex; align-items:center; justify-content:center;
+      font-size:22px; font-weight:900;
+      color:var(--accent); background:var(--accent-light); border:2px solid var(--accent); border-radius:12px;
     }
-
     .copy-code-btn {
-      width: 100%; padding: 13px;
-      border-radius: var(--r-md); border: 1.5px solid var(--accent);
-      background: var(--accent-light); color: var(--accent);
-      font-size: 15px; font-weight: 700;
-      font-family: inherit; cursor: pointer;
-      transition: transform .15s;
-      margin-bottom: 10px;
+      width:100%; padding:13px; border-radius:var(--r-md);
+      border:1.5px solid var(--accent); background:var(--accent-light); color:var(--accent);
+      font-size:15px; font-weight:700; font-family:inherit; cursor:pointer;
+      transition:transform .15s; margin-bottom:10px;
     }
-    .copy-code-btn:active { transform: scale(.96); }
+    .copy-code-btn:active { transform:scale(.96); }
 
     /* ── JOIN CODE INPUT ─────────────────────────────────────── */
-    .code-input {
-      text-align: center; font-size: 30px; font-weight: 900;
-      letter-spacing: 8px; text-transform: uppercase;
-    }
+    .code-input { text-align:center; font-size:30px; font-weight:900; letter-spacing:8px; text-transform:uppercase; }
 
     /* ── TOAST ───────────────────────────────────────────────── */
     .toast {
-      position: fixed; bottom: calc(100px + env(safe-area-inset-bottom));
-      left: 50%; transform: translateX(-50%) translateY(16px);
-      background: rgba(0,0,0,0.82); color: white;
-      padding: 10px 20px; border-radius: 20px;
-      font-size: 14px; font-weight: 600;
-      z-index: 999; opacity: 0; pointer-events: none;
-      transition: opacity .22s, transform .22s;
-      white-space: nowrap; backdrop-filter: blur(12px);
+      position:fixed; bottom:calc(100px + env(safe-area-inset-bottom));
+      left:50%; transform:translateX(-50%) translateY(16px);
+      background:rgba(0,0,0,0.82); color:white;
+      padding:10px 20px; border-radius:20px;
+      font-size:14px; font-weight:600; z-index:999; opacity:0; pointer-events:none;
+      transition:opacity .22s, transform .22s; white-space:nowrap; backdrop-filter:blur(12px);
     }
-    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
     /* ── LOADING ─────────────────────────────────────────────── */
+    .loading-screen {
+      position:fixed; inset:0; z-index:200;
+      display:flex; align-items:center; justify-content:center;
+      background: #e9e4f8;
+    }
+    @media (prefers-color-scheme: dark) { .loading-screen { background: #09060f; } }
+    .loading-screen.hidden { display:none; }
     .spinner {
-      width: 40px; height: 40px;
-      border: 3px solid var(--accent-light);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-      margin: 0 auto;
+      width:40px; height:40px;
+      border:3px solid var(--accent-light); border-top-color:var(--accent);
+      border-radius:50%; animation:spin .8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    .loading-screen {
-      position: fixed; inset: 0; z-index: 200;
-      display: flex; align-items: center; justify-content: center;
-      background: var(--bg-base);
-    }
-    .loading-screen.hidden { display: none; }
+    /* ══════════════════════════════════════════════════════════ */
+    /*  RECAP ANIMATIONS                                         */
+    /* ══════════════════════════════════════════════════════════ */
 
-    /* ── ANIMATIONS ──────────────────────────────────────────── */
-    @keyframes slide-up {
-      from { opacity: 0; transform: translateY(14px); }
-      to   { opacity: 1; transform: translateY(0); }
+    /* Card slides up */
+    @keyframes week-card-in {
+      from { opacity:0; transform:translateY(36px) scale(.97); }
+      to   { opacity:1; transform:translateY(0)    scale(1);   }
     }
-    .animate { animation: slide-up .3s cubic-bezier(.34,1.56,.64,1) both; }
+    .anim-week { animation: week-card-in .55s cubic-bezier(.34,1.4,.64,1) both; }
 
-    .error-msg {
-      font-size: 13px; color: var(--red); margin-top: 6px;
-      font-weight: 500; text-align: center; min-height: 18px;
+    /* Section label fades */
+    @keyframes fade-up {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:translateY(0); }
     }
+    .anim-fade-up { animation: fade-up .35s ease-out both; }
+
+    /* Trophy entrance — overshoot bounce */
+    @keyframes trophy-pop {
+      0%  { transform:scale(0) rotate(-25deg); opacity:0; }
+      55% { transform:scale(1.30) rotate(8deg); opacity:1; }
+      72% { transform:scale(0.85) rotate(-4deg); }
+      86% { transform:scale(1.08) rotate(2deg); }
+      100%{ transform:scale(1)    rotate(0deg); }
+    }
+    .anim-trophy { animation: trophy-pop .75s cubic-bezier(.34,1.4,.64,1) both; }
+
+    /* Floating idle loop after entrance */
+    @keyframes trophy-float {
+      0%,100% { transform:translateY(0)    rotate(0deg); }
+      30%     { transform:translateY(-5px) rotate(-3deg); }
+      70%     { transform:translateY(-3px) rotate(3deg); }
+    }
+    .anim-trophy.done { animation: trophy-float 3.5s ease-in-out 1s infinite; }
+
+    /* Name flies in from left */
+    @keyframes name-in {
+      from { opacity:0; transform:translateX(-28px); }
+      to   { opacity:1; transform:translateX(0); }
+    }
+    .anim-name { animation: name-in .45s cubic-bezier(.34,1.3,.64,1) both; }
+
+    /* Rank rows slide in from left, staggered */
+    @keyframes rank-in {
+      from { opacity:0; transform:translateX(-30px); }
+      to   { opacity:1; transform:translateX(0); }
+    }
+    .anim-rank { animation: rank-in .4s cubic-bezier(.34,1.4,.64,1) both; }
+
+    /* Gold row pulse */
+    @keyframes gold-pulse {
+      0%,100% { box-shadow: none; }
+      50%     { box-shadow: inset 0 0 0 9999px rgba(251,191,36,0.08), 0 0 16px rgba(251,191,36,0.25); }
+    }
+    .rank-row.rank-gold { animation: gold-pulse 1.8s ease-in-out both; }
+
+    /* ── CONFETTI ────────────────────────────────────────────── */
+    @keyframes confetti-fall {
+      0%   { transform:translateY(-6px) rotate(var(--cr)); opacity:1; }
+      75%  { opacity: 1; }
+      100% { transform:translateY(130px) rotate(calc(var(--cr) + var(--cr2))); opacity:0; }
+    }
+    .cbit {
+      position:absolute; pointer-events:none; top:-6px;
+      animation: confetti-fall var(--cd) ease-in var(--cdelay) forwards;
+    }
+
+    /* ── ENTRY SLIDE-IN ──────────────────────────────────────── */
+    @keyframes entry-in {
+      from { opacity:0; transform:translateY(14px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .animate { animation: entry-in .3s cubic-bezier(.34,1.56,.64,1) both; }
+
+    /* Error */
+    .error-msg { font-size:13px; color:var(--red); margin-top:6px; font-weight:500; text-align:center; min-height:18px; }
   </style>
 </head>
 <body>
 
-<!-- Background -->
-<div class="bg">
-  <div class="blob b1"></div><div class="blob b2"></div>
-  <div class="blob b3"></div><div class="blob b4"></div>
-</div>
-
 <!-- Loading -->
-<div class="loading-screen" id="loading">
-  <div class="spinner"></div>
-</div>
+<div class="loading-screen" id="loading"><div class="spinner"></div></div>
 
 <!-- Toast -->
 <div class="toast" id="toast"></div>
@@ -559,13 +518,12 @@
 <div class="screen hidden" id="screen-app">
   <div class="app-inner">
 
-    <!-- Header -->
     <div class="header">
-      <div class="header-icon">🏋️</div>
+      <div class="header-icon" id="header-icon">🏋️</div>
       <h1 class="header-title">GymLate</h1>
+      <div class="admin-badge hidden" id="admin-badge">ADMIN</div>
     </div>
 
-    <!-- Group pill -->
     <div class="group-pill glass" id="group-pill">
       <span class="pill-name" id="pill-name"></span>
       <span class="pill-dot">·</span>
@@ -576,21 +534,12 @@
     <!-- ── WEEK TAB ── -->
     <div class="tab-pane active" id="pane-week">
       <div class="stat-row">
-        <div class="card glass stat-card">
-          <div class="stat-val" id="s-count">0</div>
-          <div class="stat-lbl" id="s-count-lbl"></div>
-        </div>
-        <div class="card glass stat-card">
-          <div class="stat-val" id="s-mins">0</div>
-          <div class="stat-lbl" id="s-mins-lbl"></div>
-        </div>
+        <div class="card glass stat-card"><div class="stat-val" id="s-count">0</div><div class="stat-lbl" id="s-count-lbl"></div></div>
+        <div class="card glass stat-card"><div class="stat-val" id="s-mins">0</div><div class="stat-lbl" id="s-mins-lbl"></div></div>
       </div>
       <div class="sec-label" id="lbl-week"></div>
       <div class="card glass" id="week-card">
-        <div class="empty" id="week-empty">
-          <div class="empty-ico">🎉</div>
-          <div class="empty-txt" id="empty-week-txt"></div>
-        </div>
+        <div class="empty" id="week-empty"><div class="empty-ico">🎉</div><div class="empty-txt" id="empty-week-txt"></div></div>
         <div id="week-list"></div>
       </div>
     </div>
@@ -613,44 +562,45 @@
         <div id="people-list"></div>
       </div>
       <div class="add-person-card glass">
-        <input type="text" class="form-ctrl" id="new-name"
-               maxlength="30" autocomplete="off" autocorrect="off" spellcheck="false">
-        <div class="add-row">
-          <button class="btn btn-primary btn-full" id="add-person-btn"></button>
-        </div>
+        <input type="text" class="form-ctrl" id="new-name" maxlength="30" autocomplete="off" autocorrect="off" spellcheck="false">
+        <div class="add-row"><button class="btn btn-primary btn-full" id="add-person-btn"></button></div>
       </div>
-      <div class="leave-section">
-        <button class="leave-btn" id="leave-btn"></button>
+      <div class="leave-section"><button class="leave-btn" id="leave-btn"></button></div>
+
+      <!-- Admin Panel (hidden by default) -->
+      <div class="admin-panel glass hidden" id="admin-panel">
+        <div class="admin-panel-title" id="adm-title"></div>
+        <button class="admin-btn admin-btn-add"  id="adm-add-btn"></button>
+        <button class="admin-btn admin-btn-week" id="adm-week-btn"></button>
+        <button class="admin-btn admin-btn-del"  id="adm-del-btn"></button>
+        <button class="admin-btn admin-btn-exit" id="adm-exit-btn"></button>
       </div>
     </div>
 
-  </div><!-- /app-inner -->
+  </div>
 
-  <!-- FAB -->
   <button id="fab">+</button>
 
-  <!-- Bottom nav -->
   <div class="bottom-nav">
     <div class="nav-bar glass">
       <button class="nav-btn active" data-tab="week">
-        <span class="nav-ico">📅</span>
-        <span class="nav-lbl" id="nav-week"></span>
+        <span class="nav-ico">📅</span><span class="nav-lbl" id="nav-week"></span>
       </button>
       <button class="nav-btn" data-tab="history">
-        <span class="nav-ico">📊</span>
-        <span class="nav-lbl" id="nav-history"></span>
+        <span class="nav-ico">📊</span><span class="nav-lbl" id="nav-history"></span>
       </button>
       <button class="nav-btn" data-tab="people">
-        <span class="nav-ico">👥</span>
-        <span class="nav-lbl" id="nav-people"></span>
+        <span class="nav-ico">👥</span><span class="nav-lbl" id="nav-people"></span>
       </button>
     </div>
   </div>
 </div>
 
 <!-- ══════════════════════════════════════════════════════ -->
-<!--  MODAL: Create Group                                  -->
+<!--  MODALS                                               -->
 <!-- ══════════════════════════════════════════════════════ -->
+
+<!-- Create Group -->
 <div class="overlay" id="modal-create">
   <div class="modal glass">
     <h2 class="modal-title" id="mc-title"></h2>
@@ -666,52 +616,43 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  MODAL: Group Created (success + code display)        -->
-<!-- ══════════════════════════════════════════════════════ -->
+<!-- Success (code display) -->
 <div class="overlay" id="modal-success">
   <div class="modal glass">
     <div class="success-check">✅</div>
     <div class="success-title" id="ms-title"></div>
-    <div class="success-sub" id="ms-sub"></div>
-    <div class="code-boxes" id="ms-code-boxes"></div>
+    <div class="success-sub"   id="ms-sub"></div>
+    <div class="code-boxes"    id="ms-code-boxes"></div>
     <button class="copy-code-btn" id="ms-copy"></button>
     <button class="btn btn-primary btn-full" id="ms-continue"></button>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  MODAL: Join Group                                    -->
-<!-- ══════════════════════════════════════════════════════ -->
+<!-- Join Group -->
 <div class="overlay" id="modal-join">
   <div class="modal glass">
     <h2 class="modal-title" id="mj-title"></h2>
-    <p class="modal-sub" id="mj-sub"></p>
+    <p  class="modal-sub"   id="mj-sub"></p>
     <div class="form-grp">
       <label class="form-lbl" id="mj-lbl"></label>
       <input type="text" class="form-ctrl code-input" id="mj-code"
-             maxlength="6" autocomplete="off" autocapitalize="characters"
-             spellcheck="false" inputmode="text">
+             maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text">
     </div>
     <div class="error-msg" id="mj-error"></div>
     <div class="modal-btns">
-      <button class="btn btn-ghost" id="mj-cancel"></button>
+      <button class="btn btn-ghost"   id="mj-cancel"></button>
       <button class="btn btn-primary" id="mj-submit"></button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════════ -->
-<!--  MODAL: Log Late Entry                               -->
-<!-- ══════════════════════════════════════════════════════ -->
+<!-- Log Late -->
 <div class="overlay" id="modal-late">
   <div class="modal glass">
     <h2 class="modal-title" id="ml-title"></h2>
     <div class="form-grp">
       <label class="form-lbl" id="ml-lbl-person"></label>
-      <div class="select-wrap">
-        <select class="form-ctrl" id="ml-person"></select>
-      </div>
+      <div class="select-wrap"><select class="form-ctrl" id="ml-person"></select></div>
     </div>
     <div class="modal-row">
       <div class="form-grp">
@@ -725,8 +666,24 @@
     </div>
     <div class="error-msg" id="ml-error"></div>
     <div class="modal-btns">
-      <button class="btn btn-ghost" id="ml-cancel"></button>
+      <button class="btn btn-ghost"   id="ml-cancel"></button>
       <button class="btn btn-primary" id="ml-save"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Login -->
+<div class="overlay" id="modal-admin">
+  <div class="modal glass">
+    <h2 class="modal-title" id="ma-title"></h2>
+    <div class="form-grp">
+      <label class="form-lbl" id="ma-lbl"></label>
+      <input type="password" class="form-ctrl" id="ma-pwd" autocomplete="off">
+    </div>
+    <div class="error-msg" id="ma-error"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost"   id="ma-cancel"></button>
+      <button class="btn btn-primary" id="ma-submit"></button>
     </div>
   </div>
 </div>
@@ -738,271 +695,197 @@
 // ════════════════════════════════════════════════════════
 //  I18N
 // ════════════════════════════════════════════════════════
-const TRANSLATIONS = {
+const TRANS = {
   de: {
-    lsTagline:      'Track · Motivieren · Verbessern',
-    lsCreate:       'Gruppe erstellen',
-    lsJoin:         'Code eingeben',
-    lsOr:           'oder',
-    pillHint:       '📋 tippen zum kopieren',
-    navWeek:        'Woche',
-    navHistory:     'Verlauf',
-    navPeople:      'Personen',
-    lblWeek:        'Diese Woche',
-    lblHistory:     'Wochenrückblick',
-    lblPeople:      'Mitglieder',
-    sCountLbl:      'Verspätungen',
-    sMinLbl:        'Min. gesamt',
-    emptyWeek:      'Noch niemand zu spät! 🎉',
-    emptyPeople:    'Noch keine Personen',
-    emptyPeopleSub: 'Füge unten Personen hinzu',
-    emptyHistory:   'Noch keine abgeschlossenen Wochen',
-    namePlaceholder:'Name eingeben…',
-    addPerson:      '+ Person hinzufügen',
-    leaveGroup:     'Gruppe verlassen',
-    mcTitle:        'Neue Gruppe',
-    mcLblName:      'Gruppenname',
-    mcCancel:       'Abbrechen',
-    mcSubmit:       'Erstellen',
-    msTitle:        'Gruppe erstellt!',
-    msSub:          'Teile diesen Code mit deinen Gym-Buddies:',
-    msCopy:         '📋  Code kopieren',
-    msContinue:     'Weiter zur App →',
-    mjTitle:        'Gruppe beitreten',
-    mjSub:          'Gib den 6-stelligen Code deiner Gruppe ein.',
-    mjLbl:          'Gruppencode',
-    mjCancel:       'Abbrechen',
-    mjSubmit:       'Beitreten',
-    mlTitle:        'Verspätung eintragen',
-    mlLblPerson:    'Person',
-    mlLblDate:      'Datum',
-    mlLblMins:      'Minuten',
-    mlCancel:       'Abbrechen',
-    mlSave:         'Speichern',
-    minsShort:      'Min.',
-    noPeople:       'Erst Personen hinzufügen!',
-    confirmDel:     n  => `„${n}" wirklich löschen?`,
-    confirmLeave:   () => 'Gruppe wirklich verlassen?\n(Deine Daten bleiben auf dem Server gespeichert.)',
-    toastCopied:    'Code kopiert! ✓',
-    toastSaved:     'Eingetragen! ✓',
-    errGroupName:   'Bitte einen Gruppennamen eingeben.',
-    errNotFound:    'Gruppe nicht gefunden. Code prüfen!',
-    errServer:      'Serverfehler. Bitte erneut versuchen.',
-    errShort:       'Code muss 6 Zeichen haben.',
-    lateKing:       'Häufigster Zuspätkommer',
-    weekRange:      (s, e) => `${fmtShort(s)} – ${fmtShort(e)}`,
-    timesLate:      n => n === 1 ? '1× zu spät' : `${n}× zu spät`,
+    lsTagline:'Tracken · Motivieren · Verbessern', lsCreate:'Gruppe erstellen', lsJoin:'Code eingeben', lsOr:'oder',
+    pillHint:'📋 tippen zum kopieren',
+    navWeek:'Woche', navHistory:'Verlauf', navPeople:'Personen',
+    lblWeek:'Diese Woche', lblHistory:'Wochenrückblick', lblPeople:'Mitglieder',
+    sCountLbl:'Verspätungen', sMinLbl:'Min. gesamt',
+    emptyWeek:'Noch niemand zu spät! 🎉', emptyPeople:'Noch keine Personen', emptyPeopleSub:'Füge unten Personen hinzu', emptyHistory:'Noch keine abgeschlossenen Wochen',
+    namePlaceholder:'Name eingeben…', addPerson:'+ Person hinzufügen', leaveGroup:'Gruppe verlassen',
+    mcTitle:'Neue Gruppe', mcLblName:'Gruppenname', mcCancel:'Abbrechen', mcSubmit:'Erstellen',
+    msTitle:'Gruppe erstellt!', msSub:'Teile diesen Code mit deinen Gym-Buddies:', msCopy:'📋  Code kopieren', msContinue:'Weiter zur App →',
+    mjTitle:'Gruppe beitreten', mjSub:'Gib den 6-stelligen Code deiner Gruppe ein.', mjLbl:'Gruppencode', mjCancel:'Abbrechen', mjSubmit:'Beitreten',
+    mlTitle:'Verspätung eintragen', mlLblPerson:'Person', mlLblDate:'Datum', mlLblMins:'Minuten', mlCancel:'Abbrechen', mlSave:'Speichern',
+    minsShort:'Min.', noPeople:'Erst Personen hinzufügen!',
+    confirmDel:  n  => `„${n}" wirklich löschen?`,
+    confirmLeave:() => 'Gruppe wirklich verlassen?\n(Deine Daten bleiben auf dem Server gespeichert.)',
+    toastCopied:'Code kopiert! ✓', toastSaved:'Eingetragen! ✓',
+    errGroupName:'Bitte einen Gruppennamen eingeben.', errNotFound:'Gruppe nicht gefunden. Code prüfen!', errServer:'Serverfehler. Bitte erneut versuchen.', errShort:'Code muss 6 Zeichen haben.',
+    lateKing:'Häufigster Zuspätkommer',
+    weekRange:(s,e) => `${fmtShort(s)} – ${fmtShort(e)}`,
+    timesLate: n => n===1?'1× zu spät':`${n}× zu spät`,
+    // Admin
+    maTitle:'Admin-Login', maLbl:'Passwort', maCancel:'Abbrechen', maSubmit:'Einloggen', maError:'Falsches Passwort',
+    admTitle:'🔐 Admin-Modus', admAdd:'🧪 Testdaten letzte Woche', admWeekOn:'👁 Aktuelle Woche zeigen', admWeekOff:'🙈 Aktuelle Woche ausblenden', admDel:'🗑 Testdaten löschen', admExit:'Admin verlassen',
+    toastAdmIn:'Admin-Modus aktiviert 🔐', toastAdmOut:'Admin-Modus beendet', toastAdded:'Testdaten erstellt ✓', toastCleared:'Testdaten gelöscht ✓',
+    noMembersForTest:'Erst Personen hinzufügen!',
   },
   en: {
-    lsTagline:      'Track · Shame · Improve',
-    lsCreate:       'Create Group',
-    lsJoin:         'Enter Code',
-    lsOr:           'or',
-    pillHint:       '📋 tap to copy',
-    navWeek:        'Week',
-    navHistory:     'History',
-    navPeople:      'People',
-    lblWeek:        'This Week',
-    lblHistory:     'Weekly Recap',
-    lblPeople:      'Members',
-    sCountLbl:      'Late Arrivals',
-    sMinLbl:        'Total Mins',
-    emptyWeek:      'Nobody was late this week! 🎉',
-    emptyPeople:    'No people added yet',
-    emptyPeopleSub: 'Add people below',
-    emptyHistory:   'No completed weeks yet',
-    namePlaceholder:'Enter name…',
-    addPerson:      '+ Add Person',
-    leaveGroup:     'Leave Group',
-    mcTitle:        'New Group',
-    mcLblName:      'Group Name',
-    mcCancel:       'Cancel',
-    mcSubmit:       'Create',
-    msTitle:        'Group Created!',
-    msSub:          'Share this code with your gym buddies:',
-    msCopy:         '📋  Copy Code',
-    msContinue:     'Open App →',
-    mjTitle:        'Join Group',
-    mjSub:          'Enter the 6-character code of your group.',
-    mjLbl:          'Group Code',
-    mjCancel:       'Cancel',
-    mjSubmit:       'Join',
-    mlTitle:        'Log Late Arrival',
-    mlLblPerson:    'Person',
-    mlLblDate:      'Date',
-    mlLblMins:      'Minutes',
-    mlCancel:       'Cancel',
-    mlSave:         'Save',
-    minsShort:      'min',
-    noPeople:       'Please add people first!',
-    confirmDel:     n  => `Really delete "${n}"?`,
-    confirmLeave:   () => 'Really leave the group?\n(Your data stays on the server.)',
-    toastCopied:    'Code copied! ✓',
-    toastSaved:     'Saved! ✓',
-    errGroupName:   'Please enter a group name.',
-    errNotFound:    'Group not found. Check the code!',
-    errServer:      'Server error. Please try again.',
-    errShort:       'Code must be 6 characters.',
-    lateKing:       'Most Often Late',
-    weekRange:      (s, e) => `${fmtShort(s)} – ${fmtShort(e)}`,
-    timesLate:      n => n === 1 ? '1× late' : `${n}× late`,
+    lsTagline:'Track · Shame · Improve', lsCreate:'Create Group', lsJoin:'Enter Code', lsOr:'or',
+    pillHint:'📋 tap to copy',
+    navWeek:'Week', navHistory:'History', navPeople:'People',
+    lblWeek:'This Week', lblHistory:'Weekly Recap', lblPeople:'Members',
+    sCountLbl:'Late Arrivals', sMinLbl:'Total Mins',
+    emptyWeek:'Nobody was late this week! 🎉', emptyPeople:'No people added yet', emptyPeopleSub:'Add people below', emptyHistory:'No completed weeks yet',
+    namePlaceholder:'Enter name…', addPerson:'+ Add Person', leaveGroup:'Leave Group',
+    mcTitle:'New Group', mcLblName:'Group Name', mcCancel:'Cancel', mcSubmit:'Create',
+    msTitle:'Group Created!', msSub:'Share this code with your gym buddies:', msCopy:'📋  Copy Code', msContinue:'Open App →',
+    mjTitle:'Join Group', mjSub:'Enter the 6-character code of your group.', mjLbl:'Group Code', mjCancel:'Cancel', mjSubmit:'Join',
+    mlTitle:'Log Late Arrival', mlLblPerson:'Person', mlLblDate:'Date', mlLblMins:'Minutes', mlCancel:'Cancel', mlSave:'Save',
+    minsShort:'min', noPeople:'Please add people first!',
+    confirmDel:  n  => `Really delete "${n}"?`,
+    confirmLeave:() => 'Really leave the group?\n(Your data stays on the server.)',
+    toastCopied:'Code copied! ✓', toastSaved:'Saved! ✓',
+    errGroupName:'Please enter a group name.', errNotFound:'Group not found. Check the code!', errServer:'Server error. Please try again.', errShort:'Code must be 6 characters.',
+    lateKing:'Most Often Late',
+    weekRange:(s,e) => `${fmtShort(s)} – ${fmtShort(e)}`,
+    timesLate: n => n===1?'1× late':`${n}× late`,
+    // Admin
+    maTitle:'Admin Login', maLbl:'Password', maCancel:'Cancel', maSubmit:'Login', maError:'Wrong password',
+    admTitle:'🔐 Admin Mode', admAdd:'🧪 Create last week\'s test data', admWeekOn:'👁 Show current week', admWeekOff:'🙈 Hide current week', admDel:'🗑 Delete test data', admExit:'Exit admin mode',
+    toastAdmIn:'Admin mode activated 🔐', toastAdmOut:'Admin mode exited', toastAdded:'Test data created ✓', toastCleared:'Test data deleted ✓',
+    noMembersForTest:'Please add people first!',
   }
 };
-
-function detectLang() {
-  return (navigator.language || '').toLowerCase().startsWith('de') ? 'de' : 'en';
-}
-const T = TRANSLATIONS[detectLang()];
+const T = TRANS[(navigator.language||'').toLowerCase().startsWith('de') ? 'de' : 'en'];
 
 // ════════════════════════════════════════════════════════
 //  DATE HELPERS
 // ════════════════════════════════════════════════════════
-const pad = n => String(n).padStart(2, '0');
-
-function todayStr() {
-  const d = new Date();
+const pad = n => String(n).padStart(2,'0');
+function todayStr() { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function fmtShort(s){ return new Date(s+'T12:00').toLocaleDateString(navigator.language,{day:'numeric',month:'short'}); }
+function fmtFull(s) { return new Date(s+'T12:00').toLocaleDateString(navigator.language,{weekday:'short',day:'numeric',month:'short'}); }
+function addDays(dateStr, n) {
+  const d = new Date(dateStr+'T12:00'); d.setDate(d.getDate()+n);
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
-
-function fmtShort(s) {
-  return new Date(s + 'T12:00').toLocaleDateString(navigator.language, { day:'numeric', month:'short' });
-}
-function fmtFull(s) {
-  return new Date(s + 'T12:00').toLocaleDateString(navigator.language, { weekday:'short', day:'numeric', month:'short' });
-}
-
-function mondayOf(dateStr) {
-  const d = new Date(dateStr + 'T12:00');
-  const day = d.getDay() || 7;
-  d.setDate(d.getDate() - day + 1);
+function mondayOf(s) {
+  const d=new Date(s+'T12:00'), day=d.getDay()||7; d.setDate(d.getDate()-day+1);
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
-function sundayOf(mon) {
-  const d = new Date(mon + 'T12:00');
-  d.setDate(d.getDate() + 6);
+function sundayOf(m) {
+  const d=new Date(m+'T12:00'); d.setDate(d.getDate()+6);
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 }
 
 // ════════════════════════════════════════════════════════
-//  API CLIENT
+//  API
 // ════════════════════════════════════════════════════════
 const api = {
   async req(method, path, body) {
-    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    const opts = { method, headers:{'Content-Type':'application/json'} };
     if (body !== undefined) opts.body = JSON.stringify(body);
-    const res = await fetch('/api' + path, opts);
-    const data = await res.json();
-    if (!res.ok) { const e = new Error(data.error || 'error'); e.status = res.status; throw e; }
-    return data;
+    const res = await fetch('/api'+path, opts);
+    const d   = await res.json();
+    if (!res.ok) { const e=new Error(d.error||'error'); e.status=res.status; throw e; }
+    return d;
   },
-  createGroup:  name   => api.req('POST', '/groups', { name }),
-  joinGroup:    code   => api.req('POST', '/groups/join', { code }),
-  getGroup:     id     => api.req('GET',  `/groups/${id}`),
-  addMember:    (gid, name) => api.req('POST',   `/groups/${gid}/members`, { name }),
-  delMember:    (gid, name) => api.req('DELETE', `/groups/${gid}/members/${encodeURIComponent(name)}`),
-  addEntry:     (gid, data) => api.req('POST',   `/groups/${gid}/entries`, data),
-  delEntry:     (gid, eid)  => api.req('DELETE', `/groups/${gid}/entries/${eid}`),
+  createGroup: n    => api.req('POST', '/groups', {name:n}),
+  joinGroup:   c    => api.req('POST', '/groups/join', {code:c}),
+  getGroup:    id   => api.req('GET',  `/groups/${id}`),
+  addMember:  (g,n) => api.req('POST',   `/groups/${g}/members`, {name:n}),
+  delMember:  (g,n) => api.req('DELETE', `/groups/${g}/members/${encodeURIComponent(n)}`),
+  addEntry:   (g,d) => api.req('POST',   `/groups/${g}/entries`, d),
+  delEntry:   (g,e) => api.req('DELETE', `/groups/${g}/entries/${e}`),
 };
 
 // ════════════════════════════════════════════════════════
 //  STATE
 // ════════════════════════════════════════════════════════
-let group = null;   // { id, code, name }
-let data  = null;   // { id, code, name, people, entries }
-let pollTimer = null;
+let group = null, data = null, pollTimer = null;
+let adminMode         = false;
+let adminShowCurWeek  = false;
+let testEntryIds      = [];
 
-function saveGroup(g) {
-  group = { id: g.id, code: g.code, name: g.name };
-  localStorage.setItem('gymGroup', JSON.stringify(group));
-}
-function loadGroup() {
-  try { group = JSON.parse(localStorage.getItem('gymGroup') || 'null'); } catch { group = null; }
-}
-function clearGroup() {
-  group = null; data = null;
-  localStorage.removeItem('gymGroup');
-}
+function saveGroup(g) { group={id:g.id,code:g.code,name:g.name}; localStorage.setItem('gymGroup',JSON.stringify(group)); }
+function loadGroup()  { try { group=JSON.parse(localStorage.getItem('gymGroup')||'null'); } catch { group=null; } }
+function clearGroup() { group=null; data=null; localStorage.removeItem('gymGroup'); }
 
 // ════════════════════════════════════════════════════════
 //  UTILS
 // ════════════════════════════════════════════════════════
-function esc(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function initials(name) {
-  return name.trim().split(/\s+/).map(w => w[0]||'').join('').toUpperCase().slice(0,2) || '?';
-}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function initials(n){ return n.trim().split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2)||'?'; }
 
+let toastTimer;
 function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2300);
 }
 
-function copyToClipboard(text) {
-  navigator.clipboard?.writeText(text).then(() => showToast(T.toastCopied))
-    .catch(() => {
-      const ta = document.createElement('textarea');
-      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); showToast(T.toastCopied); } catch{}
-      document.body.removeChild(ta);
-    });
+function copyToClipboard(txt) {
+  navigator.clipboard?.writeText(txt).then(()=>showToast(T.toastCopied)).catch(()=>{
+    const ta=document.createElement('textarea'); ta.value=txt;
+    ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta);
+    ta.select(); try{document.execCommand('copy');showToast(T.toastCopied);}catch{}
+    document.body.removeChild(ta);
+  });
 }
 
 // ════════════════════════════════════════════════════════
-//  SCREENS
+//  SCREENS & OVERLAYS
 // ════════════════════════════════════════════════════════
-function showLoading(yes) {
-  document.getElementById('loading').classList.toggle('hidden', !yes);
-}
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-  document.getElementById('screen-' + id).classList.remove('hidden');
-}
+function showLoading(y){ document.getElementById('loading').classList.toggle('hidden',!y); }
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden')); document.getElementById('screen-'+id).classList.remove('hidden'); }
+function openOv(id){ document.getElementById(id).classList.add('open'); }
+function closeOv(id){ document.getElementById(id).classList.remove('open'); }
 
 // ════════════════════════════════════════════════════════
-//  OVERLAYS
+//  CONFETTI
 // ════════════════════════════════════════════════════════
-function openOverlay(id) { document.getElementById(id).classList.add('open'); }
-function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
+function spawnConfetti(host) {
+  const colors = ['#a78bfa','#fbbf24','#f472b6','#34d399','#60a5fa','#fb923c','#fff176','#c084fc'];
+  for (let i = 0; i < 48; i++) {
+    const el   = document.createElement('div');
+    el.className = 'cbit';
+    const size   = 5 + Math.random() * 7;
+    const isCirc = Math.random() > .55;
+    const isRect = !isCirc && Math.random() > .4;
+    el.style.cssText = `
+      left:${4+Math.random()*92}%;
+      width:${isRect?size*2.2:size}px; height:${size}px;
+      background:${colors[i%colors.length]};
+      border-radius:${isCirc?'50%':'3px'};
+      --cr:${Math.random()*360-180}deg;
+      --cr2:${Math.random()>0.5?360:-360}deg;
+      --cd:${0.65+Math.random()*0.9}s;
+      --cdelay:${Math.random()*0.45}s;
+    `;
+    host.appendChild(el);
+    setTimeout(() => el.remove(), 1800);
+  }
+}
 
 // ════════════════════════════════════════════════════════
 //  RENDER: WEEK
 // ════════════════════════════════════════════════════════
 function renderWeek() {
   if (!data) return;
-  const mon = mondayOf(todayStr());
-  const sun = sundayOf(mon);
-  const entries = data.entries.filter(e => e.date >= mon && e.date <= sun);
-
-  const totalMins = entries.reduce((s, e) => s + e.mins, 0);
-  const countEl = document.getElementById('s-count');
-  const minsEl  = document.getElementById('s-mins');
-  countEl.textContent = entries.length;
-  minsEl.textContent  = totalMins;
-  countEl.classList.toggle('red', entries.length > 0);
-
-  const emptyEl = document.getElementById('week-empty');
-  const listEl  = document.getElementById('week-list');
-
-  if (!entries.length) { emptyEl.style.display = ''; listEl.innerHTML = ''; return; }
-  emptyEl.style.display = 'none';
-  listEl.innerHTML = entries.map((e, i) => `
-    <div class="entry animate" style="animation-delay:${i*40}ms">
+  const mon = mondayOf(todayStr()), sun = sundayOf(mon);
+  const entries = data.entries.filter(e => e.date>=mon && e.date<=sun);
+  const totalMins = entries.reduce((s,e)=>s+e.mins,0);
+  const cEl = document.getElementById('s-count'), mEl = document.getElementById('s-mins');
+  cEl.textContent = entries.length; mEl.textContent = totalMins;
+  cEl.classList.toggle('red', entries.length>0);
+  const emEl=document.getElementById('week-empty'), lEl=document.getElementById('week-list');
+  if (!entries.length) { emEl.style.display=''; lEl.innerHTML=''; return; }
+  emEl.style.display='none';
+  lEl.innerHTML = entries.map((e,i)=>`
+    <div class="entry animate" style="animation-delay:${i*45}ms">
       <div class="avatar">${esc(initials(e.person))}</div>
-      <div class="entry-info">
-        <div class="entry-name">${esc(e.person)}</div>
-        <div class="entry-meta">${fmtFull(e.date)}</div>
-      </div>
+      <div class="entry-info"><div class="entry-name">${esc(e.person)}</div><div class="entry-meta">${fmtFull(e.date)}</div></div>
       <div class="late-badge">${e.mins} ${T.minsShort}</div>
-      <button class="icon-btn del-entry-btn" data-id="${esc(e.id)}" data-gid="${esc(data.id)}">×</button>
+      <button class="icon-btn del-entry-btn" data-id="${esc(e.id)}">×</button>
     </div>`).join('');
 }
 
 // ════════════════════════════════════════════════════════
-//  RENDER: HISTORY
+//  RENDER: HISTORY  (with full animation sequence)
 // ════════════════════════════════════════════════════════
 function renderHistory() {
   if (!data) return;
@@ -1010,43 +893,41 @@ function renderHistory() {
   const weeks = {};
   data.entries.forEach(e => {
     const mon = mondayOf(e.date);
-    if (mon === currentMon) return;
-    (weeks[mon] = weeks[mon] || []).push(e);
+    if (mon === currentMon && !adminShowCurWeek) return;
+    (weeks[mon] = weeks[mon]||[]).push(e);
   });
 
   const root = document.getElementById('history-root');
-  const sortedWeeks = Object.keys(weeks).sort().reverse();
+  const sorted = Object.keys(weeks).sort().reverse();
 
-  if (!sortedWeeks.length) {
-    root.innerHTML = `<div class="card glass"><div class="empty">
-      <div class="empty-ico">📭</div>
-      <div class="empty-txt">${esc(T.emptyHistory)}</div>
-    </div></div>`;
+  if (!sorted.length) {
+    root.innerHTML = `<div class="card glass"><div class="empty"><div class="empty-ico">📭</div><div class="empty-txt">${esc(T.emptyHistory)}</div></div></div>`;
     return;
   }
 
   const medals = ['🥇','🥈','🥉'];
-  root.innerHTML = sortedWeeks.map(mon => {
+  root.innerHTML = sorted.map((mon, wi) => {
     const sun = sundayOf(mon);
     const ps = {};
-    weeks[mon].forEach(e => {
-      ps[e.person] = ps[e.person] || { count:0, mins:0 };
-      ps[e.person].count++; ps[e.person].mins += e.mins;
-    });
-    const sorted = Object.entries(ps).sort((a,b) => b[1].mins - a[1].mins || b[1].count - a[1].count);
-    const [topName] = sorted[0];
+    weeks[mon].forEach(e=>{ ps[e.person]=ps[e.person]||{count:0,mins:0}; ps[e.person].count++; ps[e.person].mins+=e.mins; });
+    const byMins = Object.entries(ps).sort((a,b)=>b[1].mins-a[1].mins||b[1].count-a[1].count);
+    const [topName] = byMins[0];
+    const BASE = wi * 60;
+
     return `
-      <div class="week-block animate">
-        <div class="sec-label">${T.weekRange(mon, sun)}</div>
+      <div class="week-block anim-week" style="animation-delay:${BASE}ms">
+        <div class="sec-label anim-fade-up" style="animation-delay:${BASE+30}ms">${T.weekRange(mon,sun)}</div>
         <div class="card glass">
-          <div class="recap-hero">
-            <div class="recap-trophy">🏆</div>
-            <div class="recap-name">${esc(topName)}</div>
-            <div class="recap-role">${esc(T.lateKing)}</div>
+          <div class="recap-hero confetti-host">
+            <div class="recap-trophy-wrap">
+              <span class="recap-trophy anim-trophy" style="animation-delay:${BASE+100}ms">🏆</span>
+            </div>
+            <div class="recap-name anim-name" style="animation-delay:${BASE+270}ms">${esc(topName)}</div>
+            <div class="recap-role anim-fade-up" style="animation-delay:${BASE+400}ms">${esc(T.lateKing)}</div>
           </div>
-          ${sorted.map(([name, st], i) => `
-            <div class="rank-row">
-              <div class="rank-no">${medals[i] || (i+1)+'.'}</div>
+          ${byMins.map(([name,st],i)=>`
+            <div class="rank-row ${i===0?'rank-gold':''} anim-rank" style="animation-delay:${BASE+520+i*130}ms">
+              <div class="rank-no">${medals[i]||(i+1)+'.'}</div>
               <div class="avatar">${esc(initials(name))}</div>
               <div class="entry-info">
                 <div class="entry-name">${esc(name)}</div>
@@ -1057,6 +938,19 @@ function renderHistory() {
         </div>
       </div>`;
   }).join('');
+
+  // Let the DOM paint, then trigger confetti + make trophy float
+  requestAnimationFrame(() => {
+    setTimeout(() => {
+      document.querySelectorAll('.confetti-host').forEach(host => spawnConfetti(host));
+      document.querySelectorAll('.anim-trophy').forEach(el => {
+        // after pop animation ends, switch to float loop
+        el.addEventListener('animationend', () => {
+          el.classList.add('done');
+        }, { once: true });
+      });
+    }, 380);
+  });
 }
 
 // ════════════════════════════════════════════════════════
@@ -1064,32 +958,37 @@ function renderHistory() {
 // ════════════════════════════════════════════════════════
 function renderPeople() {
   if (!data) return;
-  const emptyEl = document.getElementById('people-empty');
-  const listEl  = document.getElementById('people-list');
-  if (!data.people.length) {
-    emptyEl.style.display = ''; listEl.innerHTML = ''; return;
-  }
-  emptyEl.style.display = 'none';
-  listEl.innerHTML = data.people.map((name, i) => `
-    <div class="person-row animate" style="animation-delay:${i*30}ms">
-      <div class="avatar">${esc(initials(name))}</div>
-      <div class="person-name">${esc(name)}</div>
-      <button class="icon-btn del-person-btn" data-name="${esc(name)}" data-gid="${esc(data.id)}">×</button>
+  const emEl=document.getElementById('people-empty'), lEl=document.getElementById('people-list');
+  if (!data.people.length) { emEl.style.display=''; lEl.innerHTML=''; return; }
+  emEl.style.display='none';
+  lEl.innerHTML = data.people.map((n,i)=>`
+    <div class="person-row animate" style="animation-delay:${i*35}ms">
+      <div class="avatar">${esc(initials(n))}</div>
+      <div class="person-name">${esc(n)}</div>
+      <button class="icon-btn del-person-btn" data-name="${esc(n)}">×</button>
     </div>`).join('');
 }
 
 // ════════════════════════════════════════════════════════
-//  RENDER: PILL
+//  RENDER: ADMIN PANEL
 // ════════════════════════════════════════════════════════
+function renderAdminPanel() {
+  const panel = document.getElementById('admin-panel');
+  panel.classList.toggle('hidden', !adminMode);
+  if (!adminMode) return;
+  document.getElementById('adm-week-btn').textContent = adminShowCurWeek ? T.admWeekOff : T.admWeekOn;
+  document.getElementById('adm-week-btn').classList.toggle('active', adminShowCurWeek);
+}
+
+function renderAll() {
+  renderPill(); renderWeek(); renderHistory(); renderPeople(); renderAdminPanel();
+}
+
 function renderPill() {
   if (!data) return;
   document.getElementById('pill-name').textContent = data.name;
   document.getElementById('pill-code').textContent = data.code;
   document.getElementById('pill-hint').textContent = T.pillHint;
-}
-
-function renderAll() {
-  renderPill(); renderWeek(); renderHistory(); renderPeople();
 }
 
 // ════════════════════════════════════════════════════════
@@ -1101,255 +1000,250 @@ async function refresh() {
     data = await api.getGroup(group.id);
     renderAll();
   } catch(e) {
-    if (e.status === 404) { clearGroup(); showScreen('landing'); stopPolling(); }
+    if (e.status===404) { clearGroup(); stopPolling(); showScreen('landing'); }
   }
 }
-
-function startPolling() {
-  stopPolling();
-  pollTimer = setInterval(refresh, 8000);
-}
-function stopPolling() {
-  if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-}
+function startPolling() { stopPolling(); pollTimer = setInterval(refresh, 8000); }
+function stopPolling()  { if (pollTimer) { clearInterval(pollTimer); pollTimer=null; } }
 
 // ════════════════════════════════════════════════════════
-//  JOIN GROUP FLOW
+//  ENTER GROUP
 // ════════════════════════════════════════════════════════
 async function enterGroup(g) {
   saveGroup(g);
   showLoading(true);
   try {
     data = await api.getGroup(g.id);
-  } catch(e) {
+  } catch {
     clearGroup(); showLoading(false); showScreen('landing'); return;
   }
   showLoading(false);
-  applyI18n();
-  renderAll();
-  startPolling();
-  showScreen('app');
+  applyI18n(); renderAll(); startPolling(); showScreen('app');
 }
 
 // ════════════════════════════════════════════════════════
 //  TAB NAVIGATION
 // ════════════════════════════════════════════════════════
 function switchTab(name) {
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('pane-' + name).classList.add('active');
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+name).classList.add('active');
   document.querySelector(`.nav-btn[data-tab="${name}"]`).classList.add('active');
-  document.getElementById('fab').classList.toggle('hidden', name === 'people');
+  document.getElementById('fab').classList.toggle('hidden', name==='people');
+
+  // Re-render history with fresh animations every time the tab is opened
+  if (name === 'history') renderHistory();
 }
-document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+
+// ════════════════════════════════════════════════════════
+//  ADMIN
+// ════════════════════════════════════════════════════════
+const ADMIN_PW = 'gymadmin';
+let adminTaps = 0, adminTapTimer;
+
+document.getElementById('header-icon').addEventListener('click', () => {
+  if (!group) return;
+  adminTaps++;
+  clearTimeout(adminTapTimer);
+  adminTapTimer = setTimeout(() => { adminTaps = 0; }, 2000);
+  if (adminTaps >= 5) {
+    adminTaps = 0;
+    if (adminMode) { exitAdmin(); } else { openAdminLogin(); }
+  }
+});
+
+function openAdminLogin() {
+  document.getElementById('ma-pwd').value = '';
+  document.getElementById('ma-error').textContent = '';
+  openOv('modal-admin');
+  setTimeout(() => document.getElementById('ma-pwd').focus(), 350);
+}
+
+function exitAdmin() {
+  adminMode = false;
+  adminShowCurWeek = false;
+  document.getElementById('admin-badge').classList.add('hidden');
+  showToast(T.toastAdmOut);
+  renderAdminPanel(); renderHistory();
+}
+
+document.getElementById('ma-cancel').addEventListener('click', () => closeOv('modal-admin'));
+document.getElementById('modal-admin').addEventListener('click', e => { if(e.target===e.currentTarget) closeOv('modal-admin'); });
+
+document.getElementById('ma-submit').addEventListener('click', () => {
+  const pwd = document.getElementById('ma-pwd').value.trim().toLowerCase();
+  if (pwd !== ADMIN_PW) { document.getElementById('ma-error').textContent = T.maError; return; }
+  closeOv('modal-admin');
+  adminMode = true;
+  document.getElementById('admin-badge').classList.remove('hidden');
+  showToast(T.toastAdmIn);
+  switchTab('people');
+  renderAdminPanel();
+});
+document.getElementById('ma-pwd').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('ma-submit').click(); });
+
+// Admin buttons
+document.getElementById('adm-exit-btn').addEventListener('click', exitAdmin);
+
+document.getElementById('adm-week-btn').addEventListener('click', () => {
+  adminShowCurWeek = !adminShowCurWeek;
+  renderAdminPanel();
+  // if history tab is active, re-render it
+  if (document.getElementById('pane-history').classList.contains('active')) renderHistory();
+});
+
+document.getElementById('adm-add-btn').addEventListener('click', async () => {
+  if (!data?.people?.length) { showToast(T.noMembersForTest); return; }
+  const people   = data.people;
+  const lastMon  = addDays(mondayOf(todayStr()), -7);
+  const schedule = [
+    { person: people[0 % people.length], date: addDays(lastMon, 0), mins: 12 },
+    { person: people[1 % people.length], date: addDays(lastMon, 1), mins:  5 },
+    { person: people[0 % people.length], date: addDays(lastMon, 2), mins: 22 },
+    { person: people[2 % people.length], date: addDays(lastMon, 3), mins:  8 },
+    { person: people[1 % people.length], date: addDays(lastMon, 4), mins: 17 },
+    { person: people[2 % people.length], date: addDays(lastMon, 0), mins: 31 },
+  ];
+  const ids = [];
+  for (const e of schedule) {
+    try { const r = await api.addEntry(data.id, e); ids.push(r.id); } catch {}
+  }
+  testEntryIds = [...testEntryIds, ...ids];
+  await refresh();
+  showToast(T.toastAdded);
+  // Jump to history tab so the user immediately sees the recap
+  switchTab('history');
+});
+
+document.getElementById('adm-del-btn').addEventListener('click', async () => {
+  if (!testEntryIds.length) { showToast('Keine Testdaten vorhanden'); return; }
+  for (const id of testEntryIds) {
+    try { await api.delEntry(data.id, id); } catch {}
+  }
+  testEntryIds = [];
+  await refresh();
+  showToast(T.toastCleared);
+});
 
 // ════════════════════════════════════════════════════════
 //  APPLY I18N
 // ════════════════════════════════════════════════════════
 function applyI18n() {
-  const set = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
-  set('ls-sub',            T.lsTagline);
-  set('ls-create-lbl',     T.lsCreate);
-  set('ls-join-lbl',       T.lsJoin);
-  set('ls-or',             T.lsOr);
-  set('nav-week',          T.navWeek);
-  set('nav-history',       T.navHistory);
-  set('nav-people',        T.navPeople);
-  set('lbl-week',          T.lblWeek);
-  set('lbl-history',       T.lblHistory);
-  set('lbl-people',        T.lblPeople);
-  set('s-count-lbl',       T.sCountLbl);
-  set('s-mins-lbl',        T.sMinLbl);
-  set('empty-week-txt',    T.emptyWeek);
-  set('empty-people-txt',  T.emptyPeople);
-  set('empty-people-sub',  T.emptyPeopleSub);
-  set('add-person-btn',    T.addPerson);
-  set('leave-btn',         T.leaveGroup);
-  set('mc-title',          T.mcTitle);
-  set('mc-lbl-name',       T.mcLblName);
-  set('mc-cancel',         T.mcCancel);
-  set('mc-submit',         T.mcSubmit);
-  set('ms-title',          T.msTitle);
-  set('ms-sub',            T.msSub);
-  set('ms-copy',           T.msCopy);
-  set('ms-continue',       T.msContinue);
-  set('mj-title',          T.mjTitle);
-  set('mj-sub',            T.mjSub);
-  set('mj-lbl',            T.mjLbl);
-  set('mj-cancel',         T.mjCancel);
-  set('mj-submit',         T.mjSubmit);
-  set('ml-title',          T.mlTitle);
-  set('ml-lbl-person',     T.mlLblPerson);
-  set('ml-lbl-date',       T.mlLblDate);
-  set('ml-lbl-mins',       T.mlLblMins);
-  set('ml-cancel',         T.mlCancel);
-  set('ml-save',           T.mlSave);
-  const np = document.getElementById('new-name');
-  if (np) np.placeholder = T.namePlaceholder;
+  const set = (id,v) => { const el=document.getElementById(id); if(el&&v) el.textContent=v; };
+  set('ls-sub',T.lsTagline); set('ls-create-lbl',T.lsCreate); set('ls-join-lbl',T.lsJoin); set('ls-or',T.lsOr);
+  set('nav-week',T.navWeek); set('nav-history',T.navHistory); set('nav-people',T.navPeople);
+  set('lbl-week',T.lblWeek); set('lbl-history',T.lblHistory); set('lbl-people',T.lblPeople);
+  set('s-count-lbl',T.sCountLbl); set('s-mins-lbl',T.sMinLbl);
+  set('empty-week-txt',T.emptyWeek); set('empty-people-txt',T.emptyPeople); set('empty-people-sub',T.emptyPeopleSub);
+  set('add-person-btn',T.addPerson); set('leave-btn',T.leaveGroup);
+  set('mc-title',T.mcTitle); set('mc-lbl-name',T.mcLblName); set('mc-cancel',T.mcCancel); set('mc-submit',T.mcSubmit);
+  set('ms-title',T.msTitle); set('ms-sub',T.msSub); set('ms-copy',T.msCopy); set('ms-continue',T.msContinue);
+  set('mj-title',T.mjTitle); set('mj-sub',T.mjSub); set('mj-lbl',T.mjLbl); set('mj-cancel',T.mjCancel); set('mj-submit',T.mjSubmit);
+  set('ml-title',T.mlTitle); set('ml-lbl-person',T.mlLblPerson); set('ml-lbl-date',T.mlLblDate); set('ml-lbl-mins',T.mlLblMins); set('ml-cancel',T.mlCancel); set('ml-save',T.mlSave);
+  set('ma-title',T.maTitle); set('ma-lbl',T.maLbl); set('ma-cancel',T.maCancel); set('ma-submit',T.maSubmit);
+  set('adm-title',T.admTitle); set('adm-add-btn',T.admAdd); set('adm-del-btn',T.admDel); set('adm-exit-btn',T.admExit);
+  const np = document.getElementById('new-name'); if(np) np.placeholder = T.namePlaceholder;
+  set('pill-hint', T.pillHint);
 }
 
 // ════════════════════════════════════════════════════════
 //  MODAL: CREATE GROUP
 // ════════════════════════════════════════════════════════
 document.getElementById('btn-show-create').addEventListener('click', () => {
-  document.getElementById('mc-name').value = '';
-  document.getElementById('mc-error').textContent = '';
-  openOverlay('modal-create');
-  setTimeout(() => document.getElementById('mc-name').focus(), 350);
+  document.getElementById('mc-name').value=''; document.getElementById('mc-error').textContent='';
+  openOv('modal-create'); setTimeout(()=>document.getElementById('mc-name').focus(),350);
 });
-document.getElementById('mc-cancel').addEventListener('click', () => closeOverlay('modal-create'));
-document.getElementById('modal-create').addEventListener('click', e => { if(e.target === e.currentTarget) closeOverlay('modal-create'); });
-
+document.getElementById('mc-cancel').addEventListener('click', ()=>closeOv('modal-create'));
+document.getElementById('modal-create').addEventListener('click',e=>{if(e.target===e.currentTarget)closeOv('modal-create');});
 document.getElementById('mc-submit').addEventListener('click', async () => {
   const name = document.getElementById('mc-name').value.trim();
-  if (!name) { document.getElementById('mc-error').textContent = T.errGroupName; return; }
-  document.getElementById('mc-submit').disabled = true;
+  if (!name) { document.getElementById('mc-error').textContent=T.errGroupName; return; }
+  document.getElementById('mc-submit').disabled=true;
   try {
     const g = await api.createGroup(name);
-    closeOverlay('modal-create');
-    // Show success modal
-    document.getElementById('ms-code-boxes').innerHTML =
-      g.code.split('').map(c => `<div class="code-char">${esc(c)}</div>`).join('');
-    document.getElementById('ms-copy').onclick = () => copyToClipboard(g.code);
-    document.getElementById('ms-continue').onclick = () => { closeOverlay('modal-success'); enterGroup(g); };
-    openOverlay('modal-success');
-  } catch {
-    document.getElementById('mc-error').textContent = T.errServer;
-  } finally {
-    document.getElementById('mc-submit').disabled = false;
-  }
+    closeOv('modal-create');
+    document.getElementById('ms-code-boxes').innerHTML = g.code.split('').map(c=>`<div class="code-char">${esc(c)}</div>`).join('');
+    document.getElementById('ms-copy').onclick    = ()=>copyToClipboard(g.code);
+    document.getElementById('ms-continue').onclick = ()=>{ closeOv('modal-success'); enterGroup(g); };
+    openOv('modal-success');
+  } catch { document.getElementById('mc-error').textContent=T.errServer; }
+  finally  { document.getElementById('mc-submit').disabled=false; }
 });
-document.getElementById('mc-name').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('mc-submit').click();
-});
+document.getElementById('mc-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('mc-submit').click();});
 
 // ════════════════════════════════════════════════════════
 //  MODAL: JOIN GROUP
 // ════════════════════════════════════════════════════════
-document.getElementById('btn-show-join').addEventListener('click', () => {
-  document.getElementById('mj-code').value = '';
-  document.getElementById('mj-error').textContent = '';
-  openOverlay('modal-join');
-  setTimeout(() => document.getElementById('mj-code').focus(), 350);
+document.getElementById('btn-show-join').addEventListener('click',()=>{
+  document.getElementById('mj-code').value=''; document.getElementById('mj-error').textContent='';
+  openOv('modal-join'); setTimeout(()=>document.getElementById('mj-code').focus(),350);
 });
-document.getElementById('mj-cancel').addEventListener('click', () => closeOverlay('modal-join'));
-document.getElementById('modal-join').addEventListener('click', e => { if(e.target === e.currentTarget) closeOverlay('modal-join'); });
-
-// Auto-uppercase
-document.getElementById('mj-code').addEventListener('input', e => {
-  const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-  e.target.value = v;
+document.getElementById('mj-cancel').addEventListener('click',()=>closeOv('modal-join'));
+document.getElementById('modal-join').addEventListener('click',e=>{if(e.target===e.currentTarget)closeOv('modal-join');});
+document.getElementById('mj-code').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,''); });
+document.getElementById('mj-submit').addEventListener('click', async ()=>{
+  const code=document.getElementById('mj-code').value.trim().toUpperCase();
+  if(code.length<6){document.getElementById('mj-error').textContent=T.errShort;return;}
+  document.getElementById('mj-submit').disabled=true;
+  try { const g=await api.joinGroup(code); closeOv('modal-join'); enterGroup(g); }
+  catch(e){ document.getElementById('mj-error').textContent=e.status===404?T.errNotFound:T.errServer; }
+  finally { document.getElementById('mj-submit').disabled=false; }
 });
-
-document.getElementById('mj-submit').addEventListener('click', async () => {
-  const code = document.getElementById('mj-code').value.trim().toUpperCase();
-  if (code.length < 6) { document.getElementById('mj-error').textContent = T.errShort; return; }
-  document.getElementById('mj-submit').disabled = true;
-  try {
-    const g = await api.joinGroup(code);
-    closeOverlay('modal-join');
-    enterGroup(g);
-  } catch(e) {
-    document.getElementById('mj-error').textContent = e.status === 404 ? T.errNotFound : T.errServer;
-  } finally {
-    document.getElementById('mj-submit').disabled = false;
-  }
-});
-document.getElementById('mj-code').addEventListener('keydown', e => {
-  if (e.key === 'Enter') document.getElementById('mj-submit').click();
-});
+document.getElementById('mj-code').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('mj-submit').click();});
 
 // ════════════════════════════════════════════════════════
 //  MODAL: LOG LATE
 // ════════════════════════════════════════════════════════
-document.getElementById('fab').addEventListener('click', () => {
-  if (!data?.people?.length) { showToast(T.noPeople); return; }
-  const sel = document.getElementById('ml-person');
-  sel.innerHTML = data.people.map(p => `<option value="${esc(p)}">${esc(p)}</option>`).join('');
-  document.getElementById('ml-date').value = todayStr();
-  document.getElementById('ml-mins').value = '10';
-  document.getElementById('ml-error').textContent = '';
-  openOverlay('modal-late');
+document.getElementById('fab').addEventListener('click',()=>{
+  if (!data?.people?.length){showToast(T.noPeople);return;}
+  const sel=document.getElementById('ml-person');
+  sel.innerHTML=data.people.map(p=>`<option value="${esc(p)}">${esc(p)}</option>`).join('');
+  document.getElementById('ml-date').value=todayStr();
+  document.getElementById('ml-mins').value='10';
+  document.getElementById('ml-error').textContent='';
+  openOv('modal-late');
 });
-document.getElementById('ml-cancel').addEventListener('click', () => closeOverlay('modal-late'));
-document.getElementById('modal-late').addEventListener('click', e => { if(e.target === e.currentTarget) closeOverlay('modal-late'); });
-
-document.getElementById('ml-save').addEventListener('click', async () => {
-  const person = document.getElementById('ml-person').value;
-  const date   = document.getElementById('ml-date').value;
-  const mins   = parseInt(document.getElementById('ml-mins').value);
-  if (!person || !date || isNaN(mins) || mins < 1) {
-    document.getElementById('ml-error').textContent = '⚠';
-    return;
-  }
-  document.getElementById('ml-save').disabled = true;
-  try {
-    await api.addEntry(data.id, { person, date, mins });
-    closeOverlay('modal-late');
-    await refresh();
-    showToast(T.toastSaved);
-  } catch {
-    document.getElementById('ml-error').textContent = T.errServer;
-  } finally {
-    document.getElementById('ml-save').disabled = false;
-  }
+document.getElementById('ml-cancel').addEventListener('click',()=>closeOv('modal-late'));
+document.getElementById('modal-late').addEventListener('click',e=>{if(e.target===e.currentTarget)closeOv('modal-late');});
+document.getElementById('ml-save').addEventListener('click', async ()=>{
+  const person=document.getElementById('ml-person').value;
+  const date=document.getElementById('ml-date').value;
+  const mins=parseInt(document.getElementById('ml-mins').value);
+  if(!person||!date||isNaN(mins)||mins<1){document.getElementById('ml-error').textContent='⚠';return;}
+  document.getElementById('ml-save').disabled=true;
+  try { await api.addEntry(data.id,{person,date,mins}); closeOv('modal-late'); await refresh(); showToast(T.toastSaved); }
+  catch { document.getElementById('ml-error').textContent=T.errServer; }
+  finally { document.getElementById('ml-save').disabled=false; }
 });
 
 // ════════════════════════════════════════════════════════
-//  GROUP PILL: copy code
+//  PILL, LEAVE, ADD PERSON, DELETE
 // ════════════════════════════════════════════════════════
-document.getElementById('pill-code').addEventListener('click', () => {
-  if (data?.code) copyToClipboard(data.code);
-});
+document.getElementById('pill-code').addEventListener('click',()=>{ if(data?.code) copyToClipboard(data.code); });
 
-// ════════════════════════════════════════════════════════
-//  LEAVE GROUP
-// ════════════════════════════════════════════════════════
-document.getElementById('leave-btn').addEventListener('click', () => {
+document.getElementById('leave-btn').addEventListener('click',()=>{
   if (!confirm(T.confirmLeave())) return;
-  stopPolling(); clearGroup(); showScreen('landing');
+  stopPolling(); exitAdmin(); clearGroup(); showScreen('landing');
 });
 
-// ════════════════════════════════════════════════════════
-//  ADD PERSON
-// ════════════════════════════════════════════════════════
 async function addPerson() {
-  const input = document.getElementById('new-name');
-  const name  = input.value.trim();
-  if (!name || !data) return;
-  try {
-    await api.addMember(data.id, name);
-    input.value = '';
-    await refresh();
-  } catch(e) {
-    if (e.status === 409) showToast(`"${name}" gibt es schon`);
-    else showToast(T.errServer);
-  }
+  const inp=document.getElementById('new-name'), name=inp.value.trim();
+  if(!name||!data) return;
+  try { await api.addMember(data.id,name); inp.value=''; await refresh(); }
+  catch(e){ showToast(e.status===409?`"${name}" gibt es schon`:T.errServer); }
 }
 document.getElementById('add-person-btn').addEventListener('click', addPerson);
-document.getElementById('new-name').addEventListener('keydown', e => { if(e.key === 'Enter') addPerson(); });
+document.getElementById('new-name').addEventListener('keydown',e=>{if(e.key==='Enter')addPerson();});
 
-// ════════════════════════════════════════════════════════
-//  DELETE HANDLERS (delegation)
-// ════════════════════════════════════════════════════════
 document.addEventListener('click', async e => {
-  const entryBtn = e.target.closest('.del-entry-btn');
-  if (entryBtn && data) {
-    try {
-      await api.delEntry(data.id, entryBtn.dataset.id);
-      await refresh();
-    } catch { showToast(T.errServer); }
-    return;
-  }
-
-  const personBtn = e.target.closest('.del-person-btn');
-  if (personBtn && data) {
-    const name = personBtn.dataset.name;
-    if (!confirm(T.confirmDel(name))) return;
-    try {
-      await api.delMember(data.id, name);
-      await refresh();
-    } catch { showToast(T.errServer); }
+  const eb = e.target.closest('.del-entry-btn');
+  if (eb && data) { try{await api.delEntry(data.id,eb.dataset.id); await refresh();}catch{showToast(T.errServer);} return; }
+  const pb = e.target.closest('.del-person-btn');
+  if (pb && data) {
+    const n=pb.dataset.name;
+    if(!confirm(T.confirmDel(n))) return;
+    try{await api.delMember(data.id,n); await refresh();}catch{showToast(T.errServer);}
   }
 });
 
@@ -1357,25 +1251,16 @@ document.addEventListener('click', async e => {
 //  INIT
 // ════════════════════════════════════════════════════════
 applyI18n();
-
 async function init() {
-  showLoading(true);
-  loadGroup();
+  showLoading(true); loadGroup();
   if (group) {
     try {
       data = await api.getGroup(group.id);
-      applyI18n(); renderAll(); startPolling();
-      showLoading(false);
-      showScreen('app');
-      return;
-    } catch(e) {
-      if (e.status === 404) clearGroup();
-    }
+      applyI18n(); renderAll(); startPolling(); showLoading(false); showScreen('app'); return;
+    } catch(e) { if(e.status===404) clearGroup(); }
   }
-  showLoading(false);
-  showScreen('landing');
+  showLoading(false); showScreen('landing');
 }
-
 init();
 </script>
 </body>
