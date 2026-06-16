@@ -102,6 +102,7 @@
       min-height: 100dvh;
       display: flex; flex-direction: column; align-items: center;
     }
+    .hidden { display: none !important; }
     .screen.hidden { display: none; }
 
     /* ── LANDING ─────────────────────────────────────────────── */
@@ -118,6 +119,14 @@
     }
     .landing-sub { font-size: 15px; color: var(--text-2); margin-top: 4px; }
     .landing-card { width: 100%; max-width: 420px; border-radius: var(--r-xl); padding: 24px 20px; }
+    .landing-admin-tools { margin-top: 14px; display: grid; gap: 10px; }
+    .landing-admin-note { font-size: 12px; color: var(--text-3); text-align: center; line-height: 1.35; }
+    .btn-admin {
+      background: rgba(239,68,68,.10);
+      color: var(--red);
+      border: 1.5px solid rgba(239,68,68,.24);
+      box-shadow: none;
+    }
     .or-divider {
       display: flex; align-items: center; gap: 12px;
       margin: 14px 0; color: var(--text-3); font-size: 13px; font-weight: 500;
@@ -774,6 +783,15 @@
     <button class="btn btn-ghost btn-xl btn-full" id="btn-show-join">
       <span>🔑</span><span id="ls-join-lbl"></span>
     </button>
+    <div class="landing-admin-tools">
+      <button class="btn btn-ghost btn-xl btn-full" id="btn-admin-login">
+        <span>🔐</span><span id="ls-admin-lbl"></span>
+      </button>
+      <button class="btn btn-admin btn-xl btn-full hidden" id="btn-create-test-group">
+        <span>🧪</span><span id="ls-test-lbl"></span>
+      </button>
+      <div class="landing-admin-note hidden" id="ls-admin-note"></div>
+    </div>
   </div>
 </div>
 
@@ -1104,6 +1122,7 @@
 const TRANS = {
   de: {
     lsTagline:'Tracken · Motivieren · Verbessern', lsCreate:'Gruppe erstellen', lsJoin:'Code eingeben', lsOr:'oder',
+    lsAdmin:'Admin aktivieren', lsTestGroup:'Testgruppe mit 1 Jahr Verlauf', lsAdminNote:'Admin aktiv. Du kannst jetzt eine fertige Testgruppe erstellen.',
     pillHint:'📋 tippen zum kopieren',
     navWeek:'Woche', navHistory:'Verlauf', navPeople:'Personen',
     lblWeek:'Diese Woche', lblHistory:'Wochenrückblick', lblPeople:'Mitglieder',
@@ -1126,6 +1145,7 @@ const TRANS = {
     maTitle:'Admin-Login', maLbl:'Passwort', maCancel:'Abbrechen', maSubmit:'Einloggen', maError:'Falsches Passwort',
     admTitle:'🔐 Admin-Modus', admAdd:'🧪 Testdaten letzte Woche', admWeekOn:'👁 Aktuelle Woche zeigen', admWeekOff:'🙈 Aktuelle Woche ausblenden', admDel:'🗑 Testdaten löschen', admReplay:'📺 Wrapped nochmal', admExit:'Admin verlassen',
     toastAdmIn:'Admin-Modus aktiviert 🔐', toastAdmOut:'Admin-Modus beendet', toastAdded:'Testdaten erstellt ✓', toastCleared:'Testdaten gelöscht ✓',
+    toastTestGroup:'Testgruppe erstellt ✓', noTestData:'Keine Testdaten vorhanden',
     noMembersForTest:'Erst Personen hinzufügen!',
     // Profile setup
     psuTitle:'Dein Profil erstellen', psuNameLbl:'Dein Name', psuEmojiLbl:'Avatar', psuColorLbl:'Farbe',
@@ -1164,6 +1184,7 @@ const TRANS = {
   },
   en: {
     lsTagline:'Track · Shame · Improve', lsCreate:'Create Group', lsJoin:'Enter Code', lsOr:'or',
+    lsAdmin:'Activate Admin', lsTestGroup:'Test group with 1 year history', lsAdminNote:'Admin is active. You can create a ready-made test group now.',
     pillHint:'📋 tap to copy',
     navWeek:'Week', navHistory:'History', navPeople:'People',
     lblWeek:'This Week', lblHistory:'Weekly Recap', lblPeople:'Members',
@@ -1186,6 +1207,7 @@ const TRANS = {
     maTitle:'Admin Login', maLbl:'Password', maCancel:'Cancel', maSubmit:'Login', maError:'Wrong password',
     admTitle:'🔐 Admin Mode', admAdd:'🧪 Create last week\'s test data', admWeekOn:'👁 Show current week', admWeekOff:'🙈 Hide current week', admDel:'🗑 Delete test data', admReplay:'📺 Replay Wrapped', admExit:'Exit admin mode',
     toastAdmIn:'Admin mode activated 🔐', toastAdmOut:'Admin mode exited', toastAdded:'Test data created ✓', toastCleared:'Test data deleted ✓',
+    toastTestGroup:'Test group created ✓', noTestData:'No test data to delete',
     noMembersForTest:'Please add people first!',
     // Profile setup
     psuTitle:'Create your profile', psuNameLbl:'Your name', psuEmojiLbl:'Avatar', psuColorLbl:'Color',
@@ -1258,6 +1280,7 @@ const api = {
     return d;
   },
   createGroup:    n       => api.req('POST', '/groups', {name:n}),
+  createTestGroup:p       => api.req('POST', '/test-group', {password:p}),
   joinGroup:      c       => api.req('POST', '/groups/join', {code:c}),
   getGroup:       id      => api.req('GET',  `/groups/${id}`),
   addMember:     (g,n)    => api.req('POST',   `/groups/${g}/members`, {name:n}),
@@ -1276,6 +1299,7 @@ const api = {
 let group = null, data = null, pollTimer = null;
 let adminMode         = false;
 let adminShowCurWeek  = false;
+let adminPassword     = '';
 let testEntryIds      = [];
 let userProfile       = null;   // { userId, name, avatarEmoji, avatarColor, recoveryCode, isCreator }
 let pendingGroup      = null;   // group waiting for profile setup
@@ -1321,9 +1345,19 @@ function copyToClipboard(txt) {
 //  SCREENS & OVERLAYS
 // ════════════════════════════════════════════════════════
 function showLoading(y){ document.getElementById('loading').classList.toggle('hidden',!y); }
-function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden')); document.getElementById('screen-'+id).classList.remove('hidden'); }
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
+  document.getElementById('screen-'+id).classList.remove('hidden');
+  if (id === 'landing') renderLandingAdminTools();
+}
 function openOv(id){ document.getElementById(id).classList.add('open'); }
 function closeOv(id){ document.getElementById(id).classList.remove('open'); }
+
+function renderLandingAdminTools() {
+  const show = adminMode && !group;
+  document.getElementById('btn-create-test-group').classList.toggle('hidden', !show);
+  document.getElementById('ls-admin-note').classList.toggle('hidden', !show);
+}
 
 // ════════════════════════════════════════════════════════
 //  CONFETTI
@@ -1574,12 +1608,24 @@ function openAdminLogin() {
   setTimeout(() => document.getElementById('ma-pwd').focus(), 350);
 }
 
+function activateAdmin({ silent = false } = {}) {
+  adminMode = true;
+  document.getElementById('admin-badge').classList.toggle('hidden', !group);
+  if (!silent) showToast(T.toastAdmIn);
+  renderLandingAdminTools();
+  if (group) {
+    switchTab('people');
+    renderAdminPanel();
+  }
+}
+
 function exitAdmin() {
   adminMode = false;
   adminShowCurWeek = false;
+  adminPassword = '';
   document.getElementById('admin-badge').classList.add('hidden');
   showToast(T.toastAdmOut);
-  renderAdminPanel(); renderHistory();
+  renderLandingAdminTools(); renderAdminPanel(); renderHistory();
 }
 
 document.getElementById('ma-cancel').addEventListener('click', () => closeOv('modal-admin'));
@@ -1589,11 +1635,8 @@ document.getElementById('ma-submit').addEventListener('click', () => {
   const pwd = document.getElementById('ma-pwd').value.trim().toLowerCase();
   if (pwd !== ADMIN_PW) { document.getElementById('ma-error').textContent = T.maError; return; }
   closeOv('modal-admin');
-  adminMode = true;
-  document.getElementById('admin-badge').classList.remove('hidden');
-  showToast(T.toastAdmIn);
-  switchTab('people');
-  renderAdminPanel();
+  adminPassword = pwd;
+  activateAdmin();
 });
 document.getElementById('ma-pwd').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('ma-submit').click(); });
 
@@ -1632,7 +1675,7 @@ document.getElementById('adm-add-btn').addEventListener('click', async () => {
 });
 
 document.getElementById('adm-del-btn').addEventListener('click', async () => {
-  if (!testEntryIds.length) { showToast('Keine Testdaten vorhanden'); return; }
+  if (!testEntryIds.length) { showToast(T.noTestData); return; }
   for (const id of testEntryIds) {
     try { await api.delEntry(data.id, id); } catch {}
   }
@@ -1647,6 +1690,7 @@ document.getElementById('adm-del-btn').addEventListener('click', async () => {
 function applyI18n() {
   const set = (id,v) => { const el=document.getElementById(id); if(el&&v) el.textContent=v; };
   set('ls-sub',T.lsTagline); set('ls-create-lbl',T.lsCreate); set('ls-join-lbl',T.lsJoin); set('ls-or',T.lsOr);
+  set('ls-admin-lbl',T.lsAdmin); set('ls-test-lbl',T.lsTestGroup); set('ls-admin-note',T.lsAdminNote);
   set('nav-week',T.navWeek); set('nav-history',T.navHistory); set('nav-people',T.navPeople);
   set('lbl-week',T.lblWeek); set('lbl-history',T.lblHistory); set('lbl-people',T.lblPeople);
   set('s-count-lbl',T.sCountLbl); set('s-mins-lbl',T.sMinLbl);
@@ -1702,6 +1746,33 @@ document.getElementById('mc-submit').addEventListener('click', async () => {
   finally  { document.getElementById('mc-submit').disabled=false; }
 });
 document.getElementById('mc-name').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('mc-submit').click();});
+
+document.getElementById('btn-admin-login').addEventListener('click', openAdminLogin);
+
+document.getElementById('btn-create-test-group').addEventListener('click', async () => {
+  if (!adminMode || !adminPassword) { openAdminLogin(); return; }
+  const btn = document.getElementById('btn-create-test-group');
+  btn.disabled = true;
+  showLoading(true);
+  try {
+    const demo = await api.createTestGroup(adminPassword);
+    saveUser(demo.group.id, demo.user);
+    testEntryIds = demo.entryIds || [];
+    pendingGroup = demo.group;
+    await enterGroup(demo.group);
+    activateAdmin({ silent: true });
+    showToast(T.toastTestGroup);
+    switchTab('history');
+  } catch {
+    adminMode = false;
+    adminPassword = '';
+    renderLandingAdminTools();
+    showToast(T.errServer);
+  } finally {
+    showLoading(false);
+    btn.disabled = false;
+  }
+});
 
 // ════════════════════════════════════════════════════════
 //  MODAL: JOIN GROUP

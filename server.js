@@ -75,6 +75,7 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data.db');
 const db      = new Database(DB_PATH);
+const ADMIN_PW = process.env.ADMIN_PW || 'gymadmin';
 console.log(`📂 Datenbank: ${DB_PATH}`);
 
 db.pragma('journal_mode = WAL');
@@ -142,6 +143,24 @@ function uniqueCode() {
   return code;
 }
 
+function dateYMD(d) {
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+}
+
+function addDaysUTC(d, days) {
+  const copy = new Date(d);
+  copy.setUTCDate(copy.getUTCDate() + days);
+  return copy;
+}
+
+function currentMondayUTC() {
+  const d = new Date();
+  d.setUTCHours(12, 0, 0, 0);
+  const day = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() - day + 1);
+  return d;
+}
+
 // ── Startup migration: members → users ──────────────────────────────────────
 const _doMigrate = db.transaction(() => {
   const unmigrated = db.prepare(`
@@ -202,6 +221,77 @@ app.post('/api/groups', (req, res) => {
   db.prepare('INSERT INTO groups (id,code,name,created_at) VALUES (?,?,?,?)')
     .run(id, code, name, Date.now());
   res.json({ id, code, name });
+});
+
+app.post('/api/test-group', (req, res) => {
+  const password = String(req.body?.password ?? '').trim().toLowerCase();
+  if (password !== ADMIN_PW.toLowerCase()) return res.status(401).json({ error: 'unauthorized' });
+
+  const createDemo = db.transaction(() => {
+    const now = Date.now();
+    const groupId = crypto.randomUUID();
+    const code = uniqueCode();
+    const groupName = 'GymLate Demo';
+    const people = [
+      { name: 'Alex', avatarEmoji: '💪', avatarColor: '#7c3aed' },
+      { name: 'Mia',  avatarEmoji: '🔥', avatarColor: '#db2777' },
+      { name: 'Noah', avatarEmoji: '⚡', avatarColor: '#ea580c' },
+      { name: 'Lina', avatarEmoji: '🎯', avatarColor: '#16a34a' },
+    ];
+
+    db.prepare('INSERT INTO groups (id,code,name,created_at) VALUES (?,?,?,?)')
+      .run(groupId, code, groupName, now);
+
+    const insertUser = db.prepare(`
+      INSERT INTO users (id, group_id, name, recovery_code, avatar_emoji, avatar_color, is_creator, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const insertMember = db.prepare('INSERT INTO members (id,group_id,name,created_at) VALUES (?,?,?,?)');
+    const createdUsers = people.map((person, index) => {
+      const userId = crypto.randomUUID();
+      const recoveryCode = genRecoveryCode();
+      const createdAt = now + index;
+      const isCreator = index === 0 ? 1 : 0;
+      insertUser.run(userId, groupId, person.name, recoveryCode, person.avatarEmoji, person.avatarColor, isCreator, createdAt);
+      insertMember.run(userId, groupId, person.name, createdAt);
+      if (isCreator) {
+        db.prepare('UPDATE groups SET creator_user_id = ? WHERE id = ?').run(userId, groupId);
+      }
+      return { userId, recoveryCode, isCreator: isCreator === 1, ...person };
+    });
+
+    const insertEntry = db.prepare('INSERT INTO entries (id,group_id,person,date,mins,ts) VALUES (?,?,?,?,?,?)');
+    const entryIds = [];
+    const currentMon = currentMondayUTC();
+    for (let weeksAgo = 52; weeksAgo >= 1; weeksAgo--) {
+      const mon = addDaysUTC(currentMon, -7 * weeksAgo);
+      const entriesThisWeek = 4 + (weeksAgo % 5);
+      for (let i = 0; i < entriesThisWeek; i++) {
+        const person = people[(weeksAgo + i * 2) % people.length].name;
+        const date = dateYMD(addDaysUTC(mon, i % 5));
+        const mins = 5 + ((weeksAgo * 7 + i * 11) % 41);
+        const entryId = crypto.randomUUID();
+        entryIds.push(entryId);
+        insertEntry.run(entryId, groupId, person, date, mins, now + weeksAgo * 100 + i);
+      }
+    }
+
+    const creator = createdUsers[0];
+    return {
+      group: { id: groupId, code, name: groupName },
+      user: {
+        userId: creator.userId,
+        name: creator.name,
+        avatarEmoji: creator.avatarEmoji,
+        avatarColor: creator.avatarColor,
+        recoveryCode: creator.recoveryCode,
+        isCreator: true,
+      },
+      entryIds,
+    };
+  });
+
+  res.json(createDemo());
 });
 
 app.post('/api/groups/join', (req, res) => {
