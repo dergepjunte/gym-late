@@ -1453,8 +1453,8 @@ function shouldShowWrapped() {
 }
 
 function showWrapped(force = false) {
-  const slides = buildWrappedSlides();
-  if (!slides?.length) { showToast(T.noPeople); return; }
+  const slides = buildWrappedSlides(force);
+  if (!slides?.length) { showToast(T.noMembersForTest); return; }
   wSlides = slides;
   wIdx = 0;
 
@@ -1551,10 +1551,21 @@ function wCount(el, target) {
   requestAnimationFrame(tick);
 }
 
-// Build slides from current week data
-function buildWrappedSlides() {
-  const mon = mondayOf(todayStr()), sun = sundayOf(mon);
-  const entries = (data?.entries || []).filter(e => e.date >= mon && e.date <= sun);
+// Build slides — anyWeek=true uses the most recent week with data (for admin replay)
+function buildWrappedSlides(anyWeek = false) {
+  const allEntries = data?.entries || [];
+  let mon, sun;
+
+  if (anyWeek) {
+    const mons = [...new Set(allEntries.map(e => mondayOf(e.date)))].sort().reverse();
+    if (!mons.length) return null;
+    mon = mons[0];
+  } else {
+    mon = mondayOf(todayStr());
+  }
+  sun = sundayOf(mon);
+
+  const entries = allEntries.filter(e => e.date >= mon && e.date <= sun);
   if (!entries.length) return null;
 
   const totalLate = entries.length;
