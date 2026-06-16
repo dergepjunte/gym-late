@@ -76,7 +76,9 @@ function getIcon(size) {
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
-const db   = new Database(path.join(__dirname, 'data.db'));
+const DB_PATH = process.env.DB_PATH || path.join(__dirname, 'data.db');
+const db      = new Database(DB_PATH);
+console.log(`📂 Datenbank: ${DB_PATH}`);
 
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');

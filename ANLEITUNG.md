@@ -33,6 +33,7 @@ npm start
 Du siehst:
 ```
 🏋️  GymLate läuft auf http://localhost:3000
+📂 Datenbank: /…/data.db
 ```
 
 **4. Browser öffnen:** http://localhost:3000
@@ -67,51 +68,101 @@ Alle, die denselben Code verwenden, sehen dieselben Daten in Echtzeit (Aktualisi
 
 Damit alle ohne deinen PC darauf zugreifen können, brauchst du einen Server.
 
-### Option A – Railway (einfachste Option, kostenlos)
+> ⚠️ **Wichtig – Datenbank beim Deployment**
+>
+> Railway und Render nutzen **ephemere Container**: Bei jedem neuen Deploy startet ein frischer Container – ohne die alte `data.db`. Die Daten wären weg.
+>
+> **Lösung:** Ein **Persistent Volume** (dauerhafter Datei-Speicher) einrichten und die Umgebungsvariable `DB_PATH` auf die Datei darin setzen. Anleitung für jede Plattform weiter unten.
 
+---
+
+### Option A – Railway (empfohlen, kostenlos)
+
+**1. Projekt erstellen**
 1. Konto erstellen: https://railway.app
-2. „New Project" → „Deploy from GitHub Repo"
-3. Deinen Code auf GitHub pushen (oder ZIP hochladen via Dashboard)
-4. Railway erkennt Node.js automatisch
-5. Deine App bekommt eine URL wie `gymLate-production.up.railway.app`
+2. „New Project" → „Deploy from GitHub Repo" → dein `gym-late` Repo wählen
+3. Railway erkennt Node.js automatisch und deployt sofort
 
-**Umgebungsvariable setzen:**
-- Key: `PORT`, Value: `3000` (Railway setzt das normalerweise automatisch)
+**2. Persistent Volume hinzufügen** ← damit die Datenbank überlebt
+1. Im Railway-Projekt: linke Seitenleiste → **„+ New"** → **„Volume"**
+2. Volume auf deinen Service ziehen (oder im Service unter „Volumes" hinzufügen)
+3. **Mount Path:** `/data`
+4. Speichern
 
-### Option B – Render (auch kostenlos, mit Schlafmodus)
+**3. Umgebungsvariable setzen**
+1. Service → **„Variables"** → **„New Variable"**
+2. Key: `DB_PATH`  
+   Value: `/data/data.db`
+3. Speichern → Railway startet neu → fertig ✓
 
+Deine App läuft jetzt auf `*.up.railway.app` und die Daten bleiben bei jedem Deploy erhalten.
+
+---
+
+### Option B – Render (kostenlos, mit Schlafmodus)
+
+**1. Web Service erstellen**
 1. Konto erstellen: https://render.com
 2. „New Web Service" → GitHub Repo verbinden
 3. Build Command: `npm install`
 4. Start Command: `npm start`
-5. Free Tier: App schläft nach 15 Min. Inaktivität ein (erste Anfrage dauert ~30s)
+
+**2. Persistent Disk hinzufügen** ← damit die Datenbank überlebt
+1. Service → **„Disks"** → **„Add Disk"**
+2. Name: `data`
+3. Mount Path: `/data`
+4. Size: `1 GB` (kostenlos)
+5. Speichern
+
+**3. Umgebungsvariable setzen**
+1. Service → **„Environment"** → **„Add Environment Variable"**
+2. Key: `DB_PATH`  
+   Value: `/data/data.db`
+3. Speichern → Render startet neu → fertig ✓
+
+> Free Tier: App schläft nach 15 Min. Inaktivität ein (erste Anfrage danach dauert ~30s).
+
+---
 
 ### Option C – VPS (Hetzner, z.B. €4/Monat, immer online)
 
-Auf dem Server (Ubuntu):
+Auf einem VPS liegt die `data.db` dauerhaft auf dem Server — kein Volume nötig.
+
 ```bash
 # Node.js installieren
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt install -y nodejs
 
-# Code hochladen (z.B. per scp oder git clone)
-git clone <dein-repo> gymLate && cd gymLate
+# Code holen
+git clone https://github.com/dergepjunte/gym-late gymLate
+cd gymLate
 npm install
 
-# Mit PM2 dauerhaft laufen lassen
+# Mit PM2 dauerhaft laufen lassen (startet auch nach Reboot neu)
 npm install -g pm2
 pm2 start server.js --name gymLate
 pm2 save && pm2 startup
 
-# Nginx als Reverse Proxy (optional, für Port 80/443)
-# dann läuft es auf deiner Domain ohne :3000
+# Updates einspielen (ohne Datenverlust)
+git pull && npm install && pm2 restart gymLate
 ```
+
+> Nginx als Reverse Proxy empfohlen wenn du eine eigene Domain nutzt (Port 80/443 statt :3000).
 
 ---
 
-## Daten
+## Daten sichern
 
-Alle Gruppen, Personen und Einträge werden in `data.db` gespeichert (SQLite-Datei im Projektordner). Diese Datei automatisch sichern, falls du auf einem VPS bist.
+Die Datenbank ist eine einzelne Datei (`data.db`). Backup erstellen:
+
+```bash
+# Lokal / VPS
+cp data.db data.db.backup-$(date +%Y%m%d)
+
+# Von Railway/Render herunterladen (Railway CLI)
+railway run cp /data/data.db /tmp/backup.db
+railway run cat /tmp/backup.db > backup.db
+```
 
 ---
 
@@ -121,3 +172,4 @@ Alle Gruppen, Personen und Einträge werden in `data.db` gespeichert (SQLite-Dat
 - „Gruppe verlassen" entfernt nur die Verbindung auf diesem Gerät. Die Daten bleiben.
 - Die App erkennt automatisch **Dark/Light Mode** und die **Systemsprache** (Deutsch/Englisch).
 - Auf dem **iPhone**: Im Safari-Browser unten „Teilen → Zum Home-Bildschirm" → sieht aus wie eine echte App.
+- **Admin-Modus:** 5× auf das 🏋️-Icon tippen → Passwort `gymadmin`
