@@ -1,0 +1,14 @@
+{
+  "name": "GymLate",
+  "short_name": "GymLate",
+  "description": "Track who arrives late to the gym",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#e9e4f8",
+  "theme_color": "#7c3aed",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
