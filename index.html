@@ -524,6 +524,12 @@
     }
     .emoji-cell.sel { border-color:var(--accent); transform:scale(1.18); }
     .emoji-cell:active { transform:scale(.92); }
+    .avatar-upload-wrap { text-align:center; margin:0 0 8px; }
+    .btn-upload-photo { background:none; border:1px solid var(--accent); color:var(--accent); font-size:13px; cursor:pointer; padding:5px 14px; border-radius:20px; transition:opacity .15s; }
+    .btn-upload-photo:active { opacity:.6; }
+    .btn-upload-photo:disabled { opacity:.45; cursor:not-allowed; }
+    .avatar-upload-msg { font-size:12px; text-align:center; margin-bottom:6px; min-height:16px; }
+    .avatar-circle img { width:100%; height:100%; object-fit:cover; border-radius:50%; display:block; }
 
     .color-grid {
       display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-top:6px;
@@ -980,6 +986,11 @@
     <div class="avatar-preview-wrap">
       <div class="avatar-circle xl" id="psu-preview" style="display:inline-flex;background:#7c3aed">💪</div>
     </div>
+    <div class="avatar-upload-wrap">
+      <input type="file" id="psu-img-input" accept="image/*" style="display:none">
+      <button type="button" class="btn-upload-photo" id="psu-upload-btn"></button>
+    </div>
+    <div class="avatar-upload-msg" id="psu-upload-msg" style="display:none"></div>
 
     <!-- NEW USER mode -->
     <div id="psu-new-mode">
@@ -1091,6 +1102,11 @@
     <div class="avatar-preview-wrap">
       <div class="avatar-circle xl" id="ep-preview" style="display:inline-flex;background:#7c3aed">💪</div>
     </div>
+    <div class="avatar-upload-wrap">
+      <input type="file" id="ep-img-input" accept="image/*" style="display:none">
+      <button type="button" class="btn-upload-photo" id="ep-upload-btn"></button>
+    </div>
+    <div class="avatar-upload-msg" id="ep-upload-msg" style="display:none"></div>
     <h2 class="modal-title" id="ep-title"></h2>
     <div class="form-grp">
       <label class="form-lbl" id="ep-name-lbl"></label>
@@ -1167,6 +1183,8 @@ const TRANS = {
     // Edit profile
     epTitle:'Profil bearbeiten', epNameLbl:'Name', epEmojiLbl:'Avatar', epColorLbl:'Farbe',
     epCancel:'Abbrechen', epSave:'Speichern',
+    uploadPhoto:'📷 Foto hochladen', removePhoto:'✕ Foto entfernen',
+    nsfwChecking:'Bild wird geprüft…', nsfwError:'Dieses Bild ist nicht erlaubt.',
     // Misc
     toastKicked:'Mitglied entfernt ✓', toastProfileSaved:'Profil gespeichert ✓',
     inviteHint:'Teile den Code, damit andere der Gruppe beitreten können.',
@@ -1229,6 +1247,8 @@ const TRANS = {
     // Edit profile
     epTitle:'Edit Profile', epNameLbl:'Name', epEmojiLbl:'Avatar', epColorLbl:'Color',
     epCancel:'Cancel', epSave:'Save',
+    uploadPhoto:'📷 Upload photo', removePhoto:'✕ Remove photo',
+    nsfwChecking:'Checking image…', nsfwError:'This image is not allowed.',
     // Misc
     toastKicked:'Member removed ✓', toastProfileSaved:'Profile saved ✓',
     inviteHint:'Share the code so others can join the group.',
@@ -1315,14 +1335,130 @@ function clearUser(gid)   { userProfile=null; localStorage.removeItem('gymUser_'
 // Avatar constants
 const AVATAR_EMOJIS = ['💪','🏋️','🔥','⚡','🦁','🐺','🦊','🦅','🎯','👊','🏃','🧗','🚴','🤸','🏊','🥊','🌟','❄️','🌊','🌙','☀️','💥','🎮','🧠'];
 const AVATAR_COLORS = ['#7c3aed','#db2777','#dc2626','#ea580c','#ca8a04','#16a34a','#0891b2','#2563eb','#7e22ce','#475569'];
-let selEmoji = '💪', selColor = '#7c3aed';
-let epSelEmoji = '💪', epSelColor = '#7c3aed';
+let selEmoji = '💪', selColor = '#7c3aed', selImg = null;
+let epSelEmoji = '💪', epSelColor = '#7c3aed', epSelImg = null;
+let _nsfwModel = null, _nsfwLoading = null;
 
 // ════════════════════════════════════════════════════════
 //  UTILS
 // ════════════════════════════════════════════════════════
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function initials(n){ return n.trim().split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2)||'?'; }
+
+function avatarHtml(p, cls) {
+  const hasImg = p.avatarImg && p.avatarImg.startsWith('data:image/');
+  const bg = hasImg ? 'transparent' : esc(p.avatarColor || '#7c3aed');
+  const inner = hasImg
+    ? `<img src="${p.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
+    : esc(p.avatarEmoji || '💪');
+  return `<div class="avatar-circle${cls ? ' '+cls : ''}" style="background:${bg}">${inner}</div>`;
+}
+
+function setAvatarEl(el, p) {
+  const hasImg = p && p.avatarImg && p.avatarImg.startsWith('data:image/');
+  if (hasImg) {
+    el.innerHTML = `<img src="${p.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    el.style.background = 'transparent';
+  } else {
+    el.textContent = p ? (p.avatarEmoji || '💪') : '💪';
+    el.style.background = p ? (p.avatarColor || '#7c3aed') : '#7c3aed';
+  }
+}
+
+function resizeImageToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const c = document.createElement('canvas');
+      c.width = 200; c.height = 200;
+      const s = Math.min(img.width, img.height);
+      c.getContext('2d').drawImage(img, (img.width-s)/2, (img.height-s)/2, s, s, 0, 0, 200, 200);
+      resolve(c.toDataURL('image/jpeg', 0.82));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('load_failed')); };
+    img.src = url;
+  });
+}
+
+async function isImageSafe(dataUrl) {
+  try {
+    if (!_nsfwLoading) {
+      _nsfwLoading = (async () => {
+        const load = src => new Promise((res, rej) => {
+          const s = document.createElement('script'); s.src = src;
+          s.onload = res; s.onerror = rej; document.head.appendChild(s);
+        });
+        await load('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
+        await load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js');
+        _nsfwModel = await nsfwjs.load('https://nsfwjs.com/quant_nsfw_mobilenet/');
+      })();
+    }
+    await _nsfwLoading;
+    const img = new Image(); img.src = dataUrl;
+    await new Promise(r => { img.onload = r; });
+    const preds = await _nsfwModel.classify(img);
+    const porn  = preds.find(p => p.className === 'Porn')?.probability   || 0;
+    const hent  = preds.find(p => p.className === 'Hentai')?.probability || 0;
+    return (porn + hent) < 0.4;
+  } catch { return true; }
+}
+
+function handleAvatarUpload(inputId, previewId, uploadBtnId, msgId, onImg) {
+  const input   = document.getElementById(inputId);
+  const preview = document.getElementById(previewId);
+  const btn     = document.getElementById(uploadBtnId);
+  const msg     = document.getElementById(msgId);
+
+  btn.addEventListener('click', () => {
+    if (btn.dataset.hasImg === '1') {
+      onImg(null);
+      btn.dataset.hasImg = '0';
+      btn.textContent = T.uploadPhoto;
+      preview.textContent = preview.dataset.emoji || '💪';
+      preview.style.background = preview.dataset.color || '#7c3aed';
+      msg.style.display = 'none';
+    } else {
+      input.click();
+    }
+  });
+
+  input.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    msg.style.display = '';
+    msg.style.color = 'var(--text-3)';
+    msg.textContent = T.nsfwChecking;
+    btn.disabled = true;
+    try {
+      const dataUrl = await resizeImageToDataUrl(file);
+      const safe = await isImageSafe(dataUrl);
+      if (!safe) {
+        msg.style.color = '#ef4444';
+        msg.textContent = T.nsfwError;
+        onImg(null);
+        btn.dataset.hasImg = '0';
+        btn.textContent = T.uploadPhoto;
+        preview.textContent = preview.dataset.emoji || '💪';
+        preview.style.background = preview.dataset.color || '#7c3aed';
+      } else {
+        msg.style.display = 'none';
+        onImg(dataUrl);
+        btn.dataset.hasImg = '1';
+        btn.textContent = T.removePhoto;
+        preview.innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+        preview.style.background = 'transparent';
+      }
+    } catch {
+      msg.style.color = '#ef4444';
+      msg.textContent = T.errServer;
+    } finally {
+      btn.disabled = false;
+      e.target.value = '';
+    }
+  });
+}
 
 let toastTimer;
 function showToast(msg) {
@@ -1489,7 +1625,7 @@ function renderPeople() {
   lEl.innerHTML = data.people.map((p,i)=>{
     const isMe = userProfile && p.id === userProfile.userId;
     return `<div class="person-row animate" style="animation-delay:${i*35}ms;cursor:pointer" data-uid="${esc(p.id)}">
-      <div class="avatar-circle" style="background:${esc(p.avatarColor)}">${esc(p.avatarEmoji)}</div>
+      ${avatarHtml(p)}
       <div class="person-name">${esc(p.name)}${isMe ? ' <span style="font-size:11px;color:var(--accent);font-weight:700">(Du)</span>' : ''}${p.isCreator ? ' <span style="font-size:10px;color:var(--text-3)">★</span>' : ''}</div>
     </div>`;
   }).join('');
@@ -1553,6 +1689,7 @@ async function enterGroup(g) {
       return;
     }
     userProfile.isCreator = me.isCreator;
+    if ('avatarImg' in me) userProfile.avatarImg = me.avatarImg;
     saveUser(g.id, userProfile);
   }
   showLoading(false);
@@ -1565,8 +1702,18 @@ function updateMyProfileBtn() {
   const btn = document.getElementById('my-profile-btn');
   if (!userProfile) { btn.classList.remove('visible'); return; }
   btn.classList.add('visible');
-  btn.textContent = userProfile.avatarEmoji;
-  btn.style.background = userProfile.avatarColor;
+  if (userProfile.avatarImg && userProfile.avatarImg.startsWith('data:image/')) {
+    btn.textContent = '';
+    btn.style.backgroundImage = `url(${userProfile.avatarImg})`;
+    btn.style.backgroundSize = 'cover';
+    btn.style.backgroundPosition = 'center';
+    btn.style.color = 'transparent';
+  } else {
+    btn.textContent = userProfile.avatarEmoji;
+    btn.style.backgroundImage = '';
+    btn.style.background = userProfile.avatarColor;
+    btn.style.color = '';
+  }
 }
 
 // ════════════════════════════════════════════════════════
@@ -1718,6 +1865,7 @@ function applyI18n() {
   // Edit profile
   set('ep-title',T.epTitle); set('ep-name-lbl',T.epNameLbl); set('ep-emoji-lbl',T.epEmojiLbl); set('ep-color-lbl',T.epColorLbl);
   set('ep-cancel',T.epCancel); set('ep-submit',T.epSave);
+  set('psu-upload-btn', T.uploadPhoto); set('ep-upload-btn', T.uploadPhoto);
   // Invite
   set('invite-hint-txt',T.inviteHint); set('invite-btn',T.inviteBtn);
 }
@@ -1847,6 +1995,9 @@ document.addEventListener('click', async e => {
 // ════════════════════════════════════════════════════════
 //  PROFILE SETUP MODAL
 // ════════════════════════════════════════════════════════
+handleAvatarUpload('psu-img-input', 'psu-preview', 'psu-upload-btn', 'psu-upload-msg', img => { selImg = img; });
+handleAvatarUpload('ep-img-input',  'ep-preview',  'ep-upload-btn',  'ep-upload-msg',  img => { epSelImg = img; });
+
 function buildAvatarPicker(gridId, previewId, onChangeEmoji, onChangeColor, initEmoji, initColor) {
   const eg = document.getElementById(gridId+'-emoji-grid') || document.getElementById(gridId);
   if (!eg) return;
@@ -1878,9 +2029,16 @@ function buildColorPicker(gridId, onChangeColor, initColor) {
 }
 
 function openProfileSetup() {
-  selEmoji = '💪'; selColor = '#7c3aed';
-  document.getElementById('psu-preview').textContent = selEmoji;
-  document.getElementById('psu-preview').style.background = selColor;
+  selEmoji = '💪'; selColor = '#7c3aed'; selImg = null;
+  const prev = document.getElementById('psu-preview');
+  prev.textContent = selEmoji;
+  prev.style.background = selColor;
+  prev.dataset.emoji = selEmoji;
+  prev.dataset.color = selColor;
+  const uploadBtn = document.getElementById('psu-upload-btn');
+  uploadBtn.textContent = T.uploadPhoto;
+  uploadBtn.dataset.hasImg = '0';
+  document.getElementById('psu-upload-msg').style.display = 'none';
   document.getElementById('psu-name').value = '';
   document.getElementById('psu-error').textContent = '';
   document.getElementById('psu-login-name').value = '';
@@ -1897,7 +2055,8 @@ function openProfileSetup() {
       eg.querySelectorAll('.emoji-cell').forEach(x=>x.classList.remove('sel'));
       c.classList.add('sel');
       selEmoji = c.dataset.emoji;
-      document.getElementById('psu-preview').textContent = selEmoji;
+      prev.dataset.emoji = selEmoji;
+      if (!selImg) prev.textContent = selEmoji;
     });
   });
 
@@ -1911,7 +2070,8 @@ function openProfileSetup() {
       cg.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('sel'));
       c.classList.add('sel');
       selColor = c.dataset.color;
-      document.getElementById('psu-preview').style.background = selColor;
+      prev.dataset.color = selColor;
+      if (!selImg) prev.style.background = selColor;
     });
   });
 
@@ -1948,8 +2108,8 @@ document.getElementById('psu-submit-new').addEventListener('click', async () => 
   errEl.textContent = '';
   document.getElementById('psu-submit-new').disabled = true;
   try {
-    const r = await api.registerUser(pendingGroup.id, { name, avatarEmoji: selEmoji, avatarColor: selColor });
-    saveUser(pendingGroup.id, { userId:r.userId, name:r.name, avatarEmoji:r.avatarEmoji, avatarColor:r.avatarColor, recoveryCode:r.recoveryCode, isCreator:r.isCreator });
+    const r = await api.registerUser(pendingGroup.id, { name, avatarEmoji: selEmoji, avatarColor: selColor, avatarImg: selImg });
+    saveUser(pendingGroup.id, { userId:r.userId, name:r.name, avatarEmoji:r.avatarEmoji, avatarColor:r.avatarColor, avatarImg:r.avatarImg||null, recoveryCode:r.recoveryCode, isCreator:r.isCreator });
     closeOv('modal-profile-setup');
     showRecoveryCode(r.recoveryCode);
   } catch(e) {
@@ -1967,7 +2127,7 @@ document.getElementById('psu-submit-login').addEventListener('click', async () =
   document.getElementById('psu-submit-login').disabled = true;
   try {
     const r = await api.loginUser(pendingGroup.id, { name, recoveryCode: code });
-    saveUser(pendingGroup.id, { userId:r.userId, name:r.name, avatarEmoji:r.avatarEmoji, avatarColor:r.avatarColor, recoveryCode: code.replace(/-/g,'').toUpperCase(), isCreator:r.isCreator });
+    saveUser(pendingGroup.id, { userId:r.userId, name:r.name, avatarEmoji:r.avatarEmoji, avatarColor:r.avatarColor, avatarImg:r.avatarImg||null, recoveryCode: code.replace(/-/g,'').toUpperCase(), isCreator:r.isCreator });
     closeOv('modal-profile-setup');
     enterGroup(pendingGroup);
   } catch(e) {
@@ -2001,8 +2161,7 @@ function openProfileView(userId) {
   const isOwnProfile   = userProfile && userProfile.userId === userId;
   const isCreatorView  = userProfile?.isCreator && !isOwnProfile;
 
-  document.getElementById('pv-avatar').textContent = user.avatarEmoji;
-  document.getElementById('pv-avatar').style.background = user.avatarColor;
+  setAvatarEl(document.getElementById('pv-avatar'), user);
   document.getElementById('pv-name').textContent = user.name;
 
   const badge = document.getElementById('pv-creator-badge');
@@ -2067,10 +2226,24 @@ function openEditProfile() {
   if (!userProfile) return;
   epSelEmoji = userProfile.avatarEmoji;
   epSelColor = userProfile.avatarColor;
+  epSelImg = userProfile.avatarImg || null;
 
   const prev = document.getElementById('ep-preview');
-  prev.textContent = epSelEmoji;
-  prev.style.background = epSelColor;
+  prev.dataset.emoji = epSelEmoji;
+  prev.dataset.color = epSelColor;
+  const epUploadBtn = document.getElementById('ep-upload-btn');
+  document.getElementById('ep-upload-msg').style.display = 'none';
+  if (epSelImg && epSelImg.startsWith('data:image/')) {
+    prev.innerHTML = `<img src="${epSelImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+    prev.style.background = 'transparent';
+    epUploadBtn.textContent = T.removePhoto;
+    epUploadBtn.dataset.hasImg = '1';
+  } else {
+    prev.textContent = epSelEmoji;
+    prev.style.background = epSelColor;
+    epUploadBtn.textContent = T.uploadPhoto;
+    epUploadBtn.dataset.hasImg = '0';
+  }
   document.getElementById('ep-name').value = userProfile.name;
   document.getElementById('ep-error').textContent = '';
 
@@ -2083,7 +2256,8 @@ function openEditProfile() {
       eg.querySelectorAll('.emoji-cell').forEach(x=>x.classList.remove('sel'));
       c.classList.add('sel');
       epSelEmoji = c.dataset.emoji;
-      prev.textContent = epSelEmoji;
+      prev.dataset.emoji = epSelEmoji;
+      if (!epSelImg) prev.textContent = epSelEmoji;
     });
   });
 
@@ -2096,7 +2270,8 @@ function openEditProfile() {
       cg.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('sel'));
       c.classList.add('sel');
       epSelColor = c.dataset.color;
-      prev.style.background = epSelColor;
+      prev.dataset.color = epSelColor;
+      if (!epSelImg) prev.style.background = epSelColor;
     });
   });
 
@@ -2116,9 +2291,10 @@ document.getElementById('ep-submit').addEventListener('click', async () => {
   try {
     await api.updateUser(group.id, userProfile.userId, {
       name: newName, avatarEmoji: epSelEmoji, avatarColor: epSelColor,
+      avatarImg: epSelImg,
       recoveryCode: userProfile.recoveryCode
     });
-    userProfile.name = newName; userProfile.avatarEmoji = epSelEmoji; userProfile.avatarColor = epSelColor;
+    userProfile.name = newName; userProfile.avatarEmoji = epSelEmoji; userProfile.avatarColor = epSelColor; userProfile.avatarImg = epSelImg;
     saveUser(group.id, userProfile);
     closeOv('modal-edit-profile');
     await refresh();
@@ -2393,6 +2569,7 @@ async function init() {
       setTimeout(() => showToast(T.kicked), 300); return;
     }
     userProfile.isCreator = me.isCreator;
+    if ('avatarImg' in me) userProfile.avatarImg = me.avatarImg;
     saveUser(group.id, userProfile);
     updateMyProfileBtn();
     applyI18n(); renderAll(); startPolling(); showLoading(false); showScreen('app');

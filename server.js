@@ -191,6 +191,9 @@ async function initSchema() {
     try { await database.run('ALTER TABLE `groups` ADD COLUMN creator_user_id VARCHAR(36) NULL'); } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
+    try { await database.run('ALTER TABLE users ADD COLUMN avatar_img MEDIUMTEXT NULL'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
     return;
   }
 
@@ -233,6 +236,7 @@ async function initSchema() {
     );
   `);
   try { database.exec('ALTER TABLE `groups` ADD COLUMN creator_user_id TEXT'); } catch {}
+  try { database.exec('ALTER TABLE users ADD COLUMN avatar_img TEXT'); } catch {}
 }
 
 // ── Code generators ──────────────────────────────────────────────────────────
@@ -311,6 +315,7 @@ function userDto(u) {
     name: u.name,
     avatarEmoji: u.avatar_emoji,
     avatarColor: u.avatar_color,
+    avatarImg: u.avatar_img || null,
     isCreator: Number(u.is_creator) === 1,
   };
 }
@@ -318,7 +323,7 @@ function userDto(u) {
 const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 // ── Middleware ───────────────────────────────────────────────────────────────
-app.use(express.json({ limit: '16kb' }));
+app.use(express.json({ limit: '512kb' }));
 
 // ── PWA Icon routes ──────────────────────────────────────────────────────────
 const iconHeaders = (res) => {
@@ -422,7 +427,7 @@ app.get('/api/groups/:id', ah(async (req, res) => {
   const g = await database.one('SELECT id,code,name,creator_user_id FROM `groups` WHERE id = ?', [req.params.id]);
   if (!g) return res.status(404).json({ error: 'not_found' });
   const people = (await database.all(`
-    SELECT id, name, avatar_emoji, avatar_color, is_creator
+    SELECT id, name, avatar_emoji, avatar_color, avatar_img, is_creator
     FROM users WHERE group_id = ? ORDER BY created_at
   `, [req.params.id])).map(userDto);
   const entries = await database.all('SELECT id,person,date,mins,ts FROM entries WHERE group_id = ? ORDER BY date DESC, ts DESC', [req.params.id]);
@@ -436,8 +441,12 @@ app.post('/api/groups/:id/users', ah(async (req, res) => {
   const name = String(req.body?.name ?? '').trim().slice(0, 30);
   const avatarEmoji = String(req.body?.avatarEmoji ?? '🏋️');
   const avatarColor = String(req.body?.avatarColor ?? '#7c3aed');
+  const avatarImg = req.body?.avatarImg ? String(req.body.avatarImg) : null;
 
   if (!name) return res.status(400).json({ error: 'name_required' });
+  if (avatarImg && (!avatarImg.startsWith('data:image/') || avatarImg.length > 400000)) {
+    return res.status(400).json({ error: 'invalid_avatar_img' });
+  }
   const g = await database.one('SELECT id, creator_user_id FROM `groups` WHERE id = ?', [id]);
   if (!g) return res.status(404).json({ error: 'not_found' });
 
@@ -448,9 +457,9 @@ app.post('/api/groups/:id/users', ah(async (req, res) => {
 
   try {
     await database.run(`
-      INSERT INTO users (id, group_id, name, recovery_code, avatar_emoji, avatar_color, is_creator, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `, [userId, id, name, recoveryCode, avatarEmoji, avatarColor, isCreator, now]);
+      INSERT INTO users (id, group_id, name, recovery_code, avatar_emoji, avatar_color, avatar_img, is_creator, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [userId, id, name, recoveryCode, avatarEmoji, avatarColor, avatarImg, isCreator, now]);
 
     await database.run(`${insertIgnore()} INTO members (id, group_id, name, created_at) VALUES (?,?,?,?)`, [userId, id, name, now]);
 
@@ -458,7 +467,7 @@ app.post('/api/groups/:id/users', ah(async (req, res) => {
       await database.run('UPDATE `groups` SET creator_user_id = ? WHERE id = ? AND creator_user_id IS NULL', [userId, id]);
     }
 
-    res.json({ userId, name, avatarEmoji, avatarColor, recoveryCode, isCreator: isCreator === 1 });
+    res.json({ userId, name, avatarEmoji, avatarColor, avatarImg, recoveryCode, isCreator: isCreator === 1 });
   } catch (e) {
     if (isUniqueError(e)) return res.status(409).json({ error: 'already_exists' });
     throw e;
@@ -473,7 +482,7 @@ app.post('/api/groups/:id/users/login', ah(async (req, res) => {
   if (!name || !recoveryCode) return res.status(400).json({ error: 'missing_fields' });
 
   const user = await database.one(`
-    SELECT id, name, avatar_emoji, avatar_color, is_creator, recovery_code
+    SELECT id, name, avatar_emoji, avatar_color, avatar_img, is_creator, recovery_code
     FROM users WHERE group_id = ? AND LOWER(name) = LOWER(?)
   `, [id, name]);
 
@@ -485,6 +494,7 @@ app.post('/api/groups/:id/users/login', ah(async (req, res) => {
     name: user.name,
     avatarEmoji: user.avatar_emoji,
     avatarColor: user.avatar_color,
+    avatarImg: user.avatar_img || null,
     isCreator: Number(user.is_creator) === 1,
   });
 }));
@@ -506,6 +516,14 @@ app.patch('/api/groups/:id/users/:uid', ah(async (req, res) => {
   if (newName) { sets.push('name = ?'); params.push(newName); }
   if (newEmoji) { sets.push('avatar_emoji = ?'); params.push(newEmoji); }
   if (newColor) { sets.push('avatar_color = ?'); params.push(newColor); }
+  if (Object.prototype.hasOwnProperty.call(req.body, 'avatarImg')) {
+    const imgVal = req.body.avatarImg ? String(req.body.avatarImg) : null;
+    if (imgVal && (!imgVal.startsWith('data:image/') || imgVal.length > 400000)) {
+      return res.status(400).json({ error: 'invalid_avatar_img' });
+    }
+    sets.push('avatar_img = ?');
+    params.push(imgVal);
+  }
   if (!sets.length) return res.json({ ok: true });
 
   params.push(uid, id);
