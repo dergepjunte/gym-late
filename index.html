@@ -1402,7 +1402,7 @@ async function isImageSafe(dataUrl) {
     const porn  = preds.find(p => p.className === 'Porn')?.probability   || 0;
     const hent  = preds.find(p => p.className === 'Hentai')?.probability || 0;
     return (porn + hent) < 0.4;
-  } catch { return true; }
+  } catch { throw new Error('nsfw_unavailable'); }
 }
 
 function handleAvatarUpload(inputId, previewId, uploadBtnId, msgId, onImg) {
