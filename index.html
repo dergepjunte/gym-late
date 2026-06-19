@@ -1390,8 +1390,7 @@ async function isImageSafe(dataUrl) {
         s.onload = res; s.onerror = rej; document.head.appendChild(s);
       });
       await load('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
-      await load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js');
-      _nsfwModel = await nsfwjs.load('/nsfw-model/');
+      _nsfwModel = await tf.loadGraphModel('/nsfw-model/model.json');
     })();
   }
   try {
@@ -1402,10 +1401,16 @@ async function isImageSafe(dataUrl) {
   }
   const img = new Image(); img.src = dataUrl;
   await new Promise(r => { img.onload = r; });
-  const preds = await _nsfwModel.classify(img);
-  const porn  = preds.find(p => p.className === 'Porn')?.probability   || 0;
-  const hent  = preds.find(p => p.className === 'Hentai')?.probability || 0;
-  return (porn + hent) < 0.4;
+  const tensor = tf.tidy(() =>
+    tf.browser.fromPixels(img).resizeBilinear([224, 224]).expandDims(0).div(255.0)
+  );
+  let result = await _nsfwModel.executeAsync(tensor);
+  tensor.dispose();
+  if (Array.isArray(result)) result = result[0];
+  const values = await result.data();
+  result.dispose();
+  // class order: Drawing(0), Hentai(1), Neutral(2), Porn(3), Sexy(4)
+  return (values[3] + values[1]) < 0.4;
 }
 
 function handleAvatarUpload(inputId, previewId, uploadBtnId, msgId, onImg) {
