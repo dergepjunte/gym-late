@@ -1391,11 +1391,7 @@ async function isImageSafe(dataUrl) {
       });
       await load('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
       await load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js');
-      try {
-        _nsfwModel = await nsfwjs.load('https://nsfwjs.com/quant_nsfw_mobilenet/');
-      } catch {
-        _nsfwModel = await nsfwjs.load('https://nsfwjs.com/model/');
-      }
+      _nsfwModel = await nsfwjs.load('/nsfw-model/');
     })();
   }
   try {
