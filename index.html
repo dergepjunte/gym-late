@@ -1383,26 +1383,33 @@ function resizeImageToDataUrl(file) {
 }
 
 async function isImageSafe(dataUrl) {
-  try {
-    if (!_nsfwLoading) {
-      _nsfwLoading = (async () => {
-        const load = src => new Promise((res, rej) => {
-          const s = document.createElement('script'); s.src = src;
-          s.onload = res; s.onerror = rej; document.head.appendChild(s);
-        });
-        await load('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
-        await load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js');
+  if (!_nsfwLoading) {
+    _nsfwLoading = (async () => {
+      const load = src => new Promise((res, rej) => {
+        const s = document.createElement('script'); s.src = src;
+        s.onload = res; s.onerror = rej; document.head.appendChild(s);
+      });
+      await load('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js');
+      await load('https://cdn.jsdelivr.net/npm/nsfwjs@2.4.2/dist/nsfwjs.min.js');
+      try {
         _nsfwModel = await nsfwjs.load('https://nsfwjs.com/quant_nsfw_mobilenet/');
-      })();
-    }
+      } catch {
+        _nsfwModel = await nsfwjs.load('https://nsfwjs.com/model/');
+      }
+    })();
+  }
+  try {
     await _nsfwLoading;
-    const img = new Image(); img.src = dataUrl;
-    await new Promise(r => { img.onload = r; });
-    const preds = await _nsfwModel.classify(img);
-    const porn  = preds.find(p => p.className === 'Porn')?.probability   || 0;
-    const hent  = preds.find(p => p.className === 'Hentai')?.probability || 0;
-    return (porn + hent) < 0.4;
-  } catch { throw new Error('nsfw_unavailable'); }
+  } catch {
+    _nsfwLoading = null;
+    throw new Error('nsfw_unavailable');
+  }
+  const img = new Image(); img.src = dataUrl;
+  await new Promise(r => { img.onload = r; });
+  const preds = await _nsfwModel.classify(img);
+  const porn  = preds.find(p => p.className === 'Porn')?.probability   || 0;
+  const hent  = preds.find(p => p.className === 'Hentai')?.probability || 0;
+  return (porn + hent) < 0.4;
 }
 
 function handleAvatarUpload(inputId, previewId, uploadBtnId, msgId, onImg) {
