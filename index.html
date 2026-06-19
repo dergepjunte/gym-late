@@ -1416,7 +1416,7 @@ async function isImageSafe(dataUrl) {
   result.dispose();
   // class order: Drawing(0), Hentai(1), Neutral(2), Porn(3), Sexy(4)
   const porn = values[3], hentai = values[1], sexy = values[4];
-  return porn < 0.35 && hentai < 0.35 && sexy < 0.7;
+  return porn < 0.15 && hentai < 0.15 && sexy < 0.5;
 }
 
 function handleAvatarUpload(inputId, previewId, uploadBtnId, msgId, onImg) {
