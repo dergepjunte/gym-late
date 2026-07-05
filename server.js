@@ -371,14 +371,16 @@ const PITY_MS          = 7  * 24 * 60 * 60 * 1000; // freeze pity resets weekly
 const MAX_LOOKBACK     = 90;                         // days of streak history to scan
 
 function effectiveMask(gymDays, availDays) {
-  if (!availDays) return gymDays;
+  const gd = gymDays || '0000000'; // no gym days = never miss
+  if (!availDays) return gd;
   let r = '';
-  for (let i = 0; i < 7; i++) r += (gymDays[i] === '1' && availDays[i] === '1') ? '1' : '0';
+  for (let i = 0; i < 7; i++) r += (gd[i] === '1' && availDays[i] === '1') ? '1' : '0';
   return r;
 }
 
 // mask index: Mon=0 … Sun=6
 function isDayScheduled(dateStr, mask) {
+  if (!mask) return false;
   const dow = new Date(dateStr + 'T12:00:00Z').getUTCDay(); // 0=Sun
   const idx = dow === 0 ? 6 : dow - 1;
   return mask[idx] === '1';
@@ -497,7 +499,10 @@ function userDto(u) {
   };
 }
 
-const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(e => {
+  console.error(e);
+  if (!res.headersSent) res.status(500).json({ error: 'internal' });
+});
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '512kb' }));
