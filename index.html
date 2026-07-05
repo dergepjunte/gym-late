@@ -822,14 +822,14 @@
     </button>
     <div class="or-divider"><span id="ls-or"></span></div>
     <button class="btn btn-ghost btn-xl btn-full" id="btn-show-join">
-      <span>🔑</span><span id="ls-join-lbl"></span>
+      <span id="ls-join-lbl"></span>
     </button>
     <div class="landing-admin-tools">
       <button class="btn btn-ghost btn-xl btn-full" id="btn-admin-login">
-        <span>🔐</span><span id="ls-admin-lbl"></span>
+        <span id="ls-admin-lbl"></span>
       </button>
       <button class="btn btn-admin btn-xl btn-full hidden" id="btn-create-test-group">
-        <span>🧪</span><span id="ls-test-lbl"></span>
+        <span id="ls-test-lbl"></span>
       </button>
       <div class="landing-admin-note hidden" id="ls-admin-note"></div>
     </div>
@@ -867,7 +867,7 @@
       </div>
       <div class="sec-label" id="lbl-week"></div>
       <div class="card glass" id="week-card">
-        <div class="empty" id="week-empty"><div class="empty-ico">🎉</div><div class="empty-txt" id="empty-week-txt"></div></div>
+        <div class="empty" id="week-empty"><div class="empty-txt" id="empty-week-txt"></div></div>
         <div id="week-list"></div>
       </div>
     </div>
@@ -883,7 +883,6 @@
       <div class="sec-label" id="lbl-people"></div>
       <div class="card glass" id="people-card">
         <div class="empty" id="people-empty">
-          <div class="empty-ico">👤</div>
           <div class="empty-txt" id="empty-people-txt"></div>
           <div class="empty-sub" id="empty-people-sub"></div>
         </div>
@@ -913,13 +912,13 @@
   <div class="bottom-nav">
     <div class="nav-bar glass">
       <button class="nav-btn active" data-tab="week">
-        <span class="nav-ico">📅</span><span class="nav-lbl" id="nav-week"></span>
+        <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="nav-lbl" id="nav-week"></span>
       </button>
       <button class="nav-btn" data-tab="history">
-        <span class="nav-ico">📊</span><span class="nav-lbl" id="nav-history"></span>
+        <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="13" width="4" height="8"/></svg></span><span class="nav-lbl" id="nav-history"></span>
       </button>
       <button class="nav-btn" data-tab="people">
-        <span class="nav-ico">👥</span><span class="nav-lbl" id="nav-people"></span>
+        <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg></span><span class="nav-lbl" id="nav-people"></span>
       </button>
     </div>
   </div>
@@ -948,7 +947,7 @@
 <!-- Success (code display) -->
 <div class="overlay" id="modal-success">
   <div class="modal glass">
-    <div class="success-check">✅</div>
+    <div class="success-check">✓</div>
     <div class="success-title" id="ms-title"></div>
     <div class="success-sub"   id="ms-sub"></div>
     <div class="code-boxes"    id="ms-code-boxes"></div>
@@ -1039,7 +1038,7 @@
   <div class="modal glass">
     <!-- Avatar preview -->
     <div class="avatar-preview-wrap">
-      <div class="avatar-circle xl" id="psu-preview" style="display:inline-flex;background:#7c3aed">💪</div>
+      <div class="avatar-circle xl" id="psu-preview" style="display:inline-flex;background:#7c3aed">🏋️</div>
     </div>
     <div class="avatar-upload-wrap">
       <input type="file" id="psu-img-input" accept="image/*" style="display:none">
@@ -1101,7 +1100,7 @@
 <!-- Recovery Code -->
 <div class="overlay" id="modal-recovery-code">
   <div class="modal glass">
-    <div class="success-check">🔑</div>
+    
     <div class="success-title" id="rc-title"></div>
     <div class="success-sub" id="rc-sub"></div>
     <div class="rc-row" id="rc-boxes"></div>
@@ -1136,7 +1135,7 @@
         <label class="form-lbl" id="pv-rc-lbl"></label>
         <div class="rc-blur-wrap">
           <div class="rc-blur" id="pv-rc-value"></div>
-          <button class="rc-reveal-btn" id="pv-rc-reveal">👁</button>
+          <button class="rc-reveal-btn" id="pv-rc-reveal"></button>
         </div>
       </div>
       <button class="btn btn-ghost btn-full" id="pv-edit-btn" style="margin-bottom:8px"></button>
@@ -1155,7 +1154,7 @@
 <div class="overlay" id="modal-edit-profile">
   <div class="modal glass">
     <div class="avatar-preview-wrap">
-      <div class="avatar-circle xl" id="ep-preview" style="display:inline-flex;background:#7c3aed">💪</div>
+      <div class="avatar-circle xl" id="ep-preview" style="display:inline-flex;background:#7c3aed">🏋️</div>
     </div>
     <div class="avatar-upload-wrap">
       <input type="file" id="ep-img-input" accept="image/*" style="display:none">
@@ -1194,14 +1193,14 @@ const TRANS = {
   de: {
     lsTagline:'Tracken · Motivieren · Verbessern', lsCreate:'Gruppe erstellen', lsJoin:'Code eingeben', lsOr:'oder',
     lsAdmin:'Admin aktivieren', lsTestGroup:'Testgruppe mit 1 Jahr Verlauf', lsAdminNote:'Admin aktiv. Du kannst jetzt eine fertige Testgruppe erstellen.',
-    pillHint:'📋 tippen zum kopieren',
+    pillHint:'tippen zum kopieren',
     navWeek:'Woche', navHistory:'Verlauf', navPeople:'Personen',
     lblWeek:'Diese Woche', lblHistory:'Wochenrückblick', lblPeople:'Mitglieder',
     sCountLbl:'Verspätungen', sMinLbl:'Min. gesamt',
-    emptyWeek:'Noch niemand zu spät! 🎉', emptyPeople:'Noch keine Personen', emptyPeopleSub:'Füge unten Personen hinzu', emptyHistory:'Noch keine abgeschlossenen Wochen',
+    emptyWeek:'Noch niemand zu spät!', emptyPeople:'Noch keine Personen', emptyPeopleSub:'Füge unten Personen hinzu', emptyHistory:'Noch keine abgeschlossenen Wochen',
     namePlaceholder:'Name eingeben…', addPerson:'+ Person hinzufügen', leaveGroup:'Gruppe verlassen',
     mcTitle:'Neue Gruppe', mcLblName:'Gruppenname', mcCancel:'Abbrechen', mcSubmit:'Erstellen',
-    msTitle:'Gruppe erstellt!', msSub:'Teile diesen Code mit deinen Gym-Buddies:', msCopy:'📋  Code kopieren', msContinue:'Weiter zur App →',
+    msTitle:'Gruppe erstellt!', msSub:'Teile diesen Code mit deinen Gym-Buddies:', msCopy:'Code kopieren', msContinue:'Weiter zur App →',
     mjTitle:'Gruppe beitreten', mjSub:'Gib den 6-stelligen Code deiner Gruppe ein.', mjLbl:'Gruppencode', mjCancel:'Abbrechen', mjSubmit:'Beitreten',
     mlTitle:'Verspätung eintragen', mlLblPerson:'Person', mlLblDate:'Datum', mlLblMins:'Minuten', mlCancel:'Abbrechen', mlSave:'Speichern',
     mlModeLate:'Verspätung', mlModeSkip:'⊘ Überspringen',
@@ -1223,8 +1222,8 @@ const TRANS = {
     timesLate: n => n===1?'1× zu spät':`${n}× zu spät`,
     // Admin
     maTitle:'Admin-Login', maLbl:'Passwort', maCancel:'Abbrechen', maSubmit:'Einloggen', maError:'Falsches Passwort',
-    admTitle:'🔐 Admin-Modus', admAdd:'🧪 Testdaten letzte Woche', admWeekOn:'👁 Aktuelle Woche zeigen', admWeekOff:'🙈 Aktuelle Woche ausblenden', admDel:'🗑 Testdaten löschen', admReplay:'📺 Wrapped nochmal', admExit:'Admin verlassen',
-    toastAdmIn:'Admin-Modus aktiviert 🔐', toastAdmOut:'Admin-Modus beendet', toastAdded:'Testdaten erstellt ✓', toastCleared:'Testdaten gelöscht ✓',
+    admTitle:'Admin-Modus', admAdd:'Testdaten letzte Woche', admWeekOn:'Aktuelle Woche zeigen', admWeekOff:'Aktuelle Woche ausblenden', admDel:'Testdaten löschen', admReplay:'Wrapped nochmal', admExit:'Admin verlassen',
+    toastAdmIn:'Admin-Modus aktiviert', toastAdmOut:'Admin-Modus beendet', toastAdded:'Testdaten erstellt ✓', toastCleared:'Testdaten gelöscht ✓',
     toastTestGroup:'Testgruppe erstellt ✓', noTestData:'Keine Testdaten vorhanden',
     noMembersForTest:'Erst Personen hinzufügen!',
     // Profile setup
@@ -1237,22 +1236,22 @@ const TRANS = {
     psuErrWrongCode:'Falscher Recovery Code.', psuErrNotFound:'Nutzer nicht gefunden.',
     // Recovery code modal
     rcTitle:'Recovery Code sichern!', rcSub:'Ohne diesen Code kannst du dich auf neuen Geräten nicht einloggen.',
-    rcCopy:'📋 Code kopieren', rcDone:'Ich hab\'s gespeichert! →',
+    rcCopy:'Code kopieren', rcDone:'Ich hab\'s gespeichert! →',
     // Profile view
-    pvRcLbl:'Recovery Code (geheim)', pvReveal:'👁 anzeigen', pvHide:'🙈 verbergen',
-    pvEditBtn:'✎ Profil bearbeiten', pvKickBtn:'🚫 Aus Gruppe entfernen',
+    pvRcLbl:'Recovery Code (geheim)', pvReveal:'anzeigen', pvHide:'verbergen',
+    pvEditBtn:'✎ Profil bearbeiten', pvKickBtn:'Aus Gruppe entfernen',
     pvKickConfirm: n => `"${n}" wirklich aus der Gruppe entfernen?`,
     pvCreatorBadge:'Gruppenersteller', pvStatCount:'Verspätungen', pvStatMins:'Min. gesamt',
     pvClose:'Schließen',
     // Edit profile
     epTitle:'Profil bearbeiten', epNameLbl:'Name', epEmojiLbl:'Avatar', epColorLbl:'Farbe',
     epCancel:'Abbrechen', epSave:'Speichern',
-    uploadPhoto:'📷 Foto hochladen', removePhoto:'✕ Foto entfernen',
+    uploadPhoto:'Foto hochladen', removePhoto:'✕ Foto entfernen',
     nsfwChecking:'Bild wird geprüft…', nsfwError:'Dieses Bild ist nicht erlaubt.',
     // Misc
     toastKicked:'Mitglied entfernt ✓', toastProfileSaved:'Profil gespeichert ✓',
     inviteHint:'Teile den Code, damit andere der Gruppe beitreten können.',
-    inviteBtn:'📨 Code teilen',
+    inviteBtn:'Code teilen',
     kicked:'Du wurdest aus der Gruppe entfernt.',
     errNameTaken:'Dieser Name ist bereits vergeben.',
     // Wrapped
@@ -1262,19 +1261,19 @@ const TRANS = {
     wS3hours: (h,m) => `das sind ${h}h ${m}min`,
     wS4label:'Zuspätkommer<br>der Woche',
     wS5title:'Das Ranking',
-    wS6a:'NÄCHSTE', wS6b:'WOCHE BESSER.', wClose:'Los geht\'s 💪',
+    wS6a:'NÄCHSTE', wS6b:'WOCHE BESSER.', wClose:'Los geht\'s',
   },
   en: {
     lsTagline:'Track · Shame · Improve', lsCreate:'Create Group', lsJoin:'Enter Code', lsOr:'or',
     lsAdmin:'Activate Admin', lsTestGroup:'Test group with 1 year history', lsAdminNote:'Admin is active. You can create a ready-made test group now.',
-    pillHint:'📋 tap to copy',
+    pillHint:'tap to copy',
     navWeek:'Week', navHistory:'History', navPeople:'People',
     lblWeek:'This Week', lblHistory:'Weekly Recap', lblPeople:'Members',
     sCountLbl:'Late Arrivals', sMinLbl:'Total Mins',
-    emptyWeek:'Nobody was late this week! 🎉', emptyPeople:'No people added yet', emptyPeopleSub:'Add people below', emptyHistory:'No completed weeks yet',
+    emptyWeek:'Nobody was late this week!', emptyPeople:'No people added yet', emptyPeopleSub:'Add people below', emptyHistory:'No completed weeks yet',
     namePlaceholder:'Enter name…', addPerson:'+ Add Person', leaveGroup:'Leave Group',
     mcTitle:'New Group', mcLblName:'Group Name', mcCancel:'Cancel', mcSubmit:'Create',
-    msTitle:'Group Created!', msSub:'Share this code with your gym buddies:', msCopy:'📋  Copy Code', msContinue:'Open App →',
+    msTitle:'Group Created!', msSub:'Share this code with your gym buddies:', msCopy:'Copy Code', msContinue:'Open App →',
     mjTitle:'Join Group', mjSub:'Enter the 6-character code of your group.', mjLbl:'Group Code', mjCancel:'Cancel', mjSubmit:'Join',
     mlTitle:'Log Late Arrival', mlLblPerson:'Person', mlLblDate:'Date', mlLblMins:'Minutes', mlCancel:'Cancel', mlSave:'Save',
     mlModeLate:'Log Late', mlModeSkip:'⊘ Skip',
@@ -1296,8 +1295,8 @@ const TRANS = {
     timesLate: n => n===1?'1× late':`${n}× late`,
     // Admin
     maTitle:'Admin Login', maLbl:'Password', maCancel:'Cancel', maSubmit:'Login', maError:'Wrong password',
-    admTitle:'🔐 Admin Mode', admAdd:'🧪 Create last week\'s test data', admWeekOn:'👁 Show current week', admWeekOff:'🙈 Hide current week', admDel:'🗑 Delete test data', admReplay:'📺 Replay Wrapped', admExit:'Exit admin mode',
-    toastAdmIn:'Admin mode activated 🔐', toastAdmOut:'Admin mode exited', toastAdded:'Test data created ✓', toastCleared:'Test data deleted ✓',
+    admTitle:'Admin Mode', admAdd:'Create last week\'s test data', admWeekOn:'Show current week', admWeekOff:'Hide current week', admDel:'Delete test data', admReplay:'Replay Wrapped', admExit:'Exit admin mode',
+    toastAdmIn:'Admin mode activated', toastAdmOut:'Admin mode exited', toastAdded:'Test data created ✓', toastCleared:'Test data deleted ✓',
     toastTestGroup:'Test group created ✓', noTestData:'No test data to delete',
     noMembersForTest:'Please add people first!',
     // Profile setup
@@ -1310,22 +1309,22 @@ const TRANS = {
     psuErrWrongCode:'Wrong recovery code.', psuErrNotFound:'User not found.',
     // Recovery code modal
     rcTitle:'Save your Recovery Code!', rcSub:'Without this code you can\'t log in on new devices.',
-    rcCopy:'📋 Copy Code', rcDone:'I\'ve saved it! →',
+    rcCopy:'Copy Code', rcDone:'I\'ve saved it! →',
     // Profile view
-    pvRcLbl:'Recovery Code (secret)', pvReveal:'👁 reveal', pvHide:'🙈 hide',
-    pvEditBtn:'✎ Edit Profile', pvKickBtn:'🚫 Remove from group',
+    pvRcLbl:'Recovery Code (secret)', pvReveal:'reveal', pvHide:'hide',
+    pvEditBtn:'✎ Edit Profile', pvKickBtn:'Remove from group',
     pvKickConfirm: n => `Really remove "${n}" from the group?`,
     pvCreatorBadge:'Group Creator', pvStatCount:'Late arrivals', pvStatMins:'Total mins',
     pvClose:'Close',
     // Edit profile
     epTitle:'Edit Profile', epNameLbl:'Name', epEmojiLbl:'Avatar', epColorLbl:'Color',
     epCancel:'Cancel', epSave:'Save',
-    uploadPhoto:'📷 Upload photo', removePhoto:'✕ Remove photo',
+    uploadPhoto:'Upload photo', removePhoto:'✕ Remove photo',
     nsfwChecking:'Checking image…', nsfwError:'This image is not allowed.',
     // Misc
     toastKicked:'Member removed ✓', toastProfileSaved:'Profile saved ✓',
     inviteHint:'Share the code so others can join the group.',
-    inviteBtn:'📨 Share Code',
+    inviteBtn:'Share Code',
     kicked:'You were removed from the group.',
     errNameTaken:'This name is already taken.',
     // Wrapped
@@ -1335,7 +1334,7 @@ const TRANS = {
     wS3hours: (h,m) => `that's ${h}h ${m}min`,
     wS4label:'Latecomer<br>of the Week',
     wS5title:'The Ranking',
-    wS6a:'DO BETTER', wS6b:'NEXT WEEK.', wClose:'Let\'s go 💪',
+    wS6a:'DO BETTER', wS6b:'NEXT WEEK.', wClose:'Let\'s go',
   }
 };
 const T = TRANS[(navigator.language||'').toLowerCase().startsWith('de') ? 'de' : 'en'];
@@ -1406,10 +1405,10 @@ function loadUser(gid)    { try { userProfile=JSON.parse(localStorage.getItem('g
 function clearUser(gid)   { userProfile=null; localStorage.removeItem('gymUser_'+gid); }
 
 // Avatar constants
-const AVATAR_EMOJIS = ['💪','🏋️','🔥','⚡','🦁','🐺','🦊','🦅','🎯','👊','🏃','🧗','🚴','🤸','🏊','🥊','🌟','❄️','🌊','🌙','☀️','💥','🎮','🧠'];
+const AVATAR_EMOJIS = ['🏋️'];
 const AVATAR_COLORS = ['#7c3aed','#db2777','#dc2626','#ea580c','#ca8a04','#16a34a','#0891b2','#2563eb','#7e22ce','#475569'];
-let selEmoji = '💪', selColor = '#7c3aed', selImg = null;
-let epSelEmoji = '💪', epSelColor = '#7c3aed', epSelImg = null;
+let selEmoji = '🏋️', selColor = '#7c3aed', selImg = null;
+let epSelEmoji = '🏋️', epSelColor = '#7c3aed', epSelImg = null;
 let _nsfwModel = null, _nsfwLoading = null;
 
 // ════════════════════════════════════════════════════════
@@ -1423,7 +1422,7 @@ function avatarHtml(p, cls) {
   const bg = hasImg ? 'transparent' : esc(p.avatarColor || '#7c3aed');
   const inner = hasImg
     ? `<img src="${p.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`
-    : esc(p.avatarEmoji || '💪');
+    : esc(p.avatarEmoji || '🏋️');
   return `<div class="avatar-circle${cls ? ' '+cls : ''}" style="background:${bg}">${inner}</div>`;
 }
 
@@ -1433,7 +1432,7 @@ function setAvatarEl(el, p) {
     el.innerHTML = `<img src="${p.avatarImg}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
     el.style.background = 'transparent';
   } else {
-    el.textContent = p ? (p.avatarEmoji || '💪') : '💪';
+    el.textContent = p ? (p.avatarEmoji || '🏋️') : '🏋️';
     el.style.background = p ? (p.avatarColor || '#7c3aed') : '#7c3aed';
   }
 }
@@ -1503,7 +1502,7 @@ function handleAvatarUpload(inputId, previewId, uploadBtnId, msgId, onImg) {
       onImg(null);
       btn.dataset.hasImg = '0';
       btn.textContent = T.uploadPhoto;
-      preview.textContent = preview.dataset.emoji || '💪';
+      preview.textContent = preview.dataset.emoji || '🏋️';
       preview.style.background = preview.dataset.color || '#7c3aed';
       msg.style.display = 'none';
     } else {
@@ -1527,7 +1526,7 @@ function handleAvatarUpload(inputId, previewId, uploadBtnId, msgId, onImg) {
         onImg(null);
         btn.dataset.hasImg = '0';
         btn.textContent = T.uploadPhoto;
-        preview.textContent = preview.dataset.emoji || '💪';
+        preview.textContent = preview.dataset.emoji || '🏋️';
         preview.style.background = preview.dataset.color || '#7c3aed';
       } else {
         msg.style.display = 'none';
@@ -1702,11 +1701,11 @@ function renderHistory() {
   const sorted = Object.keys(weeks).sort().reverse();
 
   if (!sorted.length) {
-    root.innerHTML = `<div class="card glass"><div class="empty"><div class="empty-ico">📭</div><div class="empty-txt">${esc(T.emptyHistory)}</div></div></div>`;
+    root.innerHTML = `<div class="card glass"><div class="empty"><div class="empty-txt">${esc(T.emptyHistory)}</div></div></div>`;
     return;
   }
 
-  const medals = ['🥇','🥈','🥉'];
+  const medals = ['1.','2.','3.'];
   root.innerHTML = sorted.map((mon, wi) => {
     const sun  = sundayOf(mon);
     const late = weeks[mon].filter(e => (e.type || 'late') === 'late');
@@ -1731,7 +1730,7 @@ function renderHistory() {
 
     const heroHtml = hasLate ? `
       <div class="recap-hero confetti-host">
-        <div class="recap-trophy-wrap"><span class="recap-trophy anim-trophy" style="animation-delay:${BASE+100}ms">🏆</span></div>
+        <div class="recap-trophy-wrap"><span class="recap-trophy anim-trophy" style="animation-delay:${BASE+100}ms">★</span></div>
         <div class="recap-name anim-name" style="animation-delay:${BASE+270}ms">${esc(byMins[0][0])}</div>
         <div class="recap-role anim-fade-up" style="animation-delay:${BASE+400}ms">${esc(T.lateKing)}</div>
       </div>` : `
@@ -2239,7 +2238,7 @@ function buildColorPicker(gridId, onChangeColor, initColor) {
 }
 
 function openProfileSetup() {
-  selEmoji = '💪'; selColor = '#7c3aed'; selImg = null;
+  selEmoji = '🏋️'; selColor = '#7c3aed'; selImg = null;
   const prev = document.getElementById('psu-preview');
   prev.textContent = selEmoji;
   prev.style.background = selColor;
@@ -2391,14 +2390,14 @@ function openProfileView(userId) {
     const rcEl = document.getElementById('pv-rc-value');
     rcEl.textContent = rc;
     rcEl.classList.remove('revealed');
-    document.getElementById('pv-rc-reveal').textContent = '👁';
+    document.getElementById('pv-rc-reveal').textContent = T.pvReveal;
     document.getElementById('pv-rc-reveal').onclick = () => {
       const revealed = rcEl.classList.toggle('revealed');
-      document.getElementById('pv-rc-reveal').textContent = revealed ? '🙈' : '👁';
+      document.getElementById('pv-rc-reveal').textContent = revealed ? T.pvHide : T.pvReveal;
     };
     rcEl.onclick = () => {
       const revealed = rcEl.classList.toggle('revealed');
-      document.getElementById('pv-rc-reveal').textContent = revealed ? '🙈' : '👁';
+      document.getElementById('pv-rc-reveal').textContent = revealed ? T.pvHide : T.pvReveal;
     };
   }
 
@@ -2651,7 +2650,7 @@ function buildWrappedSlides(anyWeek = false) {
   entries.forEach(e => { ps[e.person] = ps[e.person]||{count:0,mins:0}; ps[e.person].count++; ps[e.person].mins+=e.mins; });
   const ranking = Object.entries(ps).sort((a,b) => b[1].mins - a[1].mins);
   const [topName, topSt] = ranking[0];
-  const medals = ['🥇','🥈','🥉'];
+  const medals = ['1.','2.','3.'];
 
   const slides = [];
 
@@ -2676,7 +2675,7 @@ function buildWrappedSlides(anyWeek = false) {
     <div class="w-gap-xs"></div>
     <div class="w-sub w-rise" style="animation-delay:.3s">${T.wS2sub}</div>
     <div class="w-gap"></div>
-    <div class="w-emoji w-pop" style="animation-delay:.5s;font-size:clamp(36px,12vw,58px)">🚨</div>
+
   `});
 
   /* ── Slide 3: Minutes ── */
@@ -2691,7 +2690,7 @@ function buildWrappedSlides(anyWeek = false) {
 
   /* ── Slide 4: Top latecomer ── */
   slides.push({ dur: 4.5, bg: 'linear-gradient(160deg,#1d0082 0%,#5200d4 100%)', html: `
-    <div class="w-emoji w-pop">👑</div>
+
     <div class="w-gap-sm"></div>
     <div class="w-label w-rise" style="animation-delay:.2s">${T.wS4label}</div>
     <div class="w-gap-sm"></div>
@@ -2718,7 +2717,7 @@ function buildWrappedSlides(anyWeek = false) {
 
   /* ── Slide 6: End card ── */
   slides.push({ isLast: true, bg: 'linear-gradient(160deg,#0c0118 0%,#1e0044 100%)', html: `
-    <div class="w-emoji w-pop">💪</div>
+    <div class="w-emoji w-pop">🏋️</div>
     <div class="w-gap-sm"></div>
     <div class="w-headline w-rise" style="animation-delay:.2s;font-size:clamp(44px,14vw,78px)">${T.wS6a}</div>
     <div class="w-headline w-rise" style="animation-delay:.36s;font-size:clamp(44px,14vw,78px);color:rgba(255,255,255,.35)">${T.wS6b}</div>
