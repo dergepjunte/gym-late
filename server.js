@@ -147,7 +147,8 @@ async function initSchema() {
         code VARCHAR(6) UNIQUE NOT NULL,
         name VARCHAR(50) NOT NULL,
         created_at BIGINT NOT NULL,
-        creator_user_id VARCHAR(36) NULL
+        creator_user_id VARCHAR(36) NULL,
+        gym_days CHAR(7) NOT NULL DEFAULT '1111111'
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     await database.run(`
@@ -171,6 +172,12 @@ async function initSchema() {
         avatar_color VARCHAR(16) NOT NULL DEFAULT '#7c3aed',
         is_creator TINYINT NOT NULL DEFAULT 0,
         created_at BIGINT NOT NULL,
+        avail_days CHAR(7) NULL,
+        avail_edited_at BIGINT NULL,
+        streak INT NOT NULL DEFAULT 0,
+        freezes INT NOT NULL DEFAULT 0,
+        last_streak_date VARCHAR(10) NULL,
+        last_freeze_grant BIGINT NULL,
         UNIQUE KEY uniq_users_group_name (group_id, name),
         INDEX idx_users_group_id (group_id),
         CONSTRAINT fk_users_group FOREIGN KEY (group_id) REFERENCES \`groups\`(id) ON DELETE CASCADE
@@ -193,7 +200,28 @@ async function initSchema() {
     try { await database.run('ALTER TABLE `groups` ADD COLUMN creator_user_id VARCHAR(36) NULL'); } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
+    try { await database.run("ALTER TABLE `groups` ADD COLUMN gym_days CHAR(7) NOT NULL DEFAULT '1111111'"); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
     try { await database.run('ALTER TABLE users ADD COLUMN avatar_img MEDIUMTEXT NULL'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run('ALTER TABLE users ADD COLUMN avail_days CHAR(7) NULL'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run('ALTER TABLE users ADD COLUMN avail_edited_at BIGINT NULL'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run('ALTER TABLE users ADD COLUMN streak INT NOT NULL DEFAULT 0'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run('ALTER TABLE users ADD COLUMN freezes INT NOT NULL DEFAULT 0'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run('ALTER TABLE users ADD COLUMN last_streak_date VARCHAR(10) NULL'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run('ALTER TABLE users ADD COLUMN last_freeze_grant BIGINT NULL'); } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
     try { await database.run("ALTER TABLE entries ADD COLUMN type VARCHAR(10) NOT NULL DEFAULT 'late'"); } catch (e) {
@@ -211,7 +239,8 @@ async function initSchema() {
       code       TEXT UNIQUE NOT NULL,
       name       TEXT NOT NULL,
       created_at INTEGER NOT NULL,
-      creator_user_id TEXT
+      creator_user_id TEXT,
+      gym_days   TEXT NOT NULL DEFAULT '1111111'
     );
 
     CREATE TABLE IF NOT EXISTS members (
@@ -231,6 +260,12 @@ async function initSchema() {
       avatar_color  TEXT NOT NULL DEFAULT '#7c3aed',
       is_creator    INTEGER NOT NULL DEFAULT 0,
       created_at    INTEGER NOT NULL,
+      avail_days    TEXT,
+      avail_edited_at INTEGER,
+      streak        INTEGER NOT NULL DEFAULT 0,
+      freezes       INTEGER NOT NULL DEFAULT 0,
+      last_streak_date TEXT,
+      last_freeze_grant INTEGER,
       UNIQUE(group_id, name COLLATE NOCASE)
     );
 
@@ -246,7 +281,14 @@ async function initSchema() {
     );
   `);
   try { database.exec('ALTER TABLE `groups` ADD COLUMN creator_user_id TEXT'); } catch {}
+  try { database.exec("ALTER TABLE `groups` ADD COLUMN gym_days TEXT NOT NULL DEFAULT '1111111'"); } catch {}
   try { database.exec('ALTER TABLE users ADD COLUMN avatar_img TEXT'); } catch {}
+  try { database.exec('ALTER TABLE users ADD COLUMN avail_days TEXT'); } catch {}
+  try { database.exec('ALTER TABLE users ADD COLUMN avail_edited_at INTEGER'); } catch {}
+  try { database.exec('ALTER TABLE users ADD COLUMN streak INTEGER NOT NULL DEFAULT 0'); } catch {}
+  try { database.exec('ALTER TABLE users ADD COLUMN freezes INTEGER NOT NULL DEFAULT 0'); } catch {}
+  try { database.exec('ALTER TABLE users ADD COLUMN last_streak_date TEXT'); } catch {}
+  try { database.exec('ALTER TABLE users ADD COLUMN last_freeze_grant INTEGER'); } catch {}
   try { database.exec("ALTER TABLE entries ADD COLUMN type TEXT NOT NULL DEFAULT 'late'"); } catch {}
   try { database.exec('ALTER TABLE entries ADD COLUMN reason TEXT'); } catch {}
 }
@@ -289,6 +331,101 @@ function currentMondayUTC() {
   const day = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() - day + 1);
   return d;
+}
+
+function isValidGymDays(value) {
+  return typeof value === 'string' && /^[01]{7}$/.test(value);
+}
+
+const LOCK_OPEN_MS     = 60 * 60 * 1000;           // 1 h free-edit window
+const LOCK_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 d lock
+const PITY_MS          = 7  * 24 * 60 * 60 * 1000; // freeze pity resets weekly
+const MAX_LOOKBACK     = 90;                         // days of streak history to scan
+
+function effectiveMask(gymDays, availDays) {
+  if (!availDays) return gymDays;
+  let r = '';
+  for (let i = 0; i < 7; i++) r += (gymDays[i] === '1' && availDays[i] === '1') ? '1' : '0';
+  return r;
+}
+
+// mask index: Mon=0 … Sun=6
+function isDayScheduled(dateStr, mask) {
+  const dow = new Date(dateStr + 'T12:00:00Z').getUTCDay(); // 0=Sun
+  const idx = dow === 0 ? 6 : dow - 1;
+  return mask[idx] === '1';
+}
+
+async function recomputeStreak(userId, gymDays, userEntries, dbUser) {
+  const mask = effectiveMask(gymDays, dbUser.avail_days);
+
+  const entryMap = {};
+  for (const e of userEntries) {
+    if (!entryMap[e.date]) entryMap[e.date] = { attend: false, skip: false };
+    if (e.type === 'attend' || e.type === 'late') entryMap[e.date].attend = true;
+    if (e.type === 'skip') entryMap[e.date].skip = true;
+  }
+
+  const todayD = new Date();
+  todayD.setUTCHours(12, 0, 0, 0);
+  const todayStr = dateYMD(todayD);
+
+  // Never look before user's join date
+  const joinD = dbUser.created_at
+    ? new Date(Number(dbUser.created_at))
+    : new Date(todayD.getTime() - MAX_LOOKBACK * 86400000);
+  joinD.setUTCHours(12, 0, 0, 0);
+
+  let startD;
+  if (dbUser.last_streak_date) {
+    startD = new Date(dbUser.last_streak_date + 'T12:00:00Z');
+    startD.setUTCDate(startD.getUTCDate() + 1);
+  } else {
+    startD = new Date(joinD);
+  }
+  // Cap to [joinD, todayD]
+  if (startD < joinD) startD = new Date(joinD);
+  if (startD > todayD) {
+    return { streak: dbUser.streak, freezes: dbUser.freezes, last_streak_date: dbUser.last_streak_date };
+  }
+
+  let streak = Number(dbUser.streak) || 0;
+  let freezes = Number(dbUser.freezes) || 0;
+  let last_streak_date = dbUser.last_streak_date || null;
+  let changed = false;
+
+  for (let curD = new Date(startD); curD <= todayD; curD.setUTCDate(curD.getUTCDate() + 1)) {
+    const dateStr = dateYMD(curD);
+    if (!isDayScheduled(dateStr, mask)) continue;
+
+    const day = entryMap[dateStr] || {};
+    if (day.attend) {
+      streak++;
+      last_streak_date = dateStr;
+      changed = true;
+    } else if (dateStr < todayStr) {
+      // past scheduled day with no check-in
+      last_streak_date = dateStr;
+      changed = true;
+      if (day.skip) {
+        // held — no streak change
+      } else if (freezes > 0) {
+        freezes--;
+      } else {
+        streak = 0;
+      }
+    }
+    // today with no attend entry: leave open
+  }
+
+  if (changed) {
+    await database.run(
+      'UPDATE users SET streak = ?, freezes = ?, last_streak_date = ? WHERE id = ?',
+      [streak, freezes, last_streak_date, userId]
+    );
+  }
+
+  return { streak, freezes, last_streak_date };
 }
 
 async function startupMigration() {
@@ -351,11 +488,35 @@ app.get('/icon-512.png',                 (_, res) => { iconHeaders(res); res.sen
 
 app.post('/api/groups', ah(async (req, res) => {
   const name = String(req.body?.name ?? '').trim().slice(0, 50);
+  const gymDays = String(req.body?.gym_days ?? '').trim();
   if (!name) return res.status(400).json({ error: 'name_required' });
+  if (!isValidGymDays(gymDays)) return res.status(400).json({ error: 'invalid_gym_days' });
   const id = crypto.randomUUID();
   const code = await uniqueCode();
-  await database.run('INSERT INTO `groups` (id,code,name,created_at) VALUES (?,?,?,?)', [id, code, name, Date.now()]);
-  res.json({ id, code, name });
+  await database.run('INSERT INTO `groups` (id,code,name,created_at,gym_days) VALUES (?,?,?,?,?)', [id, code, name, Date.now(), gymDays]);
+  res.json({ id, code, name, gym_days: gymDays });
+}));
+
+app.patch('/api/groups/:id', ah(async (req, res) => {
+  const { id } = req.params;
+  const creatorUserId = String(req.body?.creatorUserId ?? '').trim();
+  const creatorRecoveryCode = String(req.body?.creatorRecoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
+  const gymDays = req.body?.gym_days === undefined ? null : String(req.body.gym_days).trim();
+
+  const group = await database.one('SELECT id, creator_user_id FROM `groups` WHERE id = ?', [id]);
+  if (!group) return res.status(404).json({ error: 'not_found' });
+  if (!creatorUserId || !creatorRecoveryCode) return res.status(400).json({ error: 'missing_fields' });
+
+  const actor = await database.one('SELECT id, recovery_code, is_creator FROM users WHERE id = ? AND group_id = ?', [creatorUserId, id]);
+  if (!actor) return res.status(401).json({ error: 'unauthorized' });
+  if (actor.recovery_code.replace(/-/g, '') !== creatorRecoveryCode) return res.status(401).json({ error: 'unauthorized' });
+  if (Number(actor.is_creator) !== 1) return res.status(403).json({ error: 'not_creator' });
+
+  if (gymDays === null) return res.json({ ok: true });
+  if (!isValidGymDays(gymDays)) return res.status(400).json({ error: 'invalid_gym_days' });
+
+  await database.run('UPDATE `groups` SET gym_days = ? WHERE id = ?', [gymDays, id]);
+  res.json({ ok: true });
 }));
 
 app.post('/api/test-group', ah(async (req, res) => {
@@ -436,14 +597,31 @@ app.post('/api/groups/join', ah(async (req, res) => {
 }));
 
 app.get('/api/groups/:id', ah(async (req, res) => {
-  const g = await database.one('SELECT id,code,name,creator_user_id FROM `groups` WHERE id = ?', [req.params.id]);
+  const g = await database.one('SELECT id,code,name,creator_user_id,gym_days FROM `groups` WHERE id = ?', [req.params.id]);
   if (!g) return res.status(404).json({ error: 'not_found' });
-  const people = (await database.all(`
-    SELECT id, name, avatar_emoji, avatar_color, avatar_img, is_creator
+  const rawUsers = await database.all(`
+    SELECT id, name, avatar_emoji, avatar_color, avatar_img, is_creator,
+           streak, freezes, last_streak_date, avail_days, avail_edited_at, created_at
     FROM users WHERE group_id = ? ORDER BY created_at
-  `, [req.params.id])).map(userDto);
-  const entries = await database.all('SELECT id,person,date,mins,ts,type,reason FROM entries WHERE group_id = ? ORDER BY date DESC, ts DESC', [req.params.id]);
-  res.json({ id: g.id, code: g.code, name: g.name, people, entries });
+  `, [req.params.id]);
+  const allEntries = await database.all('SELECT id,person,date,mins,ts,type,reason FROM entries WHERE group_id = ? ORDER BY date DESC, ts DESC', [req.params.id]);
+
+  const byPerson = {};
+  for (const e of allEntries) { (byPerson[e.person] = byPerson[e.person] || []).push(e); }
+
+  const people = [];
+  for (const u of rawUsers) {
+    const s = await recomputeStreak(u.id, g.gym_days, byPerson[u.name] || [], u);
+    people.push({
+      ...userDto(u),
+      streak: s.streak,
+      freezes: s.freezes,
+      availDays: u.avail_days || null,
+      availEditedAt: u.avail_edited_at || null,
+    });
+  }
+
+  res.json({ id: g.id, code: g.code, name: g.name, gymDays: g.gym_days, people, entries: allEntries });
 }));
 
 // ── Users ────────────────────────────────────────────────────────────────────
@@ -515,7 +693,7 @@ app.patch('/api/groups/:id/users/:uid', ah(async (req, res) => {
   const { id, uid } = req.params;
   const recoveryCode = String(req.body?.recoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
 
-  const user = await database.one('SELECT id, recovery_code, name FROM users WHERE id = ? AND group_id = ?', [uid, id]);
+  const user = await database.one('SELECT id, recovery_code, name, avail_edited_at FROM users WHERE id = ? AND group_id = ?', [uid, id]);
   if (!user) return res.status(404).json({ error: 'not_found' });
   if (user.recovery_code.replace(/-/g, '') !== recoveryCode) return res.status(401).json({ error: 'unauthorized' });
 
@@ -535,6 +713,21 @@ app.patch('/api/groups/:id/users/:uid', ah(async (req, res) => {
     }
     sets.push('avatar_img = ?');
     params.push(imgVal);
+  }
+  if (Object.prototype.hasOwnProperty.call(req.body, 'avail_days')) {
+    const rawAvail = req.body.avail_days === null ? null : String(req.body.avail_days).trim();
+    if (rawAvail !== null && !isValidGymDays(rawAvail)) {
+      return res.status(400).json({ error: 'invalid_avail_days' });
+    }
+    const editedAt = user.avail_edited_at ? Number(user.avail_edited_at) : null;
+    if (editedAt) {
+      const elapsed = Date.now() - editedAt;
+      if (elapsed > LOCK_OPEN_MS && elapsed < LOCK_DURATION_MS) {
+        return res.status(403).json({ error: 'avail_locked', remaining_ms: Math.round(LOCK_DURATION_MS - elapsed) });
+      }
+    }
+    sets.push('avail_days = ?', 'avail_edited_at = ?');
+    params.push(rawAvail, Date.now());
   }
   if (!sets.length) return res.json({ ok: true });
 
@@ -604,17 +797,50 @@ app.post('/api/groups/:id/entries', ah(async (req, res) => {
   const { id } = req.params;
   const person = String(req.body?.person ?? '').trim().slice(0, 30);
   const date   = String(req.body?.date   ?? '').trim();
-  const type   = ['late', 'skip'].includes(req.body?.type) ? req.body.type : 'late';
+  const type   = ['late', 'skip', 'attend'].includes(req.body?.type) ? req.body.type : 'late';
   const reason = (type === 'skip' && req.body?.reason) ? String(req.body.reason).trim().slice(0, 20) : null;
-  const mins   = type === 'skip' ? 0 : parseInt(req.body?.mins);
+  const mins   = (type === 'skip' || type === 'attend') ? 0 : parseInt(req.body?.mins);
   if (!person || !date) return res.status(400).json({ error: 'invalid' });
   if (type === 'late' && (isNaN(mins) || mins < 1 || mins > 999)) return res.status(400).json({ error: 'invalid' });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'invalid_date' });
-  if (!await database.one('SELECT 1 AS found FROM `groups` WHERE id = ?', [id])) return res.status(404).json({ error: 'not_found' });
+  const g = await database.one('SELECT id, gym_days FROM `groups` WHERE id = ?', [id]);
+  if (!g) return res.status(404).json({ error: 'not_found' });
+
   const eid = crypto.randomUUID();
+  const now = Date.now();
   await database.run('INSERT INTO entries (id,group_id,person,date,mins,ts,type,reason) VALUES (?,?,?,?,?,?,?,?)',
-    [eid, id, person, date, mins, Date.now(), type, reason]);
-  res.json({ ok: true, id: eid });
+    [eid, id, person, date, mins, now, type, reason]);
+
+  let chest = null;
+  if (type === 'attend') {
+    const dbUser = await database.one(
+      'SELECT id, streak, freezes, last_streak_date, avail_days, last_freeze_grant, created_at FROM users WHERE group_id = ? AND LOWER(name) = LOWER(?)',
+      [id, person]
+    );
+    if (dbUser) {
+      // Chest roll
+      const byPity = dbUser.freezes === 0 && (!dbUser.last_freeze_grant || (now - Number(dbUser.last_freeze_grant)) >= PITY_MS);
+      const byRoll = !byPity && Number(dbUser.freezes) < 2 && Math.random() < 0.05;
+      const gotFreeze = (byPity || byRoll) && Number(dbUser.freezes) < 2;
+      if (gotFreeze) {
+        await database.run(
+          'UPDATE users SET freezes = MIN(2, freezes + 1), last_freeze_grant = ? WHERE id = ?',
+          [now, dbUser.id]
+        );
+        dbUser.last_freeze_grant = now;
+        dbUser.freezes = Math.min(2, Number(dbUser.freezes) + 1);
+      }
+      // Recompute streak to include today's check-in
+      const userEntries = await database.all(
+        'SELECT date, type FROM entries WHERE group_id = ? AND LOWER(person) = LOWER(?)',
+        [id, person]
+      );
+      const s = await recomputeStreak(dbUser.id, g.gym_days, userEntries, dbUser);
+      chest = { got_freeze: gotFreeze, streak: s.streak, freezes: s.freezes };
+    }
+  }
+
+  res.json({ ok: true, id: eid, chest });
 }));
 
 app.delete('/api/groups/:id/entries/:eid', ah(async (req, res) => {

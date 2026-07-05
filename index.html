@@ -215,6 +215,30 @@
       padding:2px 9px; border-radius:20px; white-space:nowrap; flex-shrink:0;
       text-transform:uppercase;
     }
+    .freeze-badge {
+      font-size:11px; font-weight:700; color:#60a5fa; letter-spacing:.2px;
+      background:rgba(96,165,250,.1); border:1px solid rgba(96,165,250,.22);
+      padding:2px 8px; border-radius:20px; white-space:nowrap; flex-shrink:0;
+    }
+    /* Weekday picker */
+    .day-picker { display:flex; gap:5px; justify-content:space-between; margin:8px 0 4px; }
+    .day-btn {
+      flex:1; padding:7px 0; border-radius:8px; border:1.5px solid var(--glass-border);
+      background:var(--glass-inner); font-size:12px; font-weight:600;
+      color:var(--text-2); cursor:pointer; transition:background .15s, color .15s, border-color .15s;
+    }
+    .day-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .avail-lock-info {
+      font-size:12px; color:var(--text-2); margin-top:4px;
+      padding:7px 10px; background:rgba(255,255,255,.08); border-radius:8px;
+    }
+    .settings-section { margin-bottom:20px; }
+    .settings-section-title { font-size:13px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+    /* Chest modal */
+    .chest-reveal { text-align:center; padding:8px 0; }
+    .chest-icon { font-size:64px; display:block; margin-bottom:12px; animation:w-pop .5s cubic-bezier(.34,1.56,.64,1) both; }
+    .chest-msg  { font-size:22px; font-weight:800; margin-bottom:6px; }
+    .chest-sub  { font-size:14px; color:var(--text-2); }
     .skip-chip {
       display:inline-flex; align-items:center; gap:5px;
       font-size:13px; font-weight:600; color:var(--gold);
@@ -254,12 +278,12 @@
     .empty-sub { font-size:13px; color:var(--text-3); margin-top:4px; }
 
     /* ── TAB PANE ────────────────────────────────────────────── */
-    .tab-pane { display:none; padding-bottom:calc(110px + env(safe-area-inset-bottom)); }
+    .tab-pane { display:none; padding-bottom:calc(104px + env(safe-area-inset-bottom)); }
     .tab-pane.active { display:block; }
 
     /* ── FAB ─────────────────────────────────────────────────── */
     #fab {
-      position:fixed; bottom:calc(88px + env(safe-area-inset-bottom));
+      position:fixed; bottom:calc(94px + env(safe-area-inset-bottom));
       right:max(16px, calc(50vw - 234px));
       width:58px; height:58px; border-radius:50%; border:none;
       background:linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -271,26 +295,79 @@
     #fab:active { transform:scale(.88); }
     #fab.hidden { display:none; }
 
-    /* ── BOTTOM NAV ──────────────────────────────────────────── */
+    /* ── TOP NAV (desktop) ──────────────────────────────────── */
+    .nav-top { display:none; width:100%; padding:6px 0 10px; }
+    .nav-top .nav-bar { border-radius:var(--r-xl); }
+
+    /* ── BOTTOM NAV — floating pill ─────────────────────────── */
     .bottom-nav {
-      position:fixed; bottom:0; left:50%; transform:translateX(-50%);
-      width:100%; max-width:500px;
-      padding:8px 16px calc(10px + env(safe-area-inset-bottom)); z-index:30;
+      position:fixed;
+      bottom:calc(14px + env(safe-area-inset-bottom));
+      left:50%; transform:translateX(-50%);
+      width:calc(100% - 32px); max-width:468px;
+      z-index:30;
     }
-    .nav-bar { display:flex; border-radius:var(--r-xl); padding:6px; gap:2px; }
+    .nav-bar {
+      display:flex; border-radius:999px; padding:5px; gap:0;
+      position:relative; overflow:hidden;
+      box-shadow:0 6px 28px rgba(0,0,0,.22),0 1px 6px rgba(0,0,0,.12);
+    }
     .nav-btn {
       flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
-      padding:8px 4px; border:none; background:transparent; border-radius:var(--r-md);
-      cursor:pointer; font-family:inherit; transition:background .2s;
+      padding:9px 4px; border:none; background:transparent; border-radius:999px;
+      cursor:pointer; font-family:inherit;
+      position:relative; z-index:1;
     }
-    .nav-btn.active { background:var(--glass-inner); }
-    .nav-ico { font-size:22px; transition:transform .2s; }
-    .nav-btn.active .nav-ico { transform:scale(1.1); }
-    .nav-lbl { font-size:11px; font-weight:500; color:var(--text-2); }
+    .nav-btn.active { background:transparent; }
+    /* Sliding active-indicator pill */
+    .nav-indicator {
+      position:absolute; top:5px; bottom:5px; left:0;
+      border-radius:999px;
+      background:var(--glass-inner);
+      box-shadow:0 1px 4px var(--glass-shadow);
+      pointer-events:none;
+      will-change:transform,width;
+      transition:transform .32s cubic-bezier(.34,1.56,.64,1),width .32s cubic-bezier(.34,1.56,.64,1);
+    }
+    @media (prefers-reduced-motion:reduce) { .nav-indicator { transition:none; } }
+    .nav-ico { font-size:22px; transition:transform .25s cubic-bezier(.34,1.56,.64,1); }
+    .nav-btn.active .nav-ico { transform:scale(1.12) translateY(-1px); }
+    .nav-lbl { font-size:11px; font-weight:500; color:var(--text-2); transition:color .2s,font-weight .15s; }
     .nav-btn.active .nav-lbl { color:var(--accent); font-weight:700; }
 
+    /* ── CALENDAR ────────────────────────────────────────────── */
+    .cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding:4px 0; }
+    .cal-nav-btn { background:none; border:none; font-size:24px; font-weight:300; color:var(--text-1); cursor:pointer; padding:6px 16px; border-radius:var(--r-md); transition:background .15s; font-family:inherit; user-select:none; }
+    .cal-nav-btn:active { background:var(--glass-inner); }
+    .cal-month-label { font-size:17px; font-weight:700; color:var(--text-1); text-align:center; flex:1; }
+    .cal-weekdays { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px; }
+    .cal-wd { text-align:center; font-size:11px; font-weight:600; color:var(--text-3); padding:4px 0; }
+    .cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+    .cal-cell { aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center; border-radius:10px; }
+    .cal-has-entries { cursor:pointer; transition:opacity .15s; }
+    .cal-has-entries:active { opacity:.65; }
+    .cal-today { box-shadow:0 0 0 1.5px var(--accent); }
+    .cal-today .cal-day-num { font-weight:900; color:var(--accent); }
+    .cal-day-num { font-size:13px; font-weight:500; color:var(--text-1); line-height:1; }
+    .cal-dot { display:block; font-size:9px; line-height:1.3; margin-top:1px; }
+    .cal-dot-late { color:rgba(239,68,68,.95); }
+    .cal-dot-skip { color:var(--gold); }
+    .attend-badge { display:inline-flex; align-items:center; font-size:13px; font-weight:700; color:#22c55e; background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.28); padding:4px 10px; border-radius:20px; }
+
+    /* Scroll-snap for weekly recap */
+    html { scroll-snap-type:y proximity; }
+    .week-block { scroll-snap-align:start; scroll-margin-top:72px; margin-bottom:22px; }
+
+    /* Desktop overrides */
+    @media (hover:hover) and (pointer:fine) {
+      .bottom-nav { display:none; }
+      .nav-top { display:block; }
+      html { scroll-snap-type:none; }
+      .tab-pane { padding-bottom:32px; }
+      #fab { bottom:32px; }
+    }
+
     /* ── HISTORY: LAYOUT ─────────────────────────────────────── */
-    .week-block { margin-bottom: 22px; }
 
     .recap-hero {
       padding: 22px 18px 18px; text-align: center;
@@ -846,6 +923,9 @@
       <div class="header-icon" id="header-icon">🏋️</div>
       <h1 class="header-title">GymLate</h1>
       <div class="admin-badge hidden" id="admin-badge">ADMIN</div>
+      <button class="my-profile-btn" id="settings-btn" title="Einstellungen" style="right:44px">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
       <button class="my-profile-btn" id="my-profile-btn" title="Mein Profil"></button>
     </div>
 
@@ -854,6 +934,21 @@
       <span class="pill-dot">·</span>
       <button class="pill-code-btn" id="pill-code"></button>
       <span class="pill-copy-hint" id="pill-hint"></span>
+    </div>
+
+
+    <div class="nav-top">
+      <div class="nav-bar glass">
+        <button class="nav-btn active" data-tab="week">
+          <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="nav-lbl"></span>
+        </button>
+        <button class="nav-btn" data-tab="history">
+          <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="15" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="19" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg></span><span class="nav-lbl"></span>
+        </button>
+        <button class="nav-btn" data-tab="people">
+          <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg></span><span class="nav-lbl"></span>
+        </button>
+      </div>
     </div>
 
     <!-- ── WEEK TAB ── -->
@@ -870,12 +965,19 @@
         <div class="empty" id="week-empty"><div class="empty-txt" id="empty-week-txt"></div></div>
         <div id="week-list"></div>
       </div>
+      <div class="sec-label" id="lbl-history" style="margin-top:24px"></div>
+      <div id="week-recap"></div>
     </div>
 
-    <!-- ── HISTORY TAB ── -->
+    <!-- ── HISTORY / CALENDAR TAB ── -->
     <div class="tab-pane" id="pane-history">
-      <div class="sec-label" id="lbl-history"></div>
-      <div id="history-root"></div>
+      <div class="cal-nav">
+        <button class="cal-nav-btn" id="cal-prev">&#x2039;</button>
+        <div class="cal-month-label" id="cal-month-label"></div>
+        <button class="cal-nav-btn" id="cal-next">&#x203a;</button>
+      </div>
+      <div class="cal-weekdays" id="cal-weekdays"></div>
+      <div class="cal-grid" id="cal-grid"></div>
     </div>
 
     <!-- ── PEOPLE TAB ── -->
@@ -911,6 +1013,7 @@
 
   <div class="bottom-nav">
     <div class="nav-bar glass">
+      <div class="nav-indicator"></div>
       <button class="nav-btn active" data-tab="week">
         <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="nav-lbl" id="nav-week"></span>
       </button>
@@ -935,6 +1038,10 @@
     <div class="form-grp">
       <label class="form-lbl" id="mc-lbl-name"></label>
       <input type="text" class="form-ctrl" id="mc-name" maxlength="50" autocomplete="off">
+    </div>
+    <div class="form-grp" style="margin-top:14px">
+      <label class="form-lbl" id="mc-lbl-days"></label>
+      <div class="day-picker" id="mc-day-picker"></div>
     </div>
     <div class="error-msg" id="mc-error"></div>
     <div class="modal-btns">
@@ -978,15 +1085,23 @@
 <div class="overlay" id="modal-late">
   <div class="modal glass">
     <div class="mode-toggle">
-      <button class="mode-btn active" id="ml-mode-late"></button>
+      <button class="mode-btn active" id="ml-mode-attend"></button>
+      <button class="mode-btn"        id="ml-mode-late"></button>
       <button class="mode-btn"        id="ml-mode-skip"></button>
     </div>
     <div class="form-grp">
       <label class="form-lbl" id="ml-lbl-person"></label>
       <div class="select-wrap"><select class="form-ctrl" id="ml-person"></select></div>
     </div>
+    <!-- Attend-mode fields -->
+    <div id="ml-attend-fields" style="display:none">
+      <div class="form-grp">
+        <label class="form-lbl" id="ml-lbl-attend-date"></label>
+        <input type="date" class="form-ctrl" id="ml-attend-date">
+      </div>
+    </div>
     <!-- Late-mode fields -->
-    <div id="ml-late-fields">
+    <div id="ml-late-fields" style="display:none">
       <div class="modal-row">
         <div class="form-grp">
           <label class="form-lbl" id="ml-lbl-date"></label>
@@ -1182,6 +1297,54 @@
   </div>
 </div>
 
+<!-- Settings -->
+<div class="overlay" id="modal-settings">
+  <div class="modal glass">
+    <h2 class="modal-title" id="mset-title"></h2>
+    <div class="settings-section" id="mset-gymdays-section">
+      <div class="settings-section-title" id="mset-gymdays-lbl"></div>
+      <div class="day-picker" id="mset-gym-picker"></div>
+      <div class="error-msg" id="mset-gym-error" style="margin-top:6px"></div>
+      <button class="btn btn-primary" id="mset-gym-save" style="margin-top:10px;width:100%"></button>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title" id="mset-avail-lbl"></div>
+      <div class="day-picker" id="mset-avail-picker"></div>
+      <div class="avail-lock-info hidden" id="mset-avail-lock"></div>
+      <div class="error-msg" id="mset-avail-error" style="margin-top:6px"></div>
+      <button class="btn btn-primary" id="mset-avail-save" style="margin-top:10px;width:100%"></button>
+    </div>
+    <div class="modal-btns" style="margin-top:8px">
+      <button class="btn btn-ghost btn-full" id="mset-close"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Chest Reveal -->
+<div class="overlay" id="modal-chest">
+  <div class="modal glass">
+    <div class="chest-reveal">
+      <span class="chest-icon" id="chest-icon">🎁</span>
+      <div class="chest-msg" id="chest-msg"></div>
+      <div class="chest-sub" id="chest-sub"></div>
+    </div>
+    <div class="modal-btns" style="margin-top:20px">
+      <button class="btn btn-primary btn-full" id="chest-close"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Calendar Day Detail -->
+<div class="overlay" id="modal-cal-day">
+  <div class="modal glass">
+    <div class="modal-title" id="cal-day-title" style="margin-bottom:4px"></div>
+    <div id="cal-day-list" style="margin-top:12px"></div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-ghost btn-full" id="cal-day-close">OK</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════════════════════════════ -->
 <!--  SCRIPT                                              -->
 <!-- ══════════════════════════════════════════════════════ -->
@@ -1199,19 +1362,25 @@ const TRANS = {
     sCountLbl:'Verspätungen', sMinLbl:'Min. gesamt',
     emptyWeek:'Noch niemand zu spät!', emptyPeople:'Noch keine Personen', emptyPeopleSub:'Füge unten Personen hinzu', emptyHistory:'Noch keine abgeschlossenen Wochen',
     namePlaceholder:'Name eingeben…', addPerson:'+ Person hinzufügen', leaveGroup:'Gruppe verlassen',
-    mcTitle:'Neue Gruppe', mcLblName:'Gruppenname', mcCancel:'Abbrechen', mcSubmit:'Erstellen',
+    mcTitle:'Neue Gruppe', mcLblName:'Gruppenname', mcLblDays:'Gym-Tage', mcCancel:'Abbrechen', mcSubmit:'Erstellen',
     msTitle:'Gruppe erstellt!', msSub:'Teile diesen Code mit deinen Gym-Buddies:', msCopy:'Code kopieren', msContinue:'Weiter zur App →',
     mjTitle:'Gruppe beitreten', mjSub:'Gib den 6-stelligen Code deiner Gruppe ein.', mjLbl:'Gruppencode', mjCancel:'Abbrechen', mjSubmit:'Beitreten',
     mlTitle:'Verspätung eintragen', mlLblPerson:'Person', mlLblDate:'Datum', mlLblMins:'Minuten', mlCancel:'Abbrechen', mlSave:'Speichern',
-    mlModeLate:'Verspätung', mlModeSkip:'⊘ Überspringen',
-    mlLblSkipDate:'Datum', mlLblReason:'Grund (optional)',
-    mlLogSkip:'Skip speichern',
+    mlModeAttend:'✓ Ich war da', mlModeLate:'Verspätet', mlModeSkip:'⊘ Skip',
+    mlLblAttendDate:'Datum', mlLblSkipDate:'Datum', mlLblReason:'Grund (optional)',
+    mlLogSkip:'Skip speichern', mlLogAttend:'Einchecken',
     skipped:'übersprungen',
-    toastSkipSaved:'Skip gespeichert ⊘',
+    toastSkipSaved:'Skip gespeichert ⊘', toastAttendSaved:'Eingecheckt ✓',
     allSkippedTitle:'Alles übersprungen',
     reasons:{ rest:'Ruhetag', sick:'Krank', injured:'Verletzt', no_time:'Keine Zeit', deload:'Deload' },
     reasonLabel: r => ({ rest:'Ruhetag', sick:'Krank', injured:'Verletzt', no_time:'Keine Zeit', deload:'Deload' }[r] || ''),
-    streakLabel: n => `${n}w Streak`,
+    streakLabel: n => `🔥 ${n}`,
+    dayNames:['Mo','Di','Mi','Do','Fr','Sa','So'],
+    msetTitle:'Einstellungen', msetGymDaysLbl:'Gym-Tage der Gruppe', msetAvailLbl:'Meine verfügbaren Tage',
+    msetGymSave:'Gym-Tage speichern', msetAvailSave:'Speichern', msetClose:'Schließen',
+    availLocked: d => `Gesperrt noch ${d}`,
+    chestGotFreeze:'❄️ Freeze erhalten!', chestSub:'Du hast eine Streak-Schutzpflanze', chestNoReward:'Kein Gewinn diesmal', chestOk:'Cool!',
+    chestStreak: n => `Dein Streak: 🔥 ${n}`,
     minsShort:'Min.', noPeople:'Erst Personen hinzufügen!',
     confirmDel:  n  => `„${n}" wirklich löschen?`,
     confirmLeave:() => 'Gruppe wirklich verlassen?\n(Deine Daten bleiben auf dem Server gespeichert.)',
@@ -1275,16 +1444,23 @@ const TRANS = {
     mcTitle:'New Group', mcLblName:'Group Name', mcCancel:'Cancel', mcSubmit:'Create',
     msTitle:'Group Created!', msSub:'Share this code with your gym buddies:', msCopy:'Copy Code', msContinue:'Open App →',
     mjTitle:'Join Group', mjSub:'Enter the 6-character code of your group.', mjLbl:'Group Code', mjCancel:'Cancel', mjSubmit:'Join',
-    mlTitle:'Log Late Arrival', mlLblPerson:'Person', mlLblDate:'Date', mlLblMins:'Minutes', mlCancel:'Cancel', mlSave:'Save',
-    mlModeLate:'Log Late', mlModeSkip:'⊘ Skip',
-    mlLblSkipDate:'Date', mlLblReason:'Reason (optional)',
-    mlLogSkip:'Log Skip',
+    mlTitle:'Log Entry', mlLblPerson:'Person', mlLblDate:'Date', mlLblMins:'Minutes', mlCancel:'Cancel', mlSave:'Save',
+    mlModeAttend:'✓ I went', mlModeLate:'Late', mlModeSkip:'⊘ Skip',
+    mlLblAttendDate:'Date', mlLblSkipDate:'Date', mlLblReason:'Reason (optional)',
+    mlLogSkip:'Log Skip', mlLogAttend:'Check in',
     skipped:'skipped',
-    toastSkipSaved:'Skip logged ⊘',
+    toastSkipSaved:'Skip logged ⊘', toastAttendSaved:'Checked in ✓',
     allSkippedTitle:'All skipped',
     reasons:{ rest:'Rest day', sick:'Sick', injured:'Injured', no_time:'No time', deload:'Deload' },
     reasonLabel: r => ({ rest:'Rest', sick:'Sick', injured:'Injured', no_time:'No time', deload:'Deload' }[r] || ''),
-    streakLabel: n => `${n}w streak`,
+    streakLabel: n => `🔥 ${n}`,
+    dayNames:['Mo','Tu','We','Th','Fr','Sa','Su'],
+    msetTitle:'Settings', msetGymDaysLbl:'Group gym days', msetAvailLbl:'My available days',
+    msetGymSave:'Save gym days', msetAvailSave:'Save', msetClose:'Close',
+    availLocked: d => `Locked for ${d}`,
+    chestGotFreeze:'❄️ Freeze received!', chestSub:'Your streak is protected for one miss', chestNoReward:'No reward this time', chestOk:'Nice!',
+    chestStreak: n => `Your streak: 🔥 ${n}`,
+    mcLblDays:'Gym days',
     minsShort:'min', noPeople:'Please add people first!',
     confirmDel:  n  => `Really delete "${n}"?`,
     confirmLeave:() => 'Really leave the group?\n(Your data stays on the server.)',
@@ -1371,7 +1547,8 @@ const api = {
     if (!res.ok) { const e=new Error(d.error||'error'); e.status=res.status; throw e; }
     return d;
   },
-  createGroup:    n       => api.req('POST', '/groups', {name:n}),
+  createGroup:   (n,gd)   => api.req('POST', '/groups', {name:n, gym_days:gd}),
+  patchGroup:    (id,d)   => api.req('PATCH', `/groups/${id}`, d),
   createTestGroup:p       => api.req('POST', '/test-group', {password:p}),
   joinGroup:      c       => api.req('POST', '/groups/join', {code:c}),
   getGroup:       id      => api.req('GET',  `/groups/${id}`),
@@ -1610,17 +1787,20 @@ function spawnConfetti(host) {
 // ════════════════════════════════════════════════════════
 //  SKIP MODE STATE
 // ════════════════════════════════════════════════════════
-let mlMode = 'late';   // 'late' | 'skip'
+let mlMode = 'attend'; // 'attend' | 'late' | 'skip'
 let mlSelReason = null;
 const SKIP_REASONS = ['rest', 'sick', 'injured', 'no_time', 'deload'];
 
 function setMlMode(mode) {
   mlMode = mode;
-  document.getElementById('ml-late-fields').style.display = mode === 'late' ? '' : 'none';
-  document.getElementById('ml-skip-fields').style.display = mode === 'skip' ? '' : 'none';
-  document.getElementById('ml-mode-late').classList.toggle('active', mode === 'late');
-  document.getElementById('ml-mode-skip').classList.toggle('active', mode === 'skip');
-  document.getElementById('ml-save').textContent = mode === 'late' ? T.mlSave : T.mlLogSkip;
+  document.getElementById('ml-attend-fields').style.display = mode === 'attend' ? '' : 'none';
+  document.getElementById('ml-late-fields').style.display   = mode === 'late'   ? '' : 'none';
+  document.getElementById('ml-skip-fields').style.display   = mode === 'skip'   ? '' : 'none';
+  document.getElementById('ml-mode-attend').classList.toggle('active', mode === 'attend');
+  document.getElementById('ml-mode-late').classList.toggle('active',   mode === 'late');
+  document.getElementById('ml-mode-skip').classList.toggle('active',   mode === 'skip');
+  document.getElementById('ml-save').textContent =
+    mode === 'attend' ? T.mlLogAttend : mode === 'late' ? T.mlSave : T.mlLogSkip;
 }
 
 // ════════════════════════════════════════════════════════
@@ -1697,7 +1877,7 @@ function renderHistory() {
     (weeks[mon] = weeks[mon] || []).push(e);
   });
 
-  const root = document.getElementById('history-root');
+  const root = document.getElementById('week-recap');
   const sorted = Object.keys(weeks).sort().reverse();
 
   if (!sorted.length) {
@@ -1786,6 +1966,82 @@ function renderHistory() {
 }
 
 // ════════════════════════════════════════════════════════
+//  CALENDAR STATE + RENDER
+// ════════════════════════════════════════════════════════
+let calYear = new Date().getFullYear(), calMonthIdx = new Date().getMonth();
+
+function renderCalendar() {
+  if (!data) return;
+  const calEl = document.getElementById('cal-grid');
+  if (!calEl) return;
+
+  // Day map: date -> {late, skip, mins}
+  const dayMap = {};
+  (data.entries || []).forEach(e => {
+    if (!dayMap[e.date]) dayMap[e.date] = { late:0, skip:0, mins:0 };
+    const t = e.type || 'late';
+    if (t === 'late') { dayMap[e.date].late++; dayMap[e.date].mins += e.mins; }
+    else if (t === 'skip') dayMap[e.date].skip++;
+  });
+
+  // Month label
+  const firstOfMonth = new Date(calYear, calMonthIdx, 1);
+  const labelEl = document.getElementById('cal-month-label');
+  if (labelEl) labelEl.textContent = firstOfMonth.toLocaleDateString(navigator.language, { month:'long', year:'numeric' });
+
+  // Weekday headers (Mon-first)
+  const wdEl = document.getElementById('cal-weekdays');
+  if (wdEl) {
+    // Jan 1 2024 is a Monday — iterate 0-6 for Mon-Sun
+    wdEl.innerHTML = Array.from({length:7}, (_,i) =>
+      `<div class="cal-wd">${esc(new Date(2024,0,1+i).toLocaleDateString(navigator.language,{weekday:'narrow'}))}</div>`
+    ).join('');
+  }
+
+  // Grid cells
+  const daysInMonth = new Date(calYear, calMonthIdx + 1, 0).getDate();
+  const firstWeekday = (firstOfMonth.getDay() + 6) % 7; // Mon=0
+  const today = todayStr();
+
+  let cells = Array.from({length:firstWeekday}, () => '<div class="cal-cell"></div>').join('');
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calYear}-${pad(calMonthIdx+1)}-${pad(d)}`;
+    const info = dayMap[dateStr];
+    const isToday = dateStr === today;
+    let cls = 'cal-cell' + (isToday ? ' cal-today' : '');
+    let style = '', marker = '';
+    if (info) {
+      cls += ' cal-has-entries';
+      if (info.late > 0) {
+        const alpha = Math.min(0.48, 0.12 + info.late * 0.09 + info.mins * 0.002).toFixed(2);
+        style = `background:rgba(239,68,68,${alpha})`;
+        marker = `<span class="cal-dot cal-dot-late">${info.late}</span>`;
+      } else if (info.skip > 0) {
+        style = `background:rgba(245,158,11,.18)`;
+        marker = `<span class="cal-dot cal-dot-skip">&#x2298;</span>`;
+      }
+    }
+    cells += `<div class="${cls}" data-date="${dateStr}"${style ? ` style="${style}"` : ''}>` +
+      `<span class="cal-day-num">${d}</span>${marker}</div>`;
+  }
+  calEl.innerHTML = cells;
+}
+
+// Nav indicator — slides behind the active tab button
+function updateNavIndicator() {
+  const bar = document.querySelector('.bottom-nav .nav-bar');
+  if (!bar) return;
+  const indicator = bar.querySelector('.nav-indicator');
+  if (!indicator) return;
+  const activeBtn = bar.querySelector('.nav-btn.active');
+  if (!activeBtn) return;
+  const barRect = bar.getBoundingClientRect();
+  const btnRect = activeBtn.getBoundingClientRect();
+  indicator.style.width  = btnRect.width  + 'px';
+  indicator.style.transform = `translateX(${btnRect.left - barRect.left}px)`;
+}
+
+// ════════════════════════════════════════════════════════
 //  RENDER: PEOPLE
 // ════════════════════════════════════════════════════════
 function renderPeople() {
@@ -1793,15 +2049,14 @@ function renderPeople() {
   const emEl=document.getElementById('people-empty'), lEl=document.getElementById('people-list');
   if (!data.people.length) { emEl.style.display=''; lEl.innerHTML=''; return; }
   emEl.style.display='none';
-  const isCreator = userProfile?.isCreator;
   lEl.innerHTML = data.people.map((p,i)=>{
-    const isMe   = userProfile && p.id === userProfile.userId;
-    const streak = calcStreak(p.name, data.entries || []);
-    const streakBadge = streak > 0 ? `<span class="streak-badge">${T.streakLabel(streak)}</span>` : '';
+    const isMe = userProfile && p.id === userProfile.userId;
+    const streakBadge = (p.streak > 0) ? `<span class="streak-badge">${T.streakLabel(p.streak)}</span>` : '';
+    const freezeBadge = (p.freezes > 0) ? `<span class="freeze-badge">❄️ ×${p.freezes}</span>` : '';
     return `<div class="person-row animate" style="animation-delay:${i*35}ms;cursor:pointer" data-uid="${esc(p.id)}">
       ${avatarHtml(p)}
       <div class="person-name">${esc(p.name)}${isMe ? ' <span style="font-size:11px;color:var(--accent);font-weight:700">(Du)</span>' : ''}${p.isCreator ? ' <span style="font-size:10px;color:var(--text-3)">★</span>' : ''}</div>
-      ${streakBadge}
+      <div style="display:flex;gap:5px;flex-shrink:0">${streakBadge}${freezeBadge}</div>
     </div>`;
   }).join('');
 }
@@ -1818,7 +2073,7 @@ function renderAdminPanel() {
 }
 
 function renderAll() {
-  renderPill(); renderWeek(); renderHistory(); renderPeople(); renderAdminPanel();
+  renderPill(); renderWeek(); renderHistory(); renderCalendar(); renderPeople(); renderAdminPanel();
 }
 
 function renderPill() {
@@ -1875,8 +2130,10 @@ async function enterGroup(g) {
 
 function updateMyProfileBtn() {
   const btn = document.getElementById('my-profile-btn');
-  if (!userProfile) { btn.classList.remove('visible'); return; }
+  const settingsBtn = document.getElementById('settings-btn');
+  if (!userProfile) { btn.classList.remove('visible'); settingsBtn.classList.remove('visible'); return; }
   btn.classList.add('visible');
+  settingsBtn.classList.add('visible');
   if (userProfile.avatarImg && userProfile.avatarImg.startsWith('data:image/')) {
     btn.textContent = '';
     btn.style.backgroundImage = `url(${userProfile.avatarImg})`;
@@ -1898,13 +2155,49 @@ function switchTab(name) {
   document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('pane-'+name).classList.add('active');
-  document.querySelector(`.nav-btn[data-tab="${name}"]`).classList.add('active');
+  document.querySelectorAll(`.nav-btn[data-tab="${name}"]`).forEach(b=>b.classList.add('active'));
   document.getElementById('fab').classList.toggle('hidden', name==='people');
-
-  // Re-render history with fresh animations every time the tab is opened
-  if (name === 'history') renderHistory();
+  updateNavIndicator();
+  if (name === 'history') renderCalendar();
 }
 document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
+// ════════════════════════════════════════════════════════
+//  CALENDAR HANDLERS
+// ════════════════════════════════════════════════════════
+document.getElementById('cal-grid').addEventListener('click', e => {
+  const cell = e.target.closest('.cal-has-entries');
+  if (!cell || !data) return;
+  const date = cell.dataset.date;
+  const entries = (data.entries || []).filter(e => e.date === date);
+  const titleEl = document.getElementById('cal-day-title');
+  const listEl  = document.getElementById('cal-day-list');
+  if (titleEl) titleEl.textContent = fmtFull(date);
+  if (listEl) listEl.innerHTML = entries.map(e => {
+    const isSkip = e.type === 'skip';
+    const badge = isSkip
+      ? `<span class="skip-badge">&#x2298; ${esc(T.reasonLabel(e.reason)||T.skipped)}</span>`
+      : `<span class="late-badge">${e.mins} ${T.minsShort}</span>`;
+    return `<div class="entry" style="margin-bottom:8px">
+      <div class="avatar">${esc(initials(e.person))}</div>
+      <div class="entry-info"><div class="entry-name">${esc(e.person)}</div></div>
+      ${badge}
+    </div>`;
+  }).join('');
+  openOv('modal-cal-day');
+});
+document.getElementById('cal-day-close').addEventListener('click', () => closeOv('modal-cal-day'));
+document.getElementById('modal-cal-day').addEventListener('click', e => { if(e.target===e.currentTarget) closeOv('modal-cal-day'); });
+document.getElementById('cal-prev').addEventListener('click', () => {
+  calMonthIdx--; if (calMonthIdx < 0) { calMonthIdx = 11; calYear--; }
+  renderCalendar();
+});
+document.getElementById('cal-next').addEventListener('click', () => {
+  calMonthIdx++; if (calMonthIdx > 11) { calMonthIdx = 0; calYear++; }
+  renderCalendar();
+});
+// Init nav indicator on load
+requestAnimationFrame(() => { requestAnimationFrame(updateNavIndicator); });
+
 
 // ════════════════════════════════════════════════════════
 //  ADMIN
@@ -2013,16 +2306,21 @@ function applyI18n() {
   const set = (id,v) => { const el=document.getElementById(id); if(el&&v) el.textContent=v; };
   set('ls-sub',T.lsTagline); set('ls-create-lbl',T.lsCreate); set('ls-join-lbl',T.lsJoin); set('ls-or',T.lsOr);
   set('ls-admin-lbl',T.lsAdmin); set('ls-test-lbl',T.lsTestGroup); set('ls-admin-note',T.lsAdminNote);
-  set('nav-week',T.navWeek); set('nav-history',T.navHistory); set('nav-people',T.navPeople);
+  document.querySelectorAll('[data-tab="week"] .nav-lbl').forEach(el=>el.textContent=T.navWeek);
+  document.querySelectorAll('[data-tab="history"] .nav-lbl').forEach(el=>el.textContent=T.navHistory);
+  document.querySelectorAll('[data-tab="people"] .nav-lbl').forEach(el=>el.textContent=T.navPeople);
   set('lbl-week',T.lblWeek); set('lbl-history',T.lblHistory); set('lbl-people',T.lblPeople);
   set('s-count-lbl',T.sCountLbl); set('s-mins-lbl',T.sMinLbl);
   set('empty-week-txt',T.emptyWeek); set('empty-people-txt',T.emptyPeople); set('empty-people-sub',T.emptyPeopleSub);
   set('add-person-btn',T.addPerson); set('leave-btn',T.leaveGroup);
-  set('mc-title',T.mcTitle); set('mc-lbl-name',T.mcLblName); set('mc-cancel',T.mcCancel); set('mc-submit',T.mcSubmit);
+  set('mc-title',T.mcTitle); set('mc-lbl-name',T.mcLblName); set('mc-lbl-days',T.mcLblDays); set('mc-cancel',T.mcCancel); set('mc-submit',T.mcSubmit);
   set('ms-title',T.msTitle); set('ms-sub',T.msSub); set('ms-copy',T.msCopy); set('ms-continue',T.msContinue);
   set('mj-title',T.mjTitle); set('mj-sub',T.mjSub); set('mj-lbl',T.mjLbl); set('mj-cancel',T.mjCancel); set('mj-submit',T.mjSubmit);
   set('ml-title',T.mlTitle); set('ml-lbl-person',T.mlLblPerson); set('ml-lbl-date',T.mlLblDate); set('ml-lbl-mins',T.mlLblMins); set('ml-cancel',T.mlCancel); set('ml-save',T.mlSave);
-  set('ml-mode-late',T.mlModeLate); set('ml-mode-skip',T.mlModeSkip);
+  set('ml-mode-attend',T.mlModeAttend); set('ml-mode-late',T.mlModeLate); set('ml-mode-skip',T.mlModeSkip);
+  set('ml-lbl-attend-date',T.mlLblAttendDate);
+  set('mset-title',T.msetTitle); set('mset-gymdays-lbl',T.msetGymDaysLbl); set('mset-avail-lbl',T.msetAvailLbl);
+  set('mset-gym-save',T.msetGymSave); set('mset-avail-save',T.msetAvailSave); set('mset-close',T.msetClose);
   set('ml-lbl-skip-date',T.mlLblSkipDate); set('ml-lbl-reason',T.mlLblReason);
   set('ma-title',T.maTitle); set('ma-lbl',T.maLbl); set('ma-cancel',T.maCancel); set('ma-submit',T.maSubmit);
   set('adm-title',T.admTitle); set('adm-add-btn',T.admAdd); set('adm-del-btn',T.admDel); set('adm-exit-btn',T.admExit); set('adm-replay-btn',T.admReplay);
@@ -2048,20 +2346,43 @@ function applyI18n() {
 }
 
 // ════════════════════════════════════════════════════════
+//  DAY PICKER HELPER
+// ════════════════════════════════════════════════════════
+function buildDayPicker(containerId, initialMask, disabledMask) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = T.dayNames.map((name, i) => {
+    const isActive = initialMask ? initialMask[i] === '1' : true;
+    const isDisabled = disabledMask ? disabledMask[i] !== '1' : false;
+    return `<button type="button" class="day-btn${isActive ? ' active' : ''}" data-idx="${i}"${isDisabled ? ' disabled style="opacity:.3"' : ''}>${esc(name)}</button>`;
+  }).join('');
+  el.querySelectorAll('.day-btn:not([disabled])').forEach(btn => {
+    btn.addEventListener('click', () => btn.classList.toggle('active'));
+  });
+}
+
+function getDayMask(containerId) {
+  const el = document.getElementById(containerId);
+  return Array.from(el.querySelectorAll('.day-btn')).map(b => b.classList.contains('active') ? '1' : '0').join('');
+}
+
+// ════════════════════════════════════════════════════════
 //  MODAL: CREATE GROUP
 // ════════════════════════════════════════════════════════
 document.getElementById('btn-show-create').addEventListener('click', () => {
   document.getElementById('mc-name').value=''; document.getElementById('mc-error').textContent='';
+  buildDayPicker('mc-day-picker', '1111100'); // Mon-Fri default
   openOv('modal-create'); setTimeout(()=>document.getElementById('mc-name').focus(),350);
 });
 document.getElementById('mc-cancel').addEventListener('click', ()=>closeOv('modal-create'));
 document.getElementById('modal-create').addEventListener('click',e=>{if(e.target===e.currentTarget)closeOv('modal-create');});
 document.getElementById('mc-submit').addEventListener('click', async () => {
   const name = document.getElementById('mc-name').value.trim();
+  const gymDays = getDayMask('mc-day-picker');
   if (!name) { document.getElementById('mc-error').textContent=T.errGroupName; return; }
+  if (!gymDays.includes('1')) { document.getElementById('mc-error').textContent='Bitte mindestens einen Tag wählen.'; return; }
   document.getElementById('mc-submit').disabled=true;
   try {
-    const g = await api.createGroup(name);
+    const g = await api.createGroup(name, gymDays);
     closeOv('modal-create');
     document.getElementById('ms-code-boxes').innerHTML = g.code.split('').map(c=>`<div class="code-char">${esc(c)}</div>`).join('');
     document.getElementById('ms-copy').onclick    = ()=>copyToClipboard(g.code);
@@ -2122,6 +2443,7 @@ document.getElementById('mj-code').addEventListener('keydown',e=>{if(e.key==='En
 // ════════════════════════════════════════════════════════
 //  MODAL: LOG LATE
 // ════════════════════════════════════════════════════════
+document.getElementById('ml-mode-attend').addEventListener('click', () => setMlMode('attend'));
 document.getElementById('ml-mode-late').addEventListener('click', () => setMlMode('late'));
 document.getElementById('ml-mode-skip').addEventListener('click', () => setMlMode('skip'));
 
@@ -2129,10 +2451,11 @@ document.getElementById('fab').addEventListener('click', () => {
   if (!data?.people?.length) { showToast(T.noPeople); return; }
   const sel = document.getElementById('ml-person');
   sel.innerHTML = data.people.map(p => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
-  document.getElementById('ml-date').value      = todayStr();
-  document.getElementById('ml-skip-date').value = todayStr();
-  document.getElementById('ml-mins').value      = '10';
-  document.getElementById('ml-error').textContent = '';
+  document.getElementById('ml-attend-date').value = todayStr();
+  document.getElementById('ml-date').value         = todayStr();
+  document.getElementById('ml-skip-date').value    = todayStr();
+  document.getElementById('ml-mins').value         = '10';
+  document.getElementById('ml-error').textContent  = '';
   mlSelReason = null;
   // Build reason chips fresh each open
   const chips = document.getElementById('ml-reason-chips');
@@ -2147,7 +2470,7 @@ document.getElementById('fab').addEventListener('click', () => {
       else mlSelReason = null;
     });
   });
-  setMlMode('late');
+  setMlMode('attend');
   openOv('modal-late');
 });
 document.getElementById('ml-cancel').addEventListener('click', () => closeOv('modal-late'));
@@ -2158,20 +2481,30 @@ document.getElementById('ml-save').addEventListener('click', async () => {
   errEl.textContent = '';
   document.getElementById('ml-save').disabled = true;
   try {
-    if (mlMode === 'late') {
+    if (mlMode === 'attend') {
+      const date = document.getElementById('ml-attend-date').value;
+      if (!person || !date) { errEl.textContent = '⚠'; return; }
+      const res = await api.addEntry(data.id, { person, date, type: 'attend' });
+      closeOv('modal-late');
+      await refresh();
+      showToast(T.toastAttendSaved);
+      if (res.chest) showChest(res.chest);
+    } else if (mlMode === 'late') {
       const date = document.getElementById('ml-date').value;
       const mins = parseInt(document.getElementById('ml-mins').value);
       if (!person || !date || isNaN(mins) || mins < 1) { errEl.textContent = '⚠'; return; }
       await api.addEntry(data.id, { person, date, mins, type: 'late' });
+      closeOv('modal-late');
+      await refresh();
       showToast(T.toastSaved);
     } else {
       const date = document.getElementById('ml-skip-date').value;
       if (!person || !date) { errEl.textContent = '⚠'; return; }
       await api.addEntry(data.id, { person, date, type: 'skip', reason: mlSelReason });
+      closeOv('modal-late');
+      await refresh();
       showToast(T.toastSkipSaved);
     }
-    closeOv('modal-late');
-    await refresh();
   } catch { errEl.textContent = T.errServer; }
   finally  { document.getElementById('ml-save').disabled = false; }
 });
@@ -2429,6 +2762,120 @@ document.getElementById('my-profile-btn').addEventListener('click', () => {
 });
 
 // ════════════════════════════════════════════════════════
+//  SETTINGS MODAL
+// ════════════════════════════════════════════════════════
+function formatDuration(ms) {
+  const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000), d = Math.floor(ms / 86400000);
+  if (d >= 1) return `${d}d ${h % 24}h`;
+  return `${h}h ${m}m`;
+}
+
+function openSettings() {
+  if (!data) return;
+  const gymDays = data.gymDays || '1111100';
+  const me = data.people.find(p => userProfile && p.id === userProfile.userId);
+  const availDays = me?.availDays || gymDays;
+  const availEditedAt = me?.availEditedAt || null;
+  const isCreator = userProfile?.isCreator;
+
+  // Gym days section (creator only)
+  const gymSection = document.getElementById('mset-gymdays-section');
+  gymSection.style.display = isCreator ? '' : 'none';
+  if (isCreator) {
+    buildDayPicker('mset-gym-picker', gymDays);
+    document.getElementById('mset-gym-error').textContent = '';
+  }
+
+  // Avail days (current user, within gym days mask)
+  buildDayPicker('mset-avail-picker', availDays, gymDays);
+
+  // Lock check
+  const lockEl = document.getElementById('mset-avail-lock');
+  const saveBtn = document.getElementById('mset-avail-save');
+  const LOCK_OPEN_MS = 3600000, LOCK_DURATION_MS = 30 * 86400000;
+  if (availEditedAt) {
+    const elapsed = Date.now() - availEditedAt;
+    if (elapsed > LOCK_OPEN_MS && elapsed < LOCK_DURATION_MS) {
+      const remaining = LOCK_DURATION_MS - elapsed;
+      lockEl.textContent = T.availLocked(formatDuration(remaining));
+      lockEl.classList.remove('hidden');
+      saveBtn.disabled = true;
+    } else {
+      lockEl.classList.add('hidden');
+      saveBtn.disabled = false;
+    }
+  } else {
+    lockEl.classList.add('hidden');
+    saveBtn.disabled = false;
+  }
+  document.getElementById('mset-avail-error').textContent = '';
+  openOv('modal-settings');
+}
+
+document.getElementById('settings-btn').addEventListener('click', openSettings);
+document.getElementById('mset-close').addEventListener('click', () => closeOv('modal-settings'));
+document.getElementById('modal-settings').addEventListener('click', e => { if (e.target === e.currentTarget) closeOv('modal-settings'); });
+
+document.getElementById('mset-gym-save').addEventListener('click', async () => {
+  const gymDays = getDayMask('mset-gym-picker');
+  if (!gymDays.includes('1')) { document.getElementById('mset-gym-error').textContent = 'Mindestens 1 Tag wählen.'; return; }
+  const btn = document.getElementById('mset-gym-save');
+  btn.disabled = true;
+  try {
+    await api.patchGroup(data.id, {
+      creatorUserId: userProfile.userId,
+      creatorRecoveryCode: userProfile.recoveryCode,
+      gym_days: gymDays
+    });
+    showToast('Gym-Tage gespeichert ✓');
+    await refresh();
+    closeOv('modal-settings');
+  } catch { document.getElementById('mset-gym-error').textContent = T.errServer; }
+  finally { btn.disabled = false; }
+});
+
+document.getElementById('mset-avail-save').addEventListener('click', async () => {
+  const availDays = getDayMask('mset-avail-picker');
+  const btn = document.getElementById('mset-avail-save');
+  btn.disabled = true;
+  try {
+    await api.updateUser(data.id, userProfile.userId, {
+      recoveryCode: userProfile.recoveryCode,
+      avail_days: availDays
+    });
+    showToast('Verfügbarkeit gespeichert ✓');
+    await refresh();
+    closeOv('modal-settings');
+  } catch(e) {
+    if (e.status === 403) {
+      document.getElementById('mset-avail-error').textContent = T.errServer;
+    } else {
+      document.getElementById('mset-avail-error').textContent = T.errServer;
+    }
+  }
+  finally { btn.disabled = false; }
+});
+
+// ════════════════════════════════════════════════════════
+//  CHEST REVEAL
+// ════════════════════════════════════════════════════════
+function showChest(chest) {
+  if (chest.got_freeze) {
+    document.getElementById('chest-icon').textContent = '❄️';
+    document.getElementById('chest-msg').textContent  = T.chestGotFreeze;
+    document.getElementById('chest-sub').textContent  = chest.streak != null ? T.chestStreak(chest.streak) : T.chestSub;
+  } else {
+    document.getElementById('chest-icon').textContent = '🎁';
+    document.getElementById('chest-msg').textContent  = T.chestNoReward;
+    document.getElementById('chest-sub').textContent  = chest.streak != null ? T.chestStreak(chest.streak) : '';
+  }
+  document.getElementById('chest-close').textContent = T.chestOk;
+  openOv('modal-chest');
+}
+document.getElementById('chest-close').addEventListener('click', () => closeOv('modal-chest'));
+document.getElementById('modal-chest').addEventListener('click', e => { if (e.target === e.currentTarget) closeOv('modal-chest'); });
+
+// ════════════════════════════════════════════════════════
 //  EDIT PROFILE MODAL
 // ════════════════════════════════════════════════════════
 function openEditProfile() {
@@ -2650,7 +3097,7 @@ function buildWrappedSlides(anyWeek = false) {
   entries.forEach(e => { ps[e.person] = ps[e.person]||{count:0,mins:0}; ps[e.person].count++; ps[e.person].mins+=e.mins; });
   const ranking = Object.entries(ps).sort((a,b) => b[1].mins - a[1].mins);
   const [topName, topSt] = ranking[0];
-  const medals = ['1.','2.','3.'];
+  const medals = ['🥇','🥈','🥉'];
 
   const slides = [];
 
@@ -2675,7 +3122,7 @@ function buildWrappedSlides(anyWeek = false) {
     <div class="w-gap-xs"></div>
     <div class="w-sub w-rise" style="animation-delay:.3s">${T.wS2sub}</div>
     <div class="w-gap"></div>
-
+    <div class="w-emoji w-pop" style="animation-delay:.5s;font-size:clamp(36px,12vw,58px)">🚨</div>
   `});
 
   /* ── Slide 3: Minutes ── */
@@ -2690,7 +3137,7 @@ function buildWrappedSlides(anyWeek = false) {
 
   /* ── Slide 4: Top latecomer ── */
   slides.push({ dur: 4.5, bg: 'linear-gradient(160deg,#1d0082 0%,#5200d4 100%)', html: `
-
+    <div class="w-emoji w-pop">👑</div>
     <div class="w-gap-sm"></div>
     <div class="w-label w-rise" style="animation-delay:.2s">${T.wS4label}</div>
     <div class="w-gap-sm"></div>
@@ -2717,7 +3164,7 @@ function buildWrappedSlides(anyWeek = false) {
 
   /* ── Slide 6: End card ── */
   slides.push({ isLast: true, bg: 'linear-gradient(160deg,#0c0118 0%,#1e0044 100%)', html: `
-    <div class="w-emoji w-pop">🏋️</div>
+    <div class="w-emoji w-pop">💪</div>
     <div class="w-gap-sm"></div>
     <div class="w-headline w-rise" style="animation-delay:.2s;font-size:clamp(44px,14vw,78px)">${T.wS6a}</div>
     <div class="w-headline w-rise" style="animation-delay:.36s;font-size:clamp(44px,14vw,78px);color:rgba(255,255,255,.35)">${T.wS6b}</div>
@@ -2790,5 +3237,7 @@ async function init() {
 }
 init();
 </script>
+
+
 </body>
 </html>
