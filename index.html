@@ -449,6 +449,7 @@
         grid-area: sidebar; align-self: start;
         margin: 12px 12px 0; width: auto; max-width: none;
       }
+      .group-pill .pill-name { max-width: 200px; flex-shrink: 0; }
       .nav-top {
         grid-area: sidebar; align-self: start;
         display: flex; flex-direction: column;
@@ -2253,10 +2254,13 @@ function renderWeek() {
   if (!allWeek.length) { emEl.style.display = ''; lEl.innerHTML = ''; return; }
   emEl.style.display = 'none';
   lEl.innerHTML = allWeek.map((e, i) => {
-    const isSkip = e.type === 'skip';
+    const isSkip   = e.type === 'skip';
+    const isAttend = e.type === 'attend';
     const badge  = isSkip
       ? `<div class="skip-badge">⊘ ${esc(T.reasonLabel(e.reason) || T.skipped)}</div>`
-      : `<div class="late-badge">${e.mins} ${T.minsShort}</div>`;
+      : isAttend
+        ? `<div class="attend-badge">✓</div>`
+        : `<div class="late-badge">${e.mins} ${T.minsShort}</div>`;
     return `
       <div class="entry animate" style="animation-delay:${i*45}ms">
         <div class="avatar">${esc(initials(e.person))}</div>
@@ -2604,9 +2608,12 @@ document.getElementById('cal-grid').addEventListener('click', e => {
   if (titleEl) titleEl.textContent = fmtFull(date);
   if (listEl) listEl.innerHTML = entries.map(e => {
     const isSkip = e.type === 'skip';
+    const isAttendCal = e.type === 'attend';
     const badge = isSkip
       ? `<span class="skip-badge">&#x2298; ${esc(T.reasonLabel(e.reason)||T.skipped)}</span>`
-      : `<span class="late-badge">${e.mins} ${T.minsShort}</span>`;
+      : isAttendCal
+        ? `<span class="attend-badge">✓</span>`
+        : `<span class="late-badge">${e.mins} ${T.minsShort}</span>`;
     return `<div class="entry" style="margin-bottom:8px">
       <div class="avatar">${esc(initials(e.person))}</div>
       <div class="entry-info"><div class="entry-name">${esc(e.person)}</div></div>
