@@ -352,6 +352,8 @@
     .cal-dot { display:block; font-size:9px; line-height:1.3; margin-top:1px; }
     .cal-dot-late { color:rgba(239,68,68,.95); }
     .cal-dot-skip { color:var(--gold); }
+    .cal-dot-attend { color:rgba(34,197,94,.9); font-size:11px; }
+    .cal-dot-miss { color:rgba(255,255,255,.2); font-size:14px; }
     .attend-badge { display:inline-flex; align-items:center; font-size:13px; font-weight:700; color:#22c55e; background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.28); padding:4px 10px; border-radius:20px; }
 
     /* Scroll-snap for weekly recap */
@@ -1970,18 +1972,26 @@ function renderHistory() {
 // ════════════════════════════════════════════════════════
 let calYear = new Date().getFullYear(), calMonthIdx = new Date().getMonth();
 
+function calDayScheduled(dateStr, mask) {
+  if (!mask || mask === '0000000') return false;
+  const dow = new Date(dateStr + 'T12:00:00Z').getUTCDay();
+  const idx = dow === 0 ? 6 : dow - 1;
+  return mask[idx] === '1';
+}
+
 function renderCalendar() {
   if (!data) return;
   const calEl = document.getElementById('cal-grid');
   if (!calEl) return;
 
-  // Day map: date -> {late, skip, mins}
+  // Day map: date -> {late, skip, attend, mins}
   const dayMap = {};
   (data.entries || []).forEach(e => {
-    if (!dayMap[e.date]) dayMap[e.date] = { late:0, skip:0, mins:0 };
+    if (!dayMap[e.date]) dayMap[e.date] = { late:0, skip:0, attend:0, mins:0 };
     const t = e.type || 'late';
-    if (t === 'late') { dayMap[e.date].late++; dayMap[e.date].mins += e.mins; }
+    if (t === 'late') { dayMap[e.date].late++; dayMap[e.date].attend++; dayMap[e.date].mins += e.mins; }
     else if (t === 'skip') dayMap[e.date].skip++;
+    else if (t === 'attend') dayMap[e.date].attend++;
   });
 
   // Month label
@@ -2003,11 +2013,15 @@ function renderCalendar() {
   const firstWeekday = (firstOfMonth.getDay() + 6) % 7; // Mon=0
   const today = todayStr();
 
+  const gymMask = data.gymDays || '0000000';
+
   let cells = Array.from({length:firstWeekday}, () => '<div class="cal-cell"></div>').join('');
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${calYear}-${pad(calMonthIdx+1)}-${pad(d)}`;
     const info = dayMap[dateStr];
     const isToday = dateStr === today;
+    const isPast = dateStr < today;
+    const isScheduled = calDayScheduled(dateStr, gymMask);
     let cls = 'cal-cell' + (isToday ? ' cal-today' : '');
     let style = '', marker = '';
     if (info) {
@@ -2016,10 +2030,15 @@ function renderCalendar() {
         const alpha = Math.min(0.48, 0.12 + info.late * 0.09 + info.mins * 0.002).toFixed(2);
         style = `background:rgba(239,68,68,${alpha})`;
         marker = `<span class="cal-dot cal-dot-late">${info.late}</span>`;
+      } else if (info.attend > 0) {
+        style = `background:rgba(34,197,94,.18)`;
+        marker = `<span class="cal-dot cal-dot-attend">&#x2713;</span>`;
       } else if (info.skip > 0) {
         style = `background:rgba(245,158,11,.18)`;
         marker = `<span class="cal-dot cal-dot-skip">&#x2298;</span>`;
       }
+    } else if (isScheduled && isPast) {
+      marker = `<span class="cal-dot cal-dot-miss">&middot;</span>`;
     }
     cells += `<div class="${cls}" data-date="${dateStr}"${style ? ` style="${style}"` : ''}>` +
       `<span class="cal-day-num">${d}</span>${marker}</div>`;
