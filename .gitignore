@@ -3,3 +3,7 @@ data.db
 *.db-shm
 *.db-wal
 .DS_Store
+.claude/
+CLAUDE.md
+ANLEITUNG.md
+RAILWAY_MYSQL_SETUP.md

@@ -12,9 +12,12 @@
     "mysql2": "^3.11.5"
   },
   "optionalDependencies": {
-    "better-sqlite3": "^9.6.0"
+    "better-sqlite3": "^12.11.1"
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "allowScripts": {
+    "better-sqlite3@12.11.1": true
   }
 }

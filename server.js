@@ -184,6 +184,8 @@ async function initSchema() {
         date CHAR(10) NOT NULL,
         mins INT NOT NULL,
         ts BIGINT NOT NULL,
+        type VARCHAR(10) NOT NULL DEFAULT 'late',
+        reason VARCHAR(20) NULL,
         INDEX idx_entries_group_id (group_id),
         CONSTRAINT fk_entries_group FOREIGN KEY (group_id) REFERENCES \`groups\`(id) ON DELETE CASCADE
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
@@ -192,6 +194,12 @@ async function initSchema() {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
     try { await database.run('ALTER TABLE users ADD COLUMN avatar_img MEDIUMTEXT NULL'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run("ALTER TABLE entries ADD COLUMN type VARCHAR(10) NOT NULL DEFAULT 'late'"); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run('ALTER TABLE entries ADD COLUMN reason VARCHAR(20) NULL'); } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
     return;
@@ -232,11 +240,15 @@ async function initSchema() {
       person     TEXT NOT NULL,
       date       TEXT NOT NULL,
       mins       INTEGER NOT NULL,
-      ts         INTEGER NOT NULL
+      ts         INTEGER NOT NULL,
+      type       TEXT NOT NULL DEFAULT 'late',
+      reason     TEXT
     );
   `);
   try { database.exec('ALTER TABLE `groups` ADD COLUMN creator_user_id TEXT'); } catch {}
   try { database.exec('ALTER TABLE users ADD COLUMN avatar_img TEXT'); } catch {}
+  try { database.exec("ALTER TABLE entries ADD COLUMN type TEXT NOT NULL DEFAULT 'late'"); } catch {}
+  try { database.exec('ALTER TABLE entries ADD COLUMN reason TEXT'); } catch {}
 }
 
 // ── Code generators ──────────────────────────────────────────────────────────
@@ -430,7 +442,7 @@ app.get('/api/groups/:id', ah(async (req, res) => {
     SELECT id, name, avatar_emoji, avatar_color, avatar_img, is_creator
     FROM users WHERE group_id = ? ORDER BY created_at
   `, [req.params.id])).map(userDto);
-  const entries = await database.all('SELECT id,person,date,mins,ts FROM entries WHERE group_id = ? ORDER BY date DESC, ts DESC', [req.params.id]);
+  const entries = await database.all('SELECT id,person,date,mins,ts,type,reason FROM entries WHERE group_id = ? ORDER BY date DESC, ts DESC', [req.params.id]);
   res.json({ id: g.id, code: g.code, name: g.name, people, entries });
 }));
 
@@ -591,13 +603,17 @@ app.delete('/api/groups/:id/members/:name', ah(async (req, res) => {
 app.post('/api/groups/:id/entries', ah(async (req, res) => {
   const { id } = req.params;
   const person = String(req.body?.person ?? '').trim().slice(0, 30);
-  const date = String(req.body?.date ?? '').trim();
-  const mins = parseInt(req.body?.mins);
-  if (!person || !date || isNaN(mins) || mins < 1 || mins > 999) return res.status(400).json({ error: 'invalid' });
+  const date   = String(req.body?.date   ?? '').trim();
+  const type   = ['late', 'skip'].includes(req.body?.type) ? req.body.type : 'late';
+  const reason = (type === 'skip' && req.body?.reason) ? String(req.body.reason).trim().slice(0, 20) : null;
+  const mins   = type === 'skip' ? 0 : parseInt(req.body?.mins);
+  if (!person || !date) return res.status(400).json({ error: 'invalid' });
+  if (type === 'late' && (isNaN(mins) || mins < 1 || mins > 999)) return res.status(400).json({ error: 'invalid' });
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'invalid_date' });
   if (!await database.one('SELECT 1 AS found FROM `groups` WHERE id = ?', [id])) return res.status(404).json({ error: 'not_found' });
   const eid = crypto.randomUUID();
-  await database.run('INSERT INTO entries (id,group_id,person,date,mins,ts) VALUES (?,?,?,?,?,?)', [eid, id, person, date, mins, Date.now()]);
+  await database.run('INSERT INTO entries (id,group_id,person,date,mins,ts,type,reason) VALUES (?,?,?,?,?,?,?,?)',
+    [eid, id, person, date, mins, Date.now(), type, reason]);
   res.json({ ok: true, id: eid });
 }));
 
