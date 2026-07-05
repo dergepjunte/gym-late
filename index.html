@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>GymLate</title>
 
+  <!-- Leaflet (map picker for gym location) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#7c3aed" media="(prefers-color-scheme: light)">
@@ -356,15 +360,28 @@
     .cal-dot-miss { color:rgba(255,255,255,.2); font-size:14px; }
     .attend-badge { display:inline-flex; align-items:center; font-size:13px; font-weight:700; color:#22c55e; background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.28); padding:4px 10px; border-radius:20px; }
 
-    /* Scroll-snap for weekly recap */
-    html { scroll-snap-type:y proximity; }
-    .week-block { scroll-snap-align:start; scroll-margin-top:72px; margin-bottom:22px; }
+    /* Scroll-snap for weekly recap — container-based (iOS-safe) */
+    #week-recap {
+      overflow-y: scroll;
+      -webkit-overflow-scrolling: touch;
+      scroll-snap-type: y mandatory;
+      height: calc(100svh - 130px - env(safe-area-inset-bottom));
+      border-radius: 16px;
+    }
+    .week-block {
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      min-height: 100%;
+      margin-bottom: 0;
+      padding-bottom: 24px;
+    }
 
     /* Desktop overrides */
     @media (hover:hover) and (pointer:fine) {
       .bottom-nav { display:none; }
       .nav-top { display:block; }
-      html { scroll-snap-type:none; }
+      #week-recap { overflow:visible; height:auto; scroll-snap-type:none; }
+      .week-block { min-height:auto; margin-bottom:22px; }
       .tab-pane { padding-bottom:32px; }
       #fab { bottom:32px; }
     }
@@ -865,6 +882,77 @@
       box-shadow: 0 8px 28px rgba(0,0,0,.4);
     }
     .w-btn-close:active { transform: scale(.94); }
+
+    /* ══════════════════════════════════════════════════════════ */
+    /*  DAILY HYPE + GEO PROMPT overlays (reuse wrapped pattern) */
+    /* ══════════════════════════════════════════════════════════ */
+    .fullscreen-overlay {
+      position: fixed; inset: 0; z-index: 500;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      overscroll-behavior: none;
+      -webkit-user-select: none; user-select: none;
+      padding: calc(env(safe-area-inset-top) + 32px) 32px calc(env(safe-area-inset-bottom) + 40px);
+    }
+    .fullscreen-overlay.hidden { display: none; }
+    #daily-hype  { background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%); }
+    #geo-prompt  { background: linear-gradient(135deg, #16a34a 0%, #0891b2 100%); }
+
+    .overlay-icon  { font-size: 72px; line-height: 1; animation: w-pop .6s cubic-bezier(.34,1.56,.64,1) both; }
+    .overlay-title { font-size: clamp(28px,9vw,48px); font-weight: 900; color: white; text-align: center;
+                     letter-spacing: -1px; margin-top: 20px; line-height: 1.1;
+                     animation: w-rise .5s .1s cubic-bezier(.25,.46,.45,.94) both; }
+    .overlay-sub   { font-size: clamp(15px,4vw,20px); color: rgba(255,255,255,.75); text-align: center;
+                     margin-top: 12px; font-weight: 500; line-height: 1.4;
+                     animation: w-rise .5s .18s cubic-bezier(.25,.46,.45,.94) both; }
+    .overlay-btns  { display: flex; gap: 12px; margin-top: 36px; flex-wrap: wrap; justify-content: center;
+                     animation: w-fade .4s .3s both; }
+    .overlay-btn-primary {
+      background: white; color: #1a0030; border: none; font-family: inherit;
+      font-size: 17px; font-weight: 800; padding: 16px 40px; border-radius: 40px; cursor: pointer;
+      transition: transform .18s, box-shadow .18s; box-shadow: 0 8px 28px rgba(0,0,0,.3);
+    }
+    .overlay-btn-primary:active { transform: scale(.94); }
+    .overlay-btn-ghost {
+      background: rgba(255,255,255,.15); color: white; border: 1.5px solid rgba(255,255,255,.35);
+      font-family: inherit; font-size: 17px; font-weight: 700; padding: 16px 32px; border-radius: 40px;
+      cursor: pointer; transition: background .18s;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    }
+    .overlay-btn-ghost:active { background: rgba(255,255,255,.25); }
+
+    /* ── Leaflet map in settings ── */
+    #mset-map-section { margin-top: 16px; }
+    #mset-map-container { height: 200px; border-radius: 12px; overflow: hidden; margin: 10px 0; }
+    .mset-radius-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+    .mset-radius-row label { font-size: 13px; color: var(--text-2); flex: 1; }
+    .mset-radius-row input[type=range] { flex: 2; }
+    .mset-radius-val { font-size: 13px; font-weight: 700; color: var(--text-1); min-width: 48px; text-align: right; }
+    .mset-locate-btn { font-size: 13px; color: var(--accent); background: none; border: none; font-family: inherit;
+                       cursor: pointer; padding: 4px 0; text-decoration: underline; }
+
+    /* ── Gym days chips in profile view ── */
+    .pv-gym-days { margin: 10px 0 4px; }
+    .pv-gym-days-lbl { font-size: 12px; color: var(--text-2); font-weight: 600; letter-spacing: .4px;
+                       text-transform: uppercase; margin-bottom: 6px; }
+    .pv-day-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .pv-day-chip { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+                   background: rgba(124,58,237,.12); color: var(--accent);
+                   border: 1px solid rgba(124,58,237,.25); }
+
+    /* ── Admin user edit modal ── */
+    #modal-admin-user .modal { max-height: 90svh; overflow-y: auto; }
+    .admin-user-section-title { font-size: 12px; font-weight: 700; letter-spacing: .5px;
+                                text-transform: uppercase; color: var(--text-2); margin: 16px 0 8px; }
+    .admin-number-row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+    .admin-number-row label { font-size: 14px; color: var(--text-1); flex: 1; }
+    .admin-number-input { width: 70px; padding: 8px; border-radius: 8px; border: 1px solid var(--divider);
+                          background: var(--card); color: var(--text-1); font-family: inherit;
+                          font-size: 16px; font-weight: 700; text-align: center; }
+
+    /* ── Admin debug panel extras ── */
+    .admin-section-divider { height: 1px; background: rgba(239,68,68,.15); margin: 10px 0; }
+    .admin-coords-info { font-size: 12px; color: var(--text-2); margin-top: 6px; word-break: break-all; }
   </style>
 </head>
 <body>
@@ -881,6 +969,27 @@
   <button class="w-skip" id="w-skip">✕</button>
   <div class="w-tap-l"  id="w-tap-l"></div>
   <div class="w-tap-r"  id="w-tap-r"></div>
+</div>
+
+<!-- Daily Hype Overlay -->
+<div id="daily-hype" class="fullscreen-overlay hidden">
+  <div class="overlay-icon">🏋️</div>
+  <div class="overlay-title" id="dh-title"></div>
+  <div class="overlay-sub"   id="dh-sub"></div>
+  <div class="overlay-btns">
+    <button class="overlay-btn-primary" id="dh-close"></button>
+  </div>
+</div>
+
+<!-- Geo Check-in Prompt Overlay -->
+<div id="geo-prompt" class="fullscreen-overlay hidden">
+  <div class="overlay-icon">📍</div>
+  <div class="overlay-title" id="gp-title"></div>
+  <div class="overlay-sub"   id="gp-sub"></div>
+  <div class="overlay-btns">
+    <button class="overlay-btn-primary" id="gp-checkin"></button>
+    <button class="overlay-btn-ghost"   id="gp-later"></button>
+  </div>
 </div>
 
 <!-- Toast -->
@@ -1005,6 +1114,12 @@
         <button class="admin-btn admin-btn-week" id="adm-week-btn"></button>
         <button class="admin-btn admin-btn-del"  id="adm-del-btn"></button>
         <button class="admin-btn" style="background:rgba(167,139,250,.12);color:var(--accent-2);border:1.5px solid var(--accent)" id="adm-replay-btn"></button>
+        <div class="admin-section-divider"></div>
+        <button class="admin-btn" style="background:rgba(34,197,94,.1);color:#22c55e;border:1.5px solid rgba(34,197,94,.3)" id="adm-force-hype-btn"></button>
+        <button class="admin-btn" style="background:rgba(8,145,178,.1);color:#0891b2;border:1.5px solid rgba(8,145,178,.3)" id="adm-force-geo-btn"></button>
+        <button class="admin-btn" style="background:rgba(251,191,36,.1);color:var(--gold);border:1.5px solid rgba(251,191,36,.3)" id="adm-clear-flags-btn"></button>
+        <div class="admin-coords-info" id="adm-coords-info"></div>
+        <div class="admin-section-divider"></div>
         <button class="admin-btn admin-btn-exit" id="adm-exit-btn"></button>
       </div>
     </div>
@@ -1246,6 +1361,11 @@
         <div class="stat-lbl" id="pv-stat-mins-lbl"></div>
       </div>
     </div>
+    <!-- Gym days chips -->
+    <div class="pv-gym-days" id="pv-gym-days-wrap">
+      <div class="pv-gym-days-lbl" id="pv-gym-days-lbl"></div>
+      <div class="pv-day-chips" id="pv-day-chips"></div>
+    </div>
     <!-- Own profile: recovery code + edit -->
     <div id="pv-own-section" style="display:none">
       <div class="form-grp">
@@ -1309,6 +1429,19 @@
       <div class="error-msg" id="mset-gym-error" style="margin-top:6px"></div>
       <button class="btn btn-primary" id="mset-gym-save" style="margin-top:10px;width:100%"></button>
     </div>
+    <!-- Gym location section (creator/admin only) -->
+    <div class="settings-section hidden" id="mset-map-section">
+      <div class="settings-section-title" id="mset-location-lbl"></div>
+      <div id="mset-map-container"></div>
+      <div class="mset-radius-row">
+        <label id="mset-radius-lbl"></label>
+        <input type="range" id="mset-radius-slider" min="20" max="500" step="10" value="150">
+        <span class="mset-radius-val" id="mset-radius-val">150m</span>
+      </div>
+      <button class="mset-locate-btn" id="mset-locate-btn"></button>
+      <div class="error-msg" id="mset-location-error" style="margin-top:6px"></div>
+      <button class="btn btn-primary" id="mset-location-save" style="margin-top:10px;width:100%"></button>
+    </div>
     <div class="settings-section">
       <div class="settings-section-title" id="mset-avail-lbl"></div>
       <div class="day-picker" id="mset-avail-picker"></div>
@@ -1343,6 +1476,32 @@
     <div id="cal-day-list" style="margin-top:12px"></div>
     <div class="modal-btns" style="margin-top:16px">
       <button class="btn btn-ghost btn-full" id="cal-day-close">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin User Edit -->
+<div class="overlay" id="modal-admin-user">
+  <div class="modal glass">
+    <h2 class="modal-title" id="au-title"></h2>
+    <div class="admin-user-section-title" id="au-days-lbl"></div>
+    <div class="day-picker" id="au-day-picker"></div>
+    <div class="admin-user-section-title" id="au-stats-lbl"></div>
+    <div class="admin-number-row">
+      <label id="au-streak-lbl"></label>
+      <input type="number" class="admin-number-input" id="au-streak-input" min="0" max="9999">
+    </div>
+    <div class="admin-number-row">
+      <label id="au-freezes-lbl"></label>
+      <input type="number" class="admin-number-input" id="au-freezes-input" min="0" max="10">
+    </div>
+    <div class="error-msg" id="au-error"></div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-ghost" id="au-cancel"></button>
+      <button class="btn btn-primary" id="au-save"></button>
+    </div>
+    <div style="margin-top:10px">
+      <button class="leave-btn" id="au-kick-btn"></button>
     </div>
   </div>
 </div>
@@ -1433,6 +1592,22 @@ const TRANS = {
     wS4label:'Zuspätkommer<br>der Woche',
     wS5title:'Das Ranking',
     wS6a:'NÄCHSTE', wS6b:'WOCHE BESSER.', wClose:'Los geht\'s',
+    // Daily hype
+    dhTitle:'Heute ist Gym-Tag!', dhSub:'Zeig, was du drauf hast. 💪', dhClose:'Los geht\'s!',
+    // Geo prompt
+    gpTitle:'Du bist im Gym!', gpSub:'Möchtest du einchecken?', gpCheckin:'Einchecken', gpLater:'Später',
+    // Settings — location
+    msetLocationLbl:'Gym-Standort', msetRadiusLbl:'Radius', msetLocateBtn:'Meinen Standort nutzen',
+    msetLocationSave:'Standort speichern',
+    // Profile view gym days
+    pvGymDaysLbl:'Geht ins Gym:',
+    // Admin user edit
+    auTitle: n => `${n} bearbeiten`, auDaysLbl:'Verfügbare Tage', auStatsLbl:'Statistiken',
+    auStreakLbl:'Streak', auFreezesLbl:'Freezes', auCancel:'Abbrechen', auSave:'Speichern',
+    auKickBtn:'Aus Gruppe entfernen',
+    // Admin debug
+    admForceHype:'Hype-Animation testen', admForceGeo:'Geo-Prompt testen',
+    admClearFlags:'Tagesflags zurücksetzen',
   },
   en: {
     lsTagline:'Track · Shame · Improve', lsCreate:'Create Group', lsJoin:'Enter Code', lsOr:'or',
@@ -1513,6 +1688,22 @@ const TRANS = {
     wS4label:'Latecomer<br>of the Week',
     wS5title:'The Ranking',
     wS6a:'DO BETTER', wS6b:'NEXT WEEK.', wClose:'Let\'s go',
+    // Daily hype
+    dhTitle:'Today is Gym Day!', dhSub:'Show them what you\'ve got. 💪', dhClose:'Let\'s go!',
+    // Geo prompt
+    gpTitle:'You\'re at the gym!', gpSub:'Want to check in?', gpCheckin:'Check in', gpLater:'Later',
+    // Settings — location
+    msetLocationLbl:'Gym Location', msetRadiusLbl:'Radius', msetLocateBtn:'Use my location',
+    msetLocationSave:'Save location',
+    // Profile view gym days
+    pvGymDaysLbl:'Goes to gym:',
+    // Admin user edit
+    auTitle: n => `Edit ${n}`, auDaysLbl:'Available days', auStatsLbl:'Stats',
+    auStreakLbl:'Streak', auFreezesLbl:'Freezes', auCancel:'Cancel', auSave:'Save',
+    auKickBtn:'Remove from group',
+    // Admin debug
+    admForceHype:'Test hype animation', admForceGeo:'Test geo prompt',
+    admClearFlags:'Clear today\'s flags',
   }
 };
 const T = TRANS[(navigator.language||'').toLowerCase().startsWith('de') ? 'de' : 'en'];
@@ -1549,6 +1740,7 @@ const api = {
     if (!res.ok) { const e=new Error(d.error||'error'); e.status=res.status; throw e; }
     return d;
   },
+  verifyAdmin:   (pw)      => api.req('POST', '/admin/verify', {password:pw}),
   createGroup:   (n,gd)   => api.req('POST', '/groups', {name:n, gym_days:gd}),
   patchGroup:    (id,d)   => api.req('PATCH', `/groups/${id}`, d),
   createTestGroup:p       => api.req('POST', '/test-group', {password:p}),
@@ -1557,7 +1749,7 @@ const api = {
   addMember:     (g,n)    => api.req('POST',   `/groups/${g}/members`, {name:n}),
   delMember:     (g,n)    => api.req('DELETE', `/groups/${g}/members/${encodeURIComponent(n)}`),
   addEntry:      (g,d)    => api.req('POST',   `/groups/${g}/entries`, d),
-  delEntry:      (g,e)    => api.req('DELETE', `/groups/${g}/entries/${e}`),
+  delEntry:      (g,e,pw) => api.req('DELETE', `/groups/${g}/entries/${e}`, pw ? {adminPassword:pw} : undefined),
   registerUser:  (g,d)    => api.req('POST',   `/groups/${g}/users`, d),
   loginUser:     (g,d)    => api.req('POST',   `/groups/${g}/users/login`, d),
   updateUser:    (g,u,d)  => api.req('PATCH',  `/groups/${g}/users/${u}`, d),
@@ -2089,6 +2281,13 @@ function renderAdminPanel() {
   if (!adminMode) return;
   document.getElementById('adm-week-btn').textContent = adminShowCurWeek ? T.admWeekOff : T.admWeekOn;
   document.getElementById('adm-week-btn').classList.toggle('active', adminShowCurWeek);
+  // Show gym coords info
+  const coordsEl = document.getElementById('adm-coords-info');
+  if (data?.gymLat != null) {
+    coordsEl.textContent = `Gym: ${data.gymLat.toFixed(5)}, ${data.gymLng.toFixed(5)} — Radius: ${data.gymRadius}m`;
+  } else {
+    coordsEl.textContent = 'Kein Gym-Standort gesetzt';
+  }
 }
 
 function renderAll() {
@@ -2144,7 +2343,7 @@ async function enterGroup(g) {
   showLoading(false);
   updateMyProfileBtn();
   applyI18n(); renderAll(); startPolling(); showScreen('app');
-  setTimeout(() => { if (shouldShowWrapped()) showWrapped(); }, 500);
+  runOpeningSequence();
 }
 
 function updateMyProfileBtn() {
@@ -2221,7 +2420,6 @@ requestAnimationFrame(() => { requestAnimationFrame(updateNavIndicator); });
 // ════════════════════════════════════════════════════════
 //  ADMIN
 // ════════════════════════════════════════════════════════
-const ADMIN_PW = 'gymadmin';
 let adminTaps = 0, adminTapTimer;
 
 document.getElementById('header-icon').addEventListener('click', () => {
@@ -2265,12 +2463,22 @@ function exitAdmin() {
 document.getElementById('ma-cancel').addEventListener('click', () => closeOv('modal-admin'));
 document.getElementById('modal-admin').addEventListener('click', e => { if(e.target===e.currentTarget) closeOv('modal-admin'); });
 
-document.getElementById('ma-submit').addEventListener('click', () => {
-  const pwd = document.getElementById('ma-pwd').value.trim().toLowerCase();
-  if (pwd !== ADMIN_PW) { document.getElementById('ma-error').textContent = T.maError; return; }
-  closeOv('modal-admin');
-  adminPassword = pwd;
-  activateAdmin();
+document.getElementById('ma-submit').addEventListener('click', async () => {
+  const btn = document.getElementById('ma-submit');
+  const errEl = document.getElementById('ma-error');
+  const pwd = document.getElementById('ma-pwd').value.trim();
+  if (!pwd) { errEl.textContent = T.maError; return; }
+  btn.disabled = true; errEl.textContent = '';
+  try {
+    await api.verifyAdmin(pwd);
+    closeOv('modal-admin');
+    adminPassword = pwd;
+    activateAdmin();
+  } catch {
+    errEl.textContent = T.maError;
+  } finally {
+    btn.disabled = false;
+  }
 });
 document.getElementById('ma-pwd').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('ma-submit').click(); });
 
@@ -2311,11 +2519,25 @@ document.getElementById('adm-add-btn').addEventListener('click', async () => {
 document.getElementById('adm-del-btn').addEventListener('click', async () => {
   if (!testEntryIds.length) { showToast(T.noTestData); return; }
   for (const id of testEntryIds) {
-    try { await api.delEntry(data.id, id); } catch {}
+    try { await api.delEntry(data.id, id, adminPassword); } catch {}
   }
   testEntryIds = [];
   await refresh();
   showToast(T.toastCleared);
+});
+
+// Admin debug buttons
+document.getElementById('adm-force-hype-btn').addEventListener('click', () => {
+  showDailyHype(true);
+});
+document.getElementById('adm-force-geo-btn').addEventListener('click', () => {
+  checkGeoAndPrompt(true);
+});
+document.getElementById('adm-clear-flags-btn').addEventListener('click', () => {
+  const today = todayStr();
+  localStorage.removeItem('gymDailyHypeSeen_' + today);
+  localStorage.removeItem('gymGeoPromptSeen_' + today);
+  showToast('Tagesflags gelöscht ✓');
 });
 
 // ════════════════════════════════════════════════════════
@@ -2343,7 +2565,20 @@ function applyI18n() {
   set('ml-lbl-skip-date',T.mlLblSkipDate); set('ml-lbl-reason',T.mlLblReason);
   set('ma-title',T.maTitle); set('ma-lbl',T.maLbl); set('ma-cancel',T.maCancel); set('ma-submit',T.maSubmit);
   set('adm-title',T.admTitle); set('adm-add-btn',T.admAdd); set('adm-del-btn',T.admDel); set('adm-exit-btn',T.admExit); set('adm-replay-btn',T.admReplay);
+  set('adm-force-hype-btn',T.admForceHype); set('adm-force-geo-btn',T.admForceGeo); set('adm-clear-flags-btn',T.admClearFlags);
   set('pill-hint', T.pillHint);
+  // Overlays
+  set('dh-title',T.dhTitle); set('dh-sub',T.dhSub); set('dh-close',T.dhClose);
+  set('gp-title',T.gpTitle); set('gp-sub',T.gpSub); set('gp-checkin',T.gpCheckin); set('gp-later',T.gpLater);
+  // Settings location
+  set('mset-location-lbl',T.msetLocationLbl); set('mset-radius-lbl',T.msetRadiusLbl);
+  set('mset-locate-btn',T.msetLocateBtn); set('mset-location-save',T.msetLocationSave);
+  // Profile view gym days
+  set('pv-gym-days-lbl',T.pvGymDaysLbl);
+  // Admin user edit
+  set('au-days-lbl',T.auDaysLbl); set('au-stats-lbl',T.auStatsLbl);
+  set('au-streak-lbl',T.auStreakLbl); set('au-freezes-lbl',T.auFreezesLbl);
+  set('au-cancel',T.auCancel); set('au-save',T.auSave); set('au-kick-btn',T.auKickBtn);
   // Profile setup
   set('psu-title',T.psuTitle); set('psu-name-lbl',T.psuNameLbl); set('psu-emoji-lbl',T.psuEmojiLbl); set('psu-color-lbl',T.psuColorLbl);
   set('psu-submit-new',T.psuCreate); set('psu-to-login',T.psuToLogin); set('psu-cancel',T.psuCancel);
@@ -2548,9 +2783,17 @@ document.getElementById('invite-btn').addEventListener('click', () => {
 document.addEventListener('click', async e => {
   const eb = e.target.closest('.del-entry-btn');
   if (eb && data) { try{await api.delEntry(data.id,eb.dataset.id); await refresh();}catch{showToast(T.errServer);} return; }
-  // Tap on person row → open profile
+  // Tap on person row → open profile or admin-edit (when admin)
   const pr = e.target.closest('.person-row[data-uid]');
-  if (pr && data) { openProfileView(pr.dataset.uid); return; }
+  if (pr && data) {
+    if (adminMode && adminPassword) {
+      const uid = pr.dataset.uid;
+      const isMe = userProfile?.userId === uid;
+      if (!isMe) { openAdminUserEdit(uid); return; }
+    }
+    openProfileView(pr.dataset.uid);
+    return;
+  }
 });
 
 // ════════════════════════════════════════════════════════
@@ -2721,6 +2964,7 @@ function openProfileView(userId) {
 
   const isOwnProfile   = userProfile && userProfile.userId === userId;
   const isCreatorView  = userProfile?.isCreator && !isOwnProfile;
+  const isAdminView    = adminMode && !isOwnProfile;
 
   setAvatarEl(document.getElementById('pv-avatar'), user);
   document.getElementById('pv-name').textContent = user.name;
@@ -2732,10 +2976,17 @@ function openProfileView(userId) {
   document.getElementById('pv-stat-count').textContent = userLate.length;
   document.getElementById('pv-stat-mins').textContent  = userLate.reduce((s,e)=>s+e.mins,0);
 
+  // Gym days chips
+  const gymDaysMask = user.availDays || data?.gymDays || '1111100';
+  const chipsEl = document.getElementById('pv-day-chips');
+  chipsEl.innerHTML = T.dayNames.map((name, i) =>
+    gymDaysMask[i] === '1' ? `<span class="pv-day-chip">${name}</span>` : ''
+  ).join('');
+
   const ownSection  = document.getElementById('pv-own-section');
   const kickSection = document.getElementById('pv-kick-section');
   ownSection.style.display  = isOwnProfile  ? '' : 'none';
-  kickSection.style.display = isCreatorView ? '' : 'none';
+  kickSection.style.display = (isCreatorView || isAdminView) ? '' : 'none';
 
   if (isOwnProfile && userProfile.recoveryCode) {
     const rc = userProfile.recoveryCode;
@@ -2769,7 +3020,10 @@ document.getElementById('pv-kick-btn').addEventListener('click', async () => {
   if (!user) return;
   if (!confirm(T.pvKickConfirm(user.name))) return;
   try {
-    await api.kickUser(group.id, viewingUserId, { actorUserId: userProfile.userId, actorRecoveryCode: userProfile.recoveryCode });
+    const body = adminMode && adminPassword
+      ? { adminPassword }
+      : { actorUserId: userProfile.userId, actorRecoveryCode: userProfile.recoveryCode };
+    await api.kickUser(group.id, viewingUserId, body);
     closeOv('modal-profile-view');
     await refresh();
     showToast(T.toastKicked);
@@ -2789,6 +3043,8 @@ function formatDuration(ms) {
   return `${h}h ${m}m`;
 }
 
+let _leafletMap = null, _leafletMarker = null, _leafletCircle = null;
+
 function openSettings() {
   if (!data) return;
   const gymDays = data.gymDays || '1111100';
@@ -2796,13 +3052,22 @@ function openSettings() {
   const availDays = me?.availDays || gymDays;
   const availEditedAt = me?.availEditedAt || null;
   const isCreator = userProfile?.isCreator;
+  const canEditGroup = isCreator || adminMode;
 
-  // Gym days section (creator only)
+  // Gym days section (creator or admin)
   const gymSection = document.getElementById('mset-gymdays-section');
-  gymSection.style.display = isCreator ? '' : 'none';
-  if (isCreator) {
+  gymSection.style.display = canEditGroup ? '' : 'none';
+  if (canEditGroup) {
     buildDayPicker('mset-gym-picker', gymDays);
     document.getElementById('mset-gym-error').textContent = '';
+  }
+
+  // Gym location section (creator or admin)
+  const mapSection = document.getElementById('mset-map-section');
+  mapSection.classList.toggle('hidden', !canEditGroup);
+  if (canEditGroup) {
+    // Initialize Leaflet map lazily after modal is visible
+    setTimeout(() => initLeafletMap(), 350);
   }
 
   // Avail days (current user, within gym days mask)
@@ -2841,11 +3106,10 @@ document.getElementById('mset-gym-save').addEventListener('click', async () => {
   const btn = document.getElementById('mset-gym-save');
   btn.disabled = true;
   try {
-    await api.patchGroup(data.id, {
-      creatorUserId: userProfile.userId,
-      creatorRecoveryCode: userProfile.recoveryCode,
-      gym_days: gymDays
-    });
+    const body = adminMode && adminPassword
+      ? { adminPassword, gym_days: gymDays }
+      : { creatorUserId: userProfile.userId, creatorRecoveryCode: userProfile.recoveryCode, gym_days: gymDays };
+    await api.patchGroup(data.id, body);
     showToast('Gym-Tage gespeichert ✓');
     await refresh();
     closeOv('modal-settings');
@@ -2872,6 +3136,138 @@ document.getElementById('mset-avail-save').addEventListener('click', async () =>
       document.getElementById('mset-avail-error').textContent = T.errServer;
     }
   }
+  finally { btn.disabled = false; }
+});
+
+// ════════════════════════════════════════════════════════
+//  ADMIN USER EDIT MODAL
+// ════════════════════════════════════════════════════════
+let editingAdminUserId = null;
+
+function openAdminUserEdit(userId) {
+  if (!adminMode || !adminPassword) return;
+  editingAdminUserId = userId;
+  const user = data?.people?.find(p => p.id === userId);
+  if (!user) return;
+
+  document.getElementById('au-title').textContent = T.auTitle(user.name);
+  buildDayPicker('au-day-picker', user.availDays || data.gymDays || '1111100');
+  document.getElementById('au-streak-input').value  = user.streak  ?? 0;
+  document.getElementById('au-freezes-input').value = user.freezes ?? 0;
+  document.getElementById('au-error').textContent = '';
+  openOv('modal-admin-user');
+}
+
+document.getElementById('au-cancel').addEventListener('click', () => closeOv('modal-admin-user'));
+document.getElementById('modal-admin-user').addEventListener('click', e => { if (e.target === e.currentTarget) closeOv('modal-admin-user'); });
+
+document.getElementById('au-save').addEventListener('click', async () => {
+  if (!editingAdminUserId) return;
+  const btn = document.getElementById('au-save');
+  btn.disabled = true;
+  document.getElementById('au-error').textContent = '';
+  try {
+    const avail_days = getDayMask('au-day-picker');
+    const streak  = Number(document.getElementById('au-streak-input').value);
+    const freezes = Number(document.getElementById('au-freezes-input').value);
+    await api.updateUser(data.id, editingAdminUserId, {
+      adminPassword,
+      avail_days,
+      streak,
+      freezes
+    });
+    closeOv('modal-admin-user');
+    await refresh();
+    showToast('Mitglied aktualisiert ✓');
+  } catch { document.getElementById('au-error').textContent = T.errServer; }
+  finally { btn.disabled = false; }
+});
+
+document.getElementById('au-kick-btn').addEventListener('click', async () => {
+  const user = data?.people?.find(p => p.id === editingAdminUserId);
+  if (!user || !confirm(T.pvKickConfirm(user.name))) return;
+  try {
+    await api.kickUser(data.id, editingAdminUserId, { adminPassword });
+    closeOv('modal-admin-user');
+    await refresh();
+    showToast(T.toastKicked);
+  } catch { showToast(T.errServer); }
+});
+
+// ════════════════════════════════════════════════════════
+//  LEAFLET MAP (GYM LOCATION)
+// ════════════════════════════════════════════════════════
+function initLeafletMap() {
+  if (typeof L === 'undefined') return; // Leaflet not loaded
+  const container = document.getElementById('mset-map-container');
+  if (!container) return;
+
+  const defaultLat = data?.gymLat ?? 48.137;
+  const defaultLng = data?.gymLng ?? 11.576;
+  const defaultRadius = data?.gymRadius ?? 150;
+
+  document.getElementById('mset-radius-slider').value = defaultRadius;
+  document.getElementById('mset-radius-val').textContent = defaultRadius + 'm';
+
+  if (_leafletMap) {
+    _leafletMap.setView([defaultLat, defaultLng], 15);
+    _leafletMarker.setLatLng([defaultLat, defaultLng]);
+    _leafletCircle.setLatLng([defaultLat, defaultLng]).setRadius(defaultRadius);
+    _leafletMap.invalidateSize();
+    return;
+  }
+
+  _leafletMap = L.map(container, { zoomControl: true }).setView([defaultLat, defaultLng], 15);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap'
+  }).addTo(_leafletMap);
+
+  _leafletMarker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(_leafletMap);
+  _leafletCircle = L.circle([defaultLat, defaultLng], { radius: defaultRadius, color: '#7c3aed', fillOpacity: 0.15 }).addTo(_leafletMap);
+
+  _leafletMarker.on('dragend', () => {
+    const ll = _leafletMarker.getLatLng();
+    _leafletCircle.setLatLng(ll);
+  });
+
+  const slider = document.getElementById('mset-radius-slider');
+  const valEl  = document.getElementById('mset-radius-val');
+  slider.addEventListener('input', () => {
+    valEl.textContent = slider.value + 'm';
+    _leafletCircle.setRadius(Number(slider.value));
+  });
+
+  setTimeout(() => _leafletMap && _leafletMap.invalidateSize(), 100);
+}
+
+document.getElementById('mset-locate-btn').addEventListener('click', () => {
+  if (!navigator.geolocation) { showToast('Geolokalisierung nicht verfügbar'); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    if (!_leafletMap) return;
+    const ll = [pos.coords.latitude, pos.coords.longitude];
+    _leafletMap.setView(ll, 16);
+    _leafletMarker.setLatLng(ll);
+    _leafletCircle.setLatLng(ll);
+  }, () => showToast('Standort nicht verfügbar'));
+});
+
+document.getElementById('mset-location-save').addEventListener('click', async () => {
+  if (!_leafletMarker) { showToast('Karte nicht geladen'); return; }
+  const ll = _leafletMarker.getLatLng();
+  const radius = Number(document.getElementById('mset-radius-slider').value);
+  const btn = document.getElementById('mset-location-save');
+  btn.disabled = true;
+  try {
+    const base = adminMode && adminPassword
+      ? { adminPassword }
+      : { creatorUserId: userProfile.userId, creatorRecoveryCode: userProfile.recoveryCode };
+    await api.patchGroup(data.id, { ...base, gym_lat: ll.lat, gym_lng: ll.lng, gym_radius: radius });
+    showToast('Standort gespeichert ✓');
+    await refresh();
+    renderAdminPanel();
+    closeOv('modal-settings');
+  } catch { document.getElementById('mset-location-error').textContent = T.errServer; }
   finally { btn.disabled = false; }
 });
 
@@ -2981,6 +3377,118 @@ document.getElementById('ep-submit').addEventListener('click', async () => {
 });
 
 // ════════════════════════════════════════════════════════
+//  DAILY HYPE
+// ════════════════════════════════════════════════════════
+function shouldShowDailyHype() {
+  const today = todayStr();
+  if (localStorage.getItem('gymDailyHypeSeen_' + today)) return false;
+  return calDayScheduled(today, data?.gymDays || '0000000');
+}
+
+function showDailyHype(force = false) {
+  const el = document.getElementById('daily-hype');
+  el.classList.remove('hidden');
+  if (!force) localStorage.setItem('gymDailyHypeSeen_' + todayStr(), '1');
+}
+
+document.getElementById('dh-close').addEventListener('click', () => {
+  document.getElementById('daily-hype').classList.add('hidden');
+});
+
+// ════════════════════════════════════════════════════════
+//  GEO CHECK-IN PROMPT
+// ════════════════════════════════════════════════════════
+function haversineMeters(lat1, lng1, lat2, lng2) {
+  const R = 6371000; // Earth radius in meters
+  const φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function showGeoPrompt() {
+  document.getElementById('geo-prompt').classList.remove('hidden');
+  localStorage.setItem('gymGeoPromptSeen_' + todayStr(), '1');
+}
+
+function checkGeoAndPrompt(force = false) {
+  if (!data?.gymLat || !data?.gymLng) return; // no location set
+  if (!force) {
+    const today = todayStr();
+    if (localStorage.getItem('gymGeoPromptSeen_' + today)) return;
+    // Don't prompt if already checked in today
+    const alreadyIn = (data?.entries||[]).some(e => {
+      const me = userProfile?.name;
+      return me && e.person === me && e.date === today && (e.type === 'attend' || e.type === 'late');
+    });
+    if (alreadyIn) return;
+  }
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(pos => {
+    const dist = haversineMeters(pos.coords.latitude, pos.coords.longitude, data.gymLat, data.gymLng);
+    const radius = data.gymRadius ?? 150;
+    if (dist <= radius || force) {
+      showGeoPrompt();
+    }
+  }, () => { /* permission denied or error — silently skip */ }, { timeout: 6000, maximumAge: 30000 });
+}
+
+document.getElementById('gp-later').addEventListener('click', () => {
+  document.getElementById('geo-prompt').classList.add('hidden');
+});
+
+document.getElementById('gp-checkin').addEventListener('click', async () => {
+  document.getElementById('geo-prompt').classList.add('hidden');
+  if (!userProfile || !group || !data) return;
+  try {
+    const res = await api.addEntry(data.id, {
+      type: 'attend',
+      date: todayStr(),
+      person: userProfile.name
+    });
+    await refresh();
+    if (res.chest) showChest(res.chest);
+    showToast(T.toastAttendSaved);
+  } catch { showToast(T.errServer); }
+});
+
+// ════════════════════════════════════════════════════════
+//  OPENING SEQUENCE (Wrapped → Daily Hype → Geo Prompt)
+// ════════════════════════════════════════════════════════
+function runOpeningSequence() {
+  const steps = [];
+  if (shouldShowWrapped()) steps.push('wrapped');
+  if (shouldShowDailyHype()) steps.push('hype');
+  if (data?.gymLat) steps.push('geo');
+  if (!steps.length) return;
+
+  let i = 0;
+  function next() {
+    if (i >= steps.length) return;
+    const step = steps[i++];
+    if (step === 'wrapped') {
+      // wClose() reads window._seqWrappedNext and calls it when user dismisses
+      window._seqWrappedNext = next;
+      showWrapped();
+    } else if (step === 'hype') {
+      showDailyHype();
+      // Override close button for this session to advance sequence
+      document.getElementById('dh-close').onclick = () => {
+        document.getElementById('daily-hype').classList.add('hidden');
+        document.getElementById('dh-close').onclick = null;
+        next();
+      };
+    } else if (step === 'geo') {
+      // Geo is async — runs independently; sequence terminates here
+      checkGeoAndPrompt();
+    }
+  }
+
+  setTimeout(next, 500);
+}
+
+// ════════════════════════════════════════════════════════
 //  WRAPPED ENGINE
 // ════════════════════════════════════════════════════════
 let wSlides = [], wIdx = 0, wTimer = null;
@@ -3076,6 +3584,12 @@ function wAdvance(dir) {
 function wClose() {
   clearTimeout(wTimer);
   document.getElementById('wrapped').classList.add('hidden');
+  // Advance opening sequence if running
+  if (window._seqWrappedNext) {
+    const fn = window._seqWrappedNext;
+    window._seqWrappedNext = null;
+    fn();
+  }
 }
 
 function wCount(el, target) {
@@ -3249,7 +3763,7 @@ async function init() {
     saveUser(group.id, userProfile);
     updateMyProfileBtn();
     applyI18n(); renderAll(); startPolling(); showLoading(false); showScreen('app');
-    setTimeout(() => { if (shouldShowWrapped()) showWrapped(); }, 700);
+    runOpeningSequence();
     return;
   }
   showLoading(false); showScreen('landing');

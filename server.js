@@ -72,9 +72,19 @@ function getIcon(size) {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const ADMIN_PW = process.env.ADMIN_PW || 'gymadmin';
 const USE_MYSQL = Boolean(process.env.MYSQL_URL);
 let database;
+
+// ── Admin auth (password stored only as SHA-256 hash, never plaintext) ────────
+function sha256(s) { return crypto.createHash('sha256').update(s, 'utf8').digest('hex'); }
+// Default hash = sha256('gymadmin'); override by setting ADMIN_PW env var
+const ADMIN_PW_HASH = process.env.ADMIN_PW
+  ? sha256(process.env.ADMIN_PW)
+  : 'e935e949b07bf303aaccb0ded79176a9274565a1a014b775b5fe1d2b892a778d';
+function isAdmin(req) {
+  const pw = String(req.body?.adminPassword ?? req.body?.password ?? '').trim();
+  return pw.length > 0 && sha256(pw) === ADMIN_PW_HASH;
+}
 
 function isUniqueError(e) {
   return e?.code === 'SQLITE_CONSTRAINT_UNIQUE' || e?.code === 'ER_DUP_ENTRY';
@@ -148,7 +158,10 @@ async function initSchema() {
         name VARCHAR(50) NOT NULL,
         created_at BIGINT NOT NULL,
         creator_user_id VARCHAR(36) NULL,
-        gym_days CHAR(7) NOT NULL DEFAULT '1111111'
+        gym_days CHAR(7) NOT NULL DEFAULT '1111111',
+        gym_lat DOUBLE NULL,
+        gym_lng DOUBLE NULL,
+        gym_radius INT NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     await database.run(`
@@ -203,6 +216,15 @@ async function initSchema() {
     try { await database.run("ALTER TABLE `groups` ADD COLUMN gym_days CHAR(7) NOT NULL DEFAULT '1111111'"); } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
+    try { await database.run('ALTER TABLE `groups` ADD COLUMN gym_lat DOUBLE NULL'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run('ALTER TABLE `groups` ADD COLUMN gym_lng DOUBLE NULL'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run('ALTER TABLE `groups` ADD COLUMN gym_radius INT NULL'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
     try { await database.run('ALTER TABLE users ADD COLUMN avatar_img MEDIUMTEXT NULL'); } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
@@ -240,7 +262,10 @@ async function initSchema() {
       name       TEXT NOT NULL,
       created_at INTEGER NOT NULL,
       creator_user_id TEXT,
-      gym_days   TEXT NOT NULL DEFAULT '1111111'
+      gym_days   TEXT NOT NULL DEFAULT '1111111',
+      gym_lat    REAL,
+      gym_lng    REAL,
+      gym_radius INTEGER
     );
 
     CREATE TABLE IF NOT EXISTS members (
@@ -282,6 +307,9 @@ async function initSchema() {
   `);
   try { database.exec('ALTER TABLE `groups` ADD COLUMN creator_user_id TEXT'); } catch {}
   try { database.exec("ALTER TABLE `groups` ADD COLUMN gym_days TEXT NOT NULL DEFAULT '1111111'"); } catch {}
+  try { database.exec('ALTER TABLE `groups` ADD COLUMN gym_lat REAL'); } catch {}
+  try { database.exec('ALTER TABLE `groups` ADD COLUMN gym_lng REAL'); } catch {}
+  try { database.exec('ALTER TABLE `groups` ADD COLUMN gym_radius INTEGER'); } catch {}
   try { database.exec('ALTER TABLE users ADD COLUMN avatar_img TEXT'); } catch {}
   try { database.exec('ALTER TABLE users ADD COLUMN avail_days TEXT'); } catch {}
   try { database.exec('ALTER TABLE users ADD COLUMN avail_edited_at INTEGER'); } catch {}
@@ -396,15 +424,15 @@ async function recomputeStreak(userId, gymDays, userEntries, dbUser) {
 
   for (let curD = new Date(startD); curD <= todayD; curD.setUTCDate(curD.getUTCDate() + 1)) {
     const dateStr = dateYMD(curD);
-    if (!isDayScheduled(dateStr, mask)) continue;
-
     const day = entryMap[dateStr] || {};
+
     if (day.attend) {
+      // attendance always counts, regardless of scheduled day
       streak++;
       last_streak_date = dateStr;
       changed = true;
-    } else if (dateStr < todayStr) {
-      // past scheduled day with no check-in
+    } else if (isDayScheduled(dateStr, mask) && dateStr < todayStr) {
+      // past scheduled day with no check-in → apply miss logic
       last_streak_date = dateStr;
       changed = true;
       if (day.skip) {
@@ -415,7 +443,7 @@ async function recomputeStreak(userId, gymDays, userEntries, dbUser) {
         streak = 0;
       }
     }
-    // today with no attend entry: leave open
+    // non-scheduled day with no attend, or today with no attend → leave open
   }
 
   if (changed) {
@@ -486,42 +514,81 @@ app.get('/icon-512.png',                 (_, res) => { iconHeaders(res); res.sen
 
 // ── Groups ───────────────────────────────────────────────────────────────────
 
+function parseGeoCoords(body) {
+  const lat = body?.gym_lat !== undefined ? Number(body.gym_lat) : null;
+  const lng = body?.gym_lng !== undefined ? Number(body.gym_lng) : null;
+  const radius = body?.gym_radius !== undefined ? Number(body.gym_radius) : null;
+  if (lat !== null && (isNaN(lat) || lat < -90 || lat > 90)) return { error: 'invalid_gym_lat' };
+  if (lng !== null && (isNaN(lng) || lng < -180 || lng > 180)) return { error: 'invalid_gym_lng' };
+  if (radius !== null && (isNaN(radius) || radius < 20 || radius > 5000)) return { error: 'invalid_gym_radius' };
+  return { lat: lat !== null && !isNaN(lat) ? lat : null,
+           lng: lng !== null && !isNaN(lng) ? lng : null,
+           radius: radius !== null && !isNaN(radius) ? Math.round(radius) : null };
+}
+
+app.post('/api/admin/verify', ah(async (req, res) => {
+  if (!isAdmin(req)) return res.status(401).json({ error: 'unauthorized' });
+  res.json({ ok: true });
+}));
+
 app.post('/api/groups', ah(async (req, res) => {
   const name = String(req.body?.name ?? '').trim().slice(0, 50);
   const gymDays = String(req.body?.gym_days ?? '').trim();
   if (!name) return res.status(400).json({ error: 'name_required' });
   if (!isValidGymDays(gymDays)) return res.status(400).json({ error: 'invalid_gym_days' });
+  const geo = parseGeoCoords(req.body);
+  if (geo.error) return res.status(400).json({ error: geo.error });
   const id = crypto.randomUUID();
   const code = await uniqueCode();
-  await database.run('INSERT INTO `groups` (id,code,name,created_at,gym_days) VALUES (?,?,?,?,?)', [id, code, name, Date.now(), gymDays]);
+  await database.run(
+    'INSERT INTO `groups` (id,code,name,created_at,gym_days,gym_lat,gym_lng,gym_radius) VALUES (?,?,?,?,?,?,?,?)',
+    [id, code, name, Date.now(), gymDays, geo.lat, geo.lng, geo.radius]
+  );
   res.json({ id, code, name, gym_days: gymDays });
 }));
 
 app.patch('/api/groups/:id', ah(async (req, res) => {
   const { id } = req.params;
-  const creatorUserId = String(req.body?.creatorUserId ?? '').trim();
-  const creatorRecoveryCode = String(req.body?.creatorRecoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
-  const gymDays = req.body?.gym_days === undefined ? null : String(req.body.gym_days).trim();
-
   const group = await database.one('SELECT id, creator_user_id FROM `groups` WHERE id = ?', [id]);
   if (!group) return res.status(404).json({ error: 'not_found' });
-  if (!creatorUserId || !creatorRecoveryCode) return res.status(400).json({ error: 'missing_fields' });
 
-  const actor = await database.one('SELECT id, recovery_code, is_creator FROM users WHERE id = ? AND group_id = ?', [creatorUserId, id]);
-  if (!actor) return res.status(401).json({ error: 'unauthorized' });
-  if (actor.recovery_code.replace(/-/g, '') !== creatorRecoveryCode) return res.status(401).json({ error: 'unauthorized' });
-  if (Number(actor.is_creator) !== 1) return res.status(403).json({ error: 'not_creator' });
+  // Auth: admin password OR creator + recovery code
+  const admin = isAdmin(req);
+  if (!admin) {
+    const creatorUserId = String(req.body?.creatorUserId ?? '').trim();
+    const creatorRecoveryCode = String(req.body?.creatorRecoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
+    if (!creatorUserId || !creatorRecoveryCode) return res.status(400).json({ error: 'missing_fields' });
+    const actor = await database.one('SELECT id, recovery_code, is_creator FROM users WHERE id = ? AND group_id = ?', [creatorUserId, id]);
+    if (!actor) return res.status(401).json({ error: 'unauthorized' });
+    if (actor.recovery_code.replace(/-/g, '') !== creatorRecoveryCode) return res.status(401).json({ error: 'unauthorized' });
+    if (Number(actor.is_creator) !== 1) return res.status(403).json({ error: 'not_creator' });
+  }
 
-  if (gymDays === null) return res.json({ ok: true });
-  if (!isValidGymDays(gymDays)) return res.status(400).json({ error: 'invalid_gym_days' });
+  const sets = []; const params = [];
 
-  await database.run('UPDATE `groups` SET gym_days = ? WHERE id = ?', [gymDays, id]);
+  if (req.body?.gym_days !== undefined) {
+    const gymDays = String(req.body.gym_days).trim();
+    if (!isValidGymDays(gymDays)) return res.status(400).json({ error: 'invalid_gym_days' });
+    sets.push('gym_days = ?'); params.push(gymDays);
+  }
+  if (req.body?.name !== undefined) {
+    const newName = String(req.body.name).trim().slice(0, 50);
+    if (newName) { sets.push('name = ?'); params.push(newName); }
+  }
+  const geo = parseGeoCoords(req.body);
+  if (geo.error) return res.status(400).json({ error: geo.error });
+  if (req.body?.gym_lat !== undefined) { sets.push('gym_lat = ?'); params.push(geo.lat); }
+  if (req.body?.gym_lng !== undefined) { sets.push('gym_lng = ?'); params.push(geo.lng); }
+  if (req.body?.gym_radius !== undefined) { sets.push('gym_radius = ?'); params.push(geo.radius); }
+
+  if (!sets.length) return res.json({ ok: true });
+  params.push(id);
+  await database.run(`UPDATE \`groups\` SET ${sets.join(', ')} WHERE id = ?`, params);
   res.json({ ok: true });
 }));
 
 app.post('/api/test-group', ah(async (req, res) => {
-  const password = String(req.body?.password ?? '').trim().toLowerCase();
-  if (password !== ADMIN_PW.toLowerCase()) return res.status(401).json({ error: 'unauthorized' });
+  if (!isAdmin(req)) return res.status(401).json({ error: 'unauthorized' });
 
   const demo = await database.transaction(async (tx) => {
     const now = Date.now();
@@ -597,7 +664,7 @@ app.post('/api/groups/join', ah(async (req, res) => {
 }));
 
 app.get('/api/groups/:id', ah(async (req, res) => {
-  const g = await database.one('SELECT id,code,name,creator_user_id,gym_days FROM `groups` WHERE id = ?', [req.params.id]);
+  const g = await database.one('SELECT id,code,name,creator_user_id,gym_days,gym_lat,gym_lng,gym_radius FROM `groups` WHERE id = ?', [req.params.id]);
   if (!g) return res.status(404).json({ error: 'not_found' });
   const rawUsers = await database.all(`
     SELECT id, name, avatar_emoji, avatar_color, avatar_img, is_creator,
@@ -621,7 +688,9 @@ app.get('/api/groups/:id', ah(async (req, res) => {
     });
   }
 
-  res.json({ id: g.id, code: g.code, name: g.name, gymDays: g.gym_days, people, entries: allEntries });
+  res.json({ id: g.id, code: g.code, name: g.name, gymDays: g.gym_days,
+    gymLat: g.gym_lat ?? null, gymLng: g.gym_lng ?? null, gymRadius: g.gym_radius ?? null,
+    people, entries: allEntries });
 }));
 
 // ── Users ────────────────────────────────────────────────────────────────────
@@ -691,11 +760,12 @@ app.post('/api/groups/:id/users/login', ah(async (req, res) => {
 
 app.patch('/api/groups/:id/users/:uid', ah(async (req, res) => {
   const { id, uid } = req.params;
+  const admin = isAdmin(req);
   const recoveryCode = String(req.body?.recoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
 
   const user = await database.one('SELECT id, recovery_code, name, avail_edited_at FROM users WHERE id = ? AND group_id = ?', [uid, id]);
   if (!user) return res.status(404).json({ error: 'not_found' });
-  if (user.recovery_code.replace(/-/g, '') !== recoveryCode) return res.status(401).json({ error: 'unauthorized' });
+  if (!admin && user.recovery_code.replace(/-/g, '') !== recoveryCode) return res.status(401).json({ error: 'unauthorized' });
 
   const newName = req.body?.name ? String(req.body.name).trim().slice(0, 30) : null;
   const newEmoji = req.body?.avatarEmoji ? String(req.body.avatarEmoji) : null;
@@ -719,15 +789,28 @@ app.patch('/api/groups/:id/users/:uid', ah(async (req, res) => {
     if (rawAvail !== null && !isValidGymDays(rawAvail)) {
       return res.status(400).json({ error: 'invalid_avail_days' });
     }
-    const editedAt = user.avail_edited_at ? Number(user.avail_edited_at) : null;
-    if (editedAt) {
-      const elapsed = Date.now() - editedAt;
-      if (elapsed > LOCK_OPEN_MS && elapsed < LOCK_DURATION_MS) {
-        return res.status(403).json({ error: 'avail_locked', remaining_ms: Math.round(LOCK_DURATION_MS - elapsed) });
+    if (!admin) {
+      const editedAt = user.avail_edited_at ? Number(user.avail_edited_at) : null;
+      if (editedAt) {
+        const elapsed = Date.now() - editedAt;
+        if (elapsed > LOCK_OPEN_MS && elapsed < LOCK_DURATION_MS) {
+          return res.status(403).json({ error: 'avail_locked', remaining_ms: Math.round(LOCK_DURATION_MS - elapsed) });
+        }
       }
     }
     sets.push('avail_days = ?', 'avail_edited_at = ?');
     params.push(rawAvail, Date.now());
+  }
+  // Admin-only: edit streak and freezes directly
+  if (admin) {
+    if (req.body?.streak !== undefined) {
+      const sv = Math.max(0, Math.floor(Number(req.body.streak)));
+      if (!isNaN(sv)) { sets.push('streak = ?'); params.push(sv); }
+    }
+    if (req.body?.freezes !== undefined) {
+      const fv = Math.min(10, Math.max(0, Math.floor(Number(req.body.freezes))));
+      if (!isNaN(fv)) { sets.push('freezes = ?'); params.push(fv); }
+    }
   }
   if (!sets.length) return res.json({ ok: true });
 
@@ -747,14 +830,15 @@ app.patch('/api/groups/:id/users/:uid', ah(async (req, res) => {
 
 app.delete('/api/groups/:id/users/:uid', ah(async (req, res) => {
   const { id, uid } = req.params;
-  const actorId = String(req.body?.actorUserId ?? '');
-  const actorCode = String(req.body?.actorRecoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
-
-  const actor = await database.one('SELECT id, recovery_code, is_creator FROM users WHERE id = ? AND group_id = ?', [actorId, id]);
-  if (!actor) return res.status(401).json({ error: 'unauthorized' });
-  if (actor.recovery_code.replace(/-/g, '') !== actorCode) return res.status(401).json({ error: 'unauthorized' });
-  if (Number(actor.is_creator) !== 1) return res.status(403).json({ error: 'not_creator' });
-  if (uid === actorId) return res.status(400).json({ error: 'cannot_kick_self' });
+  if (!isAdmin(req)) {
+    const actorId = String(req.body?.actorUserId ?? '');
+    const actorCode = String(req.body?.actorRecoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
+    const actor = await database.one('SELECT id, recovery_code, is_creator FROM users WHERE id = ? AND group_id = ?', [actorId, id]);
+    if (!actor) return res.status(401).json({ error: 'unauthorized' });
+    if (actor.recovery_code.replace(/-/g, '') !== actorCode) return res.status(401).json({ error: 'unauthorized' });
+    if (Number(actor.is_creator) !== 1) return res.status(403).json({ error: 'not_creator' });
+    if (uid === actorId) return res.status(400).json({ error: 'cannot_kick_self' });
+  }
 
   const target = await database.one('SELECT id, name FROM users WHERE id = ? AND group_id = ?', [uid, id]);
   if (!target) return res.status(404).json({ error: 'not_found' });
@@ -844,7 +928,18 @@ app.post('/api/groups/:id/entries', ah(async (req, res) => {
 }));
 
 app.delete('/api/groups/:id/entries/:eid', ah(async (req, res) => {
-  await database.run('DELETE FROM entries WHERE id = ? AND group_id = ?', [req.params.eid, req.params.id]);
+  const { id, eid } = req.params;
+  if (!isAdmin(req)) {
+    // Require creator auth for non-admin deletes
+    const actorId = String(req.body?.actorUserId ?? '');
+    const actorCode = String(req.body?.actorRecoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
+    if (!actorId) return res.status(401).json({ error: 'unauthorized' });
+    const actor = await database.one('SELECT recovery_code, is_creator FROM users WHERE id = ? AND group_id = ?', [actorId, id]);
+    if (!actor) return res.status(401).json({ error: 'unauthorized' });
+    if (actor.recovery_code.replace(/-/g, '') !== actorCode) return res.status(401).json({ error: 'unauthorized' });
+    if (Number(actor.is_creator) !== 1) return res.status(403).json({ error: 'not_creator' });
+  }
+  await database.run('DELETE FROM entries WHERE id = ? AND group_id = ?', [eid, id]);
   res.json({ ok: true });
 }));
 
