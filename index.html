@@ -1043,6 +1043,16 @@
     .mset-radius-row label { font-size: 13px; color: var(--text-2); flex: 1; }
     .mset-radius-row input[type=range] { flex: 2; }
     .mset-radius-val { font-size: 13px; font-weight: 700; color: var(--text-1); min-width: 48px; text-align: right; }
+    /* Geo toggle */
+    .geo-toggle-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0; }
+    .geo-toggle-label { font-size:14px; color:var(--text-1); }
+    .toggle-switch { position:relative; display:inline-block; width:46px; height:26px; flex-shrink:0; }
+    .toggle-switch input { opacity:0; width:0; height:0; position:absolute; }
+    .toggle-slider { position:absolute; inset:0; background:var(--c-muted,#94a3b8); border-radius:26px; cursor:pointer; transition:.22s; }
+    .toggle-slider::before { content:''; position:absolute; height:20px; width:20px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.22s; box-shadow:0 1px 3px rgba(0,0,0,.3); }
+    .toggle-switch input:checked + .toggle-slider { background:var(--c-primary,#7c3aed); }
+    .toggle-switch input:checked + .toggle-slider::before { transform:translateX(20px); }
+    .mset-geo-hint { font-size:12px; opacity:.6; text-align:center; margin-top:6px; min-height:1em; }
     .mset-locate-btn { font-size: 13px; color: var(--accent); background: none; border: none; font-family: inherit;
                        cursor: pointer; padding: 4px 0; text-decoration: underline; }
 
@@ -1567,6 +1577,19 @@
       <div class="error-msg" id="mset-avail-error" style="margin-top:6px"></div>
       <button class="btn btn-primary" id="mset-avail-save" style="margin-top:10px;width:100%"></button>
     </div>
+    <!-- Geo toggle section (all users) -->
+    <div class="settings-section" id="mset-geo-section">
+      <div class="settings-section-title" id="mset-geo-lbl"></div>
+      <div class="geo-toggle-row">
+        <span class="geo-toggle-label" id="mset-geo-toggle-lbl"></span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="mset-geo-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <button class="btn btn-ghost" id="mset-geo-test" style="margin-top:8px;width:100%"></button>
+      <div class="mset-geo-hint" id="mset-geo-hint"></div>
+    </div>
     <div class="modal-btns" style="margin-top:8px">
       <button class="btn btn-ghost btn-full" id="mset-close"></button>
     </div>
@@ -1742,6 +1765,21 @@ const TRANS = {
     // Admin debug
     admForceHype:'Hype-Animation testen', admForceGeo:'Geo-Prompt testen',
     admClearFlags:'Tagesflags zurücksetzen',
+    // Settings fixed strings
+    errAtLeastOneDay:'Mindestens 1 Tag wählen.',
+    toastGymDaysSaved:'Gym-Tage gespeichert ✓',
+    toastAvailSaved:'Verfügbarkeit gespeichert ✓',
+    toastLocationSaved:'Standort gespeichert ✓',
+    toastMemberUpdated:'Mitglied aktualisiert ✓',
+    errGeoNotAvailable:'Geolokalisierung nicht verfügbar',
+    errLocationNotAvailable:'Standort nicht verfügbar',
+    errMapNotLoaded:'Karte nicht geladen',
+    errAvailLocked:'Bitte warte, bevor du deine Tage erneut änderst.',
+    // Settings geo toggle
+    msetGeoLbl:'Automatischer Check-in',
+    msetGeoToggleLbl:'Geo-Check aktiviert',
+    msetGeoTestBtn:'Standort testen',
+    msetGeoNoLoc:'Kein Gym-Standort gesetzt.',
   },
   en: {
     lsTagline:'Track · Shame · Improve', lsCreate:'Create Group', lsJoin:'Enter Code', lsOr:'or',
@@ -1841,6 +1879,21 @@ const TRANS = {
     // Admin debug
     admForceHype:'Test hype animation', admForceGeo:'Test geo prompt',
     admClearFlags:'Clear today\'s flags',
+    // Settings fixed strings
+    errAtLeastOneDay:'Select at least 1 day.',
+    toastGymDaysSaved:'Gym days saved ✓',
+    toastAvailSaved:'Availability saved ✓',
+    toastLocationSaved:'Location saved ✓',
+    toastMemberUpdated:'Member updated ✓',
+    errGeoNotAvailable:'Geolocation not available',
+    errLocationNotAvailable:'Location not available',
+    errMapNotLoaded:'Map not loaded',
+    errAvailLocked:'Please wait before changing your days again.',
+    // Settings geo toggle
+    msetGeoLbl:'Auto Check-in',
+    msetGeoToggleLbl:'Geo check-in enabled',
+    msetGeoTestBtn:'Test location',
+    msetGeoNoLoc:'No gym location set.',
   }
 };
 const T = TRANS[(navigator.language||'').toLowerCase().startsWith('de') ? 'de' : 'en'];
@@ -2696,7 +2749,7 @@ document.getElementById('adm-clear-flags-btn').addEventListener('click', () => {
   const today = todayStr();
   localStorage.removeItem('gymDailyHypeSeen_' + today);
   localStorage.removeItem('gymGeoPromptSeen_' + today);
-  showToast('Tagesflags gelöscht ✓');
+  showToast(T.toastCleared);
 });
 
 // ════════════════════════════════════════════════════════
@@ -2734,6 +2787,9 @@ function applyI18n() {
   // Settings location
   set('mset-location-lbl',T.msetLocationLbl); set('mset-radius-lbl',T.msetRadiusLbl);
   set('mset-locate-btn',T.msetLocateBtn); set('mset-location-save',T.msetLocationSave);
+  // Settings geo toggle
+  set('mset-geo-lbl',T.msetGeoLbl); set('mset-geo-toggle-lbl',T.msetGeoToggleLbl);
+  set('mset-geo-test',T.msetGeoTestBtn);
   // Profile view gym days
   set('pv-gym-days-lbl',T.pvGymDaysLbl);
   // Admin user edit
@@ -3343,6 +3399,14 @@ function openSettings() {
     saveBtn.disabled = false;
   }
   document.getElementById('mset-avail-error').textContent = '';
+
+  // Geo toggle — visible to all users
+  const geoEnabled = localStorage.getItem('gymGeoEnabled') !== '0';
+  document.getElementById('mset-geo-toggle').checked = geoEnabled;
+  document.getElementById('mset-geo-hint').textContent = '';
+  // Show geo section only if gym location is set
+  document.getElementById('mset-geo-section').style.display = data?.gymLat ? '' : 'none';
+
   openOv('modal-settings');
 }
 
@@ -3350,9 +3414,29 @@ document.getElementById('settings-btn').addEventListener('click', openSettings);
 document.getElementById('mset-close').addEventListener('click', () => closeOv('modal-settings'));
 document.getElementById('modal-settings').addEventListener('click', e => { if (e.target === e.currentTarget) closeOv('modal-settings'); });
 
+document.getElementById('mset-geo-toggle').addEventListener('change', e => {
+  localStorage.setItem('gymGeoEnabled', e.target.checked ? '1' : '0');
+});
+
+document.getElementById('mset-geo-test').addEventListener('click', () => {
+  const hintEl = document.getElementById('mset-geo-hint');
+  if (!data?.gymLat || !data?.gymLng) { hintEl.textContent = T.msetGeoNoLoc; return; }
+  if (!navigator.geolocation) { hintEl.textContent = T.errGeoNotAvailable; return; }
+  hintEl.textContent = '…';
+  navigator.geolocation.getCurrentPosition(pos => {
+    const dist = haversineMeters(pos.coords.latitude, pos.coords.longitude, data.gymLat, data.gymLng);
+    const radius = data.gymRadius ?? 150;
+    hintEl.textContent = `${Math.round(dist)}m (Radius: ${radius}m)`;
+    if (dist <= radius) {
+      closeOv('modal-settings');
+      showGeoPrompt();
+    }
+  }, () => { hintEl.textContent = T.errLocationNotAvailable; }, { timeout: 8000 });
+});
+
 document.getElementById('mset-gym-save').addEventListener('click', async () => {
   const gymDays = getDayMask('mset-gym-picker');
-  if (!gymDays.includes('1')) { document.getElementById('mset-gym-error').textContent = 'Mindestens 1 Tag wählen.'; return; }
+  if (!gymDays.includes('1')) { document.getElementById('mset-gym-error').textContent = T.errAtLeastOneDay; return; }
   const btn = document.getElementById('mset-gym-save');
   btn.disabled = true;
   try {
@@ -3360,7 +3444,7 @@ document.getElementById('mset-gym-save').addEventListener('click', async () => {
       ? { adminPassword, gym_days: gymDays }
       : { creatorUserId: userProfile.userId, creatorRecoveryCode: userProfile.recoveryCode, gym_days: gymDays };
     await api.patchGroup(data.id, body);
-    showToast('Gym-Tage gespeichert ✓');
+    showToast(T.toastGymDaysSaved);
     await refresh();
     closeOv('modal-settings');
   } catch { document.getElementById('mset-gym-error').textContent = T.errServer; }
@@ -3376,15 +3460,11 @@ document.getElementById('mset-avail-save').addEventListener('click', async () =>
       recoveryCode: userProfile.recoveryCode,
       avail_days: availDays
     });
-    showToast('Verfügbarkeit gespeichert ✓');
+    showToast(T.toastAvailSaved);
     await refresh();
     closeOv('modal-settings');
   } catch(e) {
-    if (e.status === 403) {
-      document.getElementById('mset-avail-error').textContent = T.errServer;
-    } else {
-      document.getElementById('mset-avail-error').textContent = T.errServer;
-    }
+    document.getElementById('mset-avail-error').textContent = e.status === 403 ? T.errAvailLocked : T.errServer;
   }
   finally { btn.disabled = false; }
 });
@@ -3428,7 +3508,7 @@ document.getElementById('au-save').addEventListener('click', async () => {
     });
     closeOv('modal-admin-user');
     await refresh();
-    showToast('Mitglied aktualisiert ✓');
+    showToast(T.toastMemberUpdated);
   } catch { document.getElementById('au-error').textContent = T.errServer; }
   finally { btn.disabled = false; }
 });
@@ -3492,18 +3572,18 @@ function initLeafletMap() {
 }
 
 document.getElementById('mset-locate-btn').addEventListener('click', () => {
-  if (!navigator.geolocation) { showToast('Geolokalisierung nicht verfügbar'); return; }
+  if (!navigator.geolocation) { showToast(T.errGeoNotAvailable); return; }
   navigator.geolocation.getCurrentPosition(pos => {
     if (!_leafletMap) return;
     const ll = [pos.coords.latitude, pos.coords.longitude];
     _leafletMap.setView(ll, 16);
     _leafletMarker.setLatLng(ll);
     _leafletCircle.setLatLng(ll);
-  }, () => showToast('Standort nicht verfügbar'));
+  }, () => showToast(T.errLocationNotAvailable));
 });
 
 document.getElementById('mset-location-save').addEventListener('click', async () => {
-  if (!_leafletMarker) { showToast('Karte nicht geladen'); return; }
+  if (!_leafletMarker) { showToast(T.errMapNotLoaded); return; }
   const ll = _leafletMarker.getLatLng();
   const radius = Number(document.getElementById('mset-radius-slider').value);
   const btn = document.getElementById('mset-location-save');
@@ -3513,7 +3593,7 @@ document.getElementById('mset-location-save').addEventListener('click', async ()
       ? { adminPassword }
       : { creatorUserId: userProfile.userId, creatorRecoveryCode: userProfile.recoveryCode };
     await api.patchGroup(data.id, { ...base, gym_lat: ll.lat, gym_lng: ll.lng, gym_radius: radius });
-    showToast('Standort gespeichert ✓');
+    showToast(T.toastLocationSaved);
     await refresh();
     renderAdminPanel();
     closeOv('modal-settings');
@@ -3664,6 +3744,7 @@ function showGeoPrompt() {
 
 function checkGeoAndPrompt(force = false) {
   if (!data?.gymLat || !data?.gymLng) return; // no location set
+  if (!force && localStorage.getItem('gymGeoEnabled') === '0') return; // user disabled
   if (!force) {
     const today = todayStr();
     if (localStorage.getItem('gymGeoPromptSeen_' + today)) return;
