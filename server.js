@@ -386,7 +386,10 @@ function isDayScheduled(dateStr, mask) {
   return mask[idx] === '1';
 }
 
-async function recomputeStreak(userId, gymDays, userEntries, dbUser) {
+// fullReplay: ignore the last_streak_date watermark and recompute from the
+// join date (capped to MAX_LOOKBACK). Needed when entries are backdated or
+// deleted — the watermark fast path can only ever move forward.
+async function recomputeStreak(userId, gymDays, userEntries, dbUser, fullReplay = false) {
   const mask = effectiveMask(gymDays, dbUser.avail_days);
 
   const entryMap = {};
@@ -406,23 +409,27 @@ async function recomputeStreak(userId, gymDays, userEntries, dbUser) {
     : new Date(todayD.getTime() - MAX_LOOKBACK * 86400000);
   joinD.setUTCHours(12, 0, 0, 0);
 
+  // Attendance counts anywhere in the lookback window (users may backdate
+  // check-ins from before they joined); misses only apply from the join date.
+  const joinStr = dateYMD(joinD);
+  const minStart = new Date(todayD.getTime() - MAX_LOOKBACK * 86400000);
+
   let startD;
-  if (dbUser.last_streak_date) {
+  if (!fullReplay && dbUser.last_streak_date) {
     startD = new Date(dbUser.last_streak_date + 'T12:00:00Z');
     startD.setUTCDate(startD.getUTCDate() + 1);
   } else {
-    startD = new Date(joinD);
+    startD = new Date(minStart);
   }
-  // Cap to [joinD, todayD]
-  if (startD < joinD) startD = new Date(joinD);
+  if (startD < minStart) startD = new Date(minStart);
   if (startD > todayD) {
     return { streak: dbUser.streak, freezes: dbUser.freezes, last_streak_date: dbUser.last_streak_date };
   }
 
-  let streak = Number(dbUser.streak) || 0;
+  let streak = fullReplay ? 0 : (Number(dbUser.streak) || 0);
   let freezes = Number(dbUser.freezes) || 0;
-  let last_streak_date = dbUser.last_streak_date || null;
-  let changed = false;
+  let last_streak_date = fullReplay ? null : (dbUser.last_streak_date || null);
+  let changed = fullReplay;
 
   for (let curD = new Date(startD); curD <= todayD; curD.setUTCDate(curD.getUTCDate() + 1)) {
     const dateStr = dateYMD(curD);
@@ -433,7 +440,7 @@ async function recomputeStreak(userId, gymDays, userEntries, dbUser) {
       streak++;
       last_streak_date = dateStr;
       changed = true;
-    } else if (isDayScheduled(dateStr, mask) && dateStr < todayStr) {
+    } else if (isDayScheduled(dateStr, mask) && dateStr < todayStr && dateStr >= joinStr) {
       // past scheduled day with no check-in → apply miss logic
       last_streak_date = dateStr;
       changed = true;
@@ -678,12 +685,18 @@ app.get('/api/groups/:id', ah(async (req, res) => {
   `, [req.params.id]);
   const allEntries = await database.all('SELECT id,person,date,mins,ts,type,reason FROM entries WHERE group_id = ? ORDER BY date DESC, ts DESC', [req.params.id]);
 
+  // Key case-insensitively — entry person names are free text and the
+  // POST /entries user lookup is LOWER()-based; a case mismatch here made
+  // the recompute miss attendances and falsely reset streaks.
   const byPerson = {};
-  for (const e of allEntries) { (byPerson[e.person] = byPerson[e.person] || []).push(e); }
+  for (const e of allEntries) {
+    const k = (e.person || '').toLowerCase();
+    (byPerson[k] = byPerson[k] || []).push(e);
+  }
 
   const people = [];
   for (const u of rawUsers) {
-    const s = await recomputeStreak(u.id, g.gym_days, byPerson[u.name] || [], u);
+    const s = await recomputeStreak(u.id, g.gym_days, byPerson[(u.name || '').toLowerCase()] || [], u);
     people.push({
       ...userDto(u),
       streak: s.streak,
@@ -703,8 +716,8 @@ app.get('/api/groups/:id', ah(async (req, res) => {
 app.post('/api/groups/:id/users', ah(async (req, res) => {
   const { id } = req.params;
   const name = String(req.body?.name ?? '').trim().slice(0, 30);
-  const avatarEmoji = String(req.body?.avatarEmoji ?? '🏋️');
-  const avatarColor = String(req.body?.avatarColor ?? '#7c3aed');
+  const avatarEmoji = String(req.body?.avatarEmoji ?? '🏋️').slice(0, 16);
+  const avatarColor = String(req.body?.avatarColor ?? '#7c3aed').slice(0, 16);
   const avatarImg = req.body?.avatarImg ? String(req.body.avatarImg) : null;
 
   if (!name) return res.status(400).json({ error: 'name_required' });
@@ -773,8 +786,8 @@ app.patch('/api/groups/:id/users/:uid', ah(async (req, res) => {
   if (!admin && user.recovery_code.replace(/-/g, '') !== recoveryCode) return res.status(401).json({ error: 'unauthorized' });
 
   const newName = req.body?.name ? String(req.body.name).trim().slice(0, 30) : null;
-  const newEmoji = req.body?.avatarEmoji ? String(req.body.avatarEmoji) : null;
-  const newColor = req.body?.avatarColor ? String(req.body.avatarColor) : null;
+  const newEmoji = req.body?.avatarEmoji ? String(req.body.avatarEmoji).slice(0, 16) : null;
+  const newColor = req.body?.avatarColor ? String(req.body.avatarColor).slice(0, 16) : null;
 
   const sets = [];
   const params = [];
@@ -901,34 +914,39 @@ app.post('/api/groups/:id/entries', ah(async (req, res) => {
     [eid, id, person, date, mins, now, type, reason]);
 
   let chest = null;
-  if (type === 'attend') {
+  if (type === 'attend' || type === 'late') {
     const dbUser = await database.one(
       'SELECT id, streak, freezes, last_streak_date, avail_days, last_freeze_grant, created_at FROM users WHERE group_id = ? AND LOWER(name) = LOWER(?)',
       [id, person]
     );
     if (dbUser) {
-      // Chest roll
-      const byPity = dbUser.freezes === 0 && (!dbUser.last_freeze_grant || (now - Number(dbUser.last_freeze_grant)) >= PITY_MS);
-      const byRoll = !byPity && Number(dbUser.freezes) < 2 && Math.random() < 0.05;
-      const gotFreeze = (byPity || byRoll) && Number(dbUser.freezes) < 2;
-      if (gotFreeze) {
-        // Compute in JS — MySQL's MIN() is aggregate-only (scalar version is LEAST),
-        // SQLite has no LEAST; a plain bound value works on both engines.
-        const newFreezes = Math.min(2, Number(dbUser.freezes) + 1);
-        await database.run(
-          'UPDATE users SET freezes = ?, last_freeze_grant = ? WHERE id = ?',
-          [newFreezes, now, dbUser.id]
-        );
-        dbUser.last_freeze_grant = now;
-        dbUser.freezes = newFreezes;
+      let gotFreeze = false;
+      if (type === 'attend') {
+        // Chest roll
+        const byPity = Number(dbUser.freezes) === 0 && (!dbUser.last_freeze_grant || (now - Number(dbUser.last_freeze_grant)) >= PITY_MS);
+        const byRoll = !byPity && Number(dbUser.freezes) < 2 && Math.random() < 0.05;
+        gotFreeze = (byPity || byRoll) && Number(dbUser.freezes) < 2;
+        if (gotFreeze) {
+          // Compute in JS — MySQL's MIN() is aggregate-only (scalar version is LEAST),
+          // SQLite has no LEAST; a plain bound value works on both engines.
+          const newFreezes = Math.min(2, Number(dbUser.freezes) + 1);
+          await database.run(
+            'UPDATE users SET freezes = ?, last_freeze_grant = ? WHERE id = ?',
+            [newFreezes, now, dbUser.id]
+          );
+          dbUser.last_freeze_grant = now;
+          dbUser.freezes = newFreezes;
+        }
       }
-      // Recompute streak to include today's check-in
+      // Recompute streak; a backdated entry lands behind the watermark and
+      // needs a full replay, otherwise it would never count.
       const userEntries = await database.all(
         'SELECT date, type FROM entries WHERE group_id = ? AND LOWER(person) = LOWER(?)',
         [id, person]
       );
-      const s = await recomputeStreak(dbUser.id, g.gym_days, userEntries, dbUser);
-      chest = { got_freeze: gotFreeze, streak: s.streak, freezes: s.freezes };
+      const backdated = Boolean(dbUser.last_streak_date && date <= dbUser.last_streak_date);
+      const s = await recomputeStreak(dbUser.id, g.gym_days, userEntries, dbUser, backdated);
+      if (type === 'attend') chest = { got_freeze: gotFreeze, streak: s.streak, freezes: s.freezes };
     }
   }
 
@@ -947,15 +965,37 @@ app.delete('/api/groups/:id/entries/:eid', ah(async (req, res) => {
     if (actor.recovery_code.replace(/-/g, '') !== actorCode) return res.status(401).json({ error: 'unauthorized' });
     if (Number(actor.is_creator) !== 1) return res.status(403).json({ error: 'not_creator' });
   }
+  const entry = await database.one('SELECT person, date, type FROM entries WHERE id = ? AND group_id = ?', [eid, id]);
   await database.run('DELETE FROM entries WHERE id = ? AND group_id = ?', [eid, id]);
+
+  // Deleting an attendance can invalidate an already-counted streak day —
+  // replay the streak from scratch for that user.
+  if (entry && (entry.type === 'attend' || (entry.type || 'late') === 'late')) {
+    const dbUser = await database.one(
+      'SELECT id, streak, freezes, last_streak_date, avail_days, last_freeze_grant, created_at FROM users WHERE group_id = ? AND LOWER(name) = LOWER(?)',
+      [id, entry.person]
+    );
+    if (dbUser && dbUser.last_streak_date && entry.date <= dbUser.last_streak_date) {
+      const g = await database.one('SELECT gym_days FROM `groups` WHERE id = ?', [id]);
+      const userEntries = await database.all(
+        'SELECT date, type FROM entries WHERE group_id = ? AND LOWER(person) = LOWER(?)',
+        [id, entry.person]
+      );
+      await recomputeStreak(dbUser.id, g.gym_days, userEntries, dbUser, true);
+    }
+  }
+
   res.json({ ok: true });
 }));
 
 app.use(express.static(__dirname));
 
 app.use((err, req, res, next) => {
-  console.error(err);
   if (res.headersSent) return next(err);
+  if (err.type === 'entity.parse.failed' || err.type === 'entity.too.large') {
+    return res.status(400).json({ error: 'bad_request' });
+  }
+  console.error(err);
   res.status(500).json({ error: 'server_error' });
 });
 
