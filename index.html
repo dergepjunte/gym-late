@@ -305,11 +305,22 @@
       background:rgba(245,158,11,.10); border:1px solid rgba(245,158,11,.22);
       padding:3px 10px; border-radius:20px;
     }
-    .checkin-time-chip {
-      display:inline-flex; align-items:center; gap:5px;
-      font-size:13px; font-weight:600; color:var(--accent);
-      background:rgba(124,58,237,.10); border:1px solid rgba(124,58,237,.24);
-      padding:3px 10px; border-radius:20px;
+    .checkin-time-hero { background:rgba(124,58,237,.08); }
+    .checkin-time-icon { font-size:34px; width:44px; flex-shrink:0; text-align:center; line-height:1; }
+    .checkin-time-num { color:var(--accent); }
+    .checkin-time-hero .streak-hero-hint { color:var(--accent); font-weight:600; cursor:pointer; }
+    .checkin-time-editor {
+      display:flex; align-items:center; gap:10px; flex:1;
+    }
+    .checkin-time-input {
+      font-size:18px; font-weight:700; padding:7px 12px; border-radius:10px;
+      border:1.5px solid var(--glass-border); background:var(--glass-inner);
+      color:var(--text-1); font-family:inherit;
+    }
+    .checkin-time-save-btn {
+      padding:8px 16px; border-radius:10px; border:none; font-family:inherit;
+      font-size:14px; font-weight:700; color:#fff; background:var(--accent);
+      cursor:pointer; -webkit-tap-highlight-color:transparent;
     }
     /* Mode toggle (Late / Skip) */
     .mode-toggle { display:flex; gap:4px; background:var(--glass-inner); border-radius:12px; padding:4px; margin-bottom:18px; }
@@ -1401,10 +1412,17 @@
         </div>
         <div class="streak-hero-hint" id="streak-hero-hint"></div>
       </div>
-      <div id="checkin-time-wrap" class="hidden" style="text-align:center;margin-top:8px">
-        <span class="checkin-time-chip" id="checkin-time-chip">
-          <span aria-hidden="true">⏰</span> <span id="checkin-time-chip-lbl"></span> <span id="checkin-time-chip-val"></span>
-        </span>
+      <div class="streak-hero glass checkin-time-hero hidden" id="checkin-time-hero">
+        <div class="checkin-time-icon" aria-hidden="true">⏰</div>
+        <div class="streak-hero-info" id="checkin-time-view">
+          <div class="streak-hero-lbl" id="checkin-time-chip-lbl"></div>
+          <div class="streak-hero-num checkin-time-num" id="checkin-time-chip-val">0</div>
+        </div>
+        <div class="checkin-time-editor hidden" id="checkin-time-editor">
+          <input type="time" class="checkin-time-input" id="checkin-time-edit-input">
+          <button class="checkin-time-save-btn" id="checkin-time-save-btn"></button>
+        </div>
+        <div class="streak-hero-hint" id="checkin-time-hint"></div>
       </div>
       <div class="stat-row">
         <div class="card glass stat-card"><div class="stat-val" id="s-count">0</div><div class="stat-lbl" id="s-count-lbl"></div></div>
@@ -2027,6 +2045,7 @@ const TRANS = {
     dhTimeSetLbl:'Heutige Uhrzeit',
     dhTimeWindowHint:d=>`Check-in-Fenster: ${d} ± 10 Min.`,
     checkinTimeChipLbl:'Check-in um',
+    checkinTimeChangeBtn:'Ändern',
     gpNoGymDayTitle:'Kein Gym-Tag heute',
     gpNoGymDaySub:'Heute steht kein Training auf dem Plan.',
     gpLogCheckinBtn:'Trotzdem einchecken',
@@ -2164,6 +2183,7 @@ const TRANS = {
     dhTimeSetLbl:"Today's time",
     dhTimeWindowHint:d=>`Check-in window: ${d} ± 10 min.`,
     checkinTimeChipLbl:'Check in at',
+    checkinTimeChangeBtn:'Change',
     gpNoGymDayTitle:'Not a gym day today',
     gpNoGymDaySub:"There's no training scheduled today.",
     gpLogCheckinBtn:'Log check-in anyway',
@@ -4113,14 +4133,49 @@ function renderStreakHero() {
 }
 
 function renderCheckinTimeChip() {
-  const wrap = document.getElementById('checkin-time-wrap');
+  const hero = document.getElementById('checkin-time-hero');
   const hasTimeToday = !!data?.fixedCheckinEnabled && data?.checkinTimeDate === todayStr() && !!data?.checkinTime;
-  wrap.classList.toggle('hidden', !hasTimeToday);
+  hero.classList.toggle('hidden', !hasTimeToday);
   if (hasTimeToday) {
     document.getElementById('checkin-time-chip-lbl').textContent = T.checkinTimeChipLbl;
     document.getElementById('checkin-time-chip-val').textContent = data.checkinTime;
+    document.getElementById('checkin-time-hint').textContent = T.checkinTimeChangeBtn;
+    document.getElementById('checkin-time-save-btn').textContent = T.dhSetTimeBtn;
   }
 }
+
+function openCheckinTimeEditor() {
+  document.getElementById('checkin-time-view').classList.add('hidden');
+  document.getElementById('checkin-time-hint').classList.add('hidden');
+  document.getElementById('checkin-time-editor').classList.remove('hidden');
+  document.getElementById('checkin-time-edit-input').value = data?.checkinTime || '18:00';
+}
+
+function closeCheckinTimeEditor() {
+  document.getElementById('checkin-time-view').classList.remove('hidden');
+  document.getElementById('checkin-time-hint').classList.remove('hidden');
+  document.getElementById('checkin-time-editor').classList.add('hidden');
+}
+
+document.getElementById('checkin-time-hint').addEventListener('click', e => {
+  e.stopPropagation();
+  openCheckinTimeEditor();
+});
+
+document.getElementById('checkin-time-save-btn').addEventListener('click', async e => {
+  e.stopPropagation();
+  const val = document.getElementById('checkin-time-edit-input').value;
+  if (!val) return;
+  const btn = e.target;
+  btn.disabled = true;
+  try {
+    await api.setCheckinTime(data.id, { date: todayStr(), time: val });
+    await refresh();
+    updateDailyHypeTimeUI();
+    closeCheckinTimeEditor();
+  } catch { showToast(T.errServer); }
+  finally { btn.disabled = false; }
+});
 
 // Tap on the hero opens the check-in modal
 document.getElementById('streak-hero').addEventListener('click', () => {
