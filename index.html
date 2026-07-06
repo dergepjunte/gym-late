@@ -343,7 +343,14 @@
       display:block; flex:1; min-height:0;
       overflow-y:auto; -webkit-overflow-scrolling:touch;
       overscroll-behavior:contain;
+      /* Container is only as wide as the centered content column, so its
+         native scrollbar track would render mid-page (through cards) on
+         wider viewports instead of at the screen edge — hide it, touch/
+         trackpad scrolling still works fine without the visible track. */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
+    .tab-pane.active::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
     /* ── FAB ─────────────────────────────────────────────────── */
     #fab {
@@ -428,7 +435,10 @@
       /* pane is the scroll parent now: viewport minus header+pill+nav overlay */
       height: calc(100dvh - 250px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
       border-radius: 16px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
+    #week-recap::-webkit-scrollbar { display: none; width: 0; height: 0; }
     .week-block {
       scroll-snap-align: start;
       scroll-snap-stop: always;
