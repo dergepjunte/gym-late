@@ -401,8 +401,8 @@
       transition:transform .32s cubic-bezier(.34,1.56,.64,1),width .32s cubic-bezier(.34,1.56,.64,1);
     }
     @media (prefers-reduced-motion:reduce) { .nav-indicator { transition:none; } }
-    .nav-ico { font-size:22px; transition:transform .25s cubic-bezier(.34,1.56,.64,1); }
-    .nav-btn.active .nav-ico { transform:scale(1.12) translateY(-1px); }
+    .nav-ico { font-size:22px; color:var(--text-2); transition:transform .25s cubic-bezier(.34,1.56,.64,1),color .2s; }
+    .nav-btn.active .nav-ico { transform:scale(1.12) translateY(-1px); color:var(--accent); }
     .nav-lbl { font-size:11px; font-weight:500; color:var(--text-2); transition:color .2s,font-weight .15s; }
     .nav-btn.active .nav-lbl { color:var(--accent); font-weight:700; }
 
@@ -887,7 +887,7 @@
       border:2.5px solid rgba(255,255,255,0.3);
       display:none; align-items:center; justify-content:center;
       font-size:20px; cursor:pointer; transition:transform .15s;
-      font-family:inherit; background:transparent;
+      font-family:inherit; background:transparent; color:var(--text-1);
     }
     .my-profile-btn.visible { display:flex; }
     .my-profile-btn:active { transform:scale(.88); }
@@ -1087,6 +1087,23 @@
     }
     .overlay-btn-ghost:active { background: rgba(255,255,255,.25); }
 
+    .dh-time-picker { display:flex; flex-direction:column; align-items:center; gap:12px; margin-top:28px;
+                       animation: w-fade .4s .24s both; }
+    .dh-time-picker-lbl { font-size:14px; font-weight:600; color:rgba(255,255,255,.8); }
+    .dh-time-input { font-size:28px; font-weight:700; padding:10px 18px; border-radius:14px; border:none;
+                      background:rgba(255,255,255,.15); color:#fff; font-family:inherit;
+                      color-scheme: dark; }
+    .dh-time-display { display:flex; flex-direction:column; align-items:center; gap:4px; margin-top:24px;
+                        animation: w-fade .4s .24s both; }
+    .dh-time-display-lbl { font-size:13px; font-weight:600; color:rgba(255,255,255,.7); }
+    .dh-time-display-val { font-size:40px; font-weight:900; color:#fff; letter-spacing:-1px; }
+
+    #late-anim { background: radial-gradient(circle at 50% 40%, #b91c1c 0%, #450a0a 60%, #1a0303 100%); z-index:520; }
+    .la-icon-wrap { position:relative; width:120px; height:120px; display:flex; align-items:center; justify-content:center; }
+    .la-glow { position:absolute; inset:-20px; border-radius:50%; background:radial-gradient(circle, rgba(248,113,113,.55) 0%, rgba(248,113,113,0) 70%);
+               animation: sa-glow-pulse 1.6s ease-in-out infinite; }
+    .la-icon { font-size:72px; line-height:1; animation: sa-pop .6s cubic-bezier(.34,1.56,.64,1) both; }
+
     /* ══════════════════════════════════════════════════════════ */
     /*  STREAK HERO (startseite) + STREAK ANIMATION (duolingo)   */
     /* ══════════════════════════════════════════════════════════ */
@@ -1168,6 +1185,7 @@
     .toggle-switch input:checked + .toggle-slider { background:var(--c-primary,#7c3aed); }
     .toggle-switch input:checked + .toggle-slider::before { transform:translateX(20px); }
     .mset-geo-hint { font-size:12px; opacity:.6; text-align:center; margin-top:6px; min-height:1em; }
+.beta-badge { display:inline-block; font-size:10px; font-weight:700; letter-spacing:.03em; color:#fff; background:var(--c-primary,#7c3aed); border-radius:5px; padding:1px 6px; vertical-align:middle; }
     .mset-locate-btn { font-size: 13px; color: var(--accent); background: none; border: none; font-family: inherit;
                        cursor: pointer; padding: 4px 0; text-decoration: underline; }
 
@@ -1216,6 +1234,15 @@
   <div class="overlay-icon">🏋️</div>
   <div class="overlay-title" id="dh-title"></div>
   <div class="overlay-sub"   id="dh-sub"></div>
+  <div class="dh-time-picker hidden" id="dh-time-picker">
+    <div class="dh-time-picker-lbl" id="dh-time-picker-lbl"></div>
+    <input type="time" class="dh-time-input" id="dh-time-input" value="18:00">
+    <button class="overlay-btn-primary" id="dh-time-save"></button>
+  </div>
+  <div class="dh-time-display hidden" id="dh-time-display">
+    <div class="dh-time-display-lbl" id="dh-time-display-lbl"></div>
+    <div class="dh-time-display-val" id="dh-time-display-val"></div>
+  </div>
   <div class="overlay-btns">
     <button class="overlay-btn-primary" id="dh-close"></button>
   </div>
@@ -1223,12 +1250,29 @@
 
 <!-- Geo Check-in Prompt Overlay -->
 <div id="geo-prompt" class="fullscreen-overlay hidden">
-  <div class="overlay-icon">📍</div>
+  <div class="overlay-icon" id="gp-icon">📍</div>
   <div class="overlay-title" id="gp-title"></div>
   <div class="overlay-sub"   id="gp-sub"></div>
-  <div class="overlay-btns">
+  <div class="overlay-btns" id="gp-btns-gymday">
     <button class="overlay-btn-primary" id="gp-checkin"></button>
     <button class="overlay-btn-ghost"   id="gp-later"></button>
+  </div>
+  <div class="overlay-btns hidden" id="gp-btns-nogymday">
+    <button class="overlay-btn-primary" id="gp-log-checkin"></button>
+    <button class="overlay-btn-ghost"   id="gp-later2"></button>
+  </div>
+</div>
+
+<!-- Late Check-in Animation -->
+<div id="late-anim" class="fullscreen-overlay hidden">
+  <div class="la-icon-wrap">
+    <div class="la-glow"></div>
+    <div class="la-icon">⏰</div>
+  </div>
+  <div class="overlay-title" id="la-title"></div>
+  <div class="overlay-sub"   id="la-sub"></div>
+  <div class="overlay-btns">
+    <button class="overlay-btn-primary" id="la-close"></button>
   </div>
 </div>
 
@@ -1727,6 +1771,18 @@
       <div class="error-msg" id="mset-gym-error" style="margin-top:6px"></div>
       <button class="btn btn-primary" id="mset-gym-save" style="margin-top:10px;width:100%"></button>
     </div>
+    <!-- Fixed check-in time (Beta, creator/admin only) -->
+    <div class="settings-section hidden" id="mset-fixedtime-section">
+      <div class="settings-section-title"><span id="mset-fixedtime-lbl"></span> <span class="beta-badge">BETA</span></div>
+      <div class="geo-toggle-row">
+        <span class="geo-toggle-label" id="mset-fixedtime-toggle-lbl"></span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="mset-fixedtime-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="mset-geo-hint" id="mset-fixedtime-hint"></div>
+    </div>
     <!-- Gym location section (creator/admin only) -->
     <div class="settings-section hidden" id="mset-map-section">
       <div class="settings-section-title" id="mset-location-lbl"></div>
@@ -1950,6 +2006,23 @@ const TRANS = {
     msetGeoToggleLbl:'Geo-Check aktiviert',
     msetGeoTestBtn:'Standort testen',
     msetGeoNoLoc:'Kein Gym-Standort gesetzt.',
+    // Settings fixed check-in time (beta)
+    msetFixedtimeLbl:'Feste Check-in-Zeit',
+    msetFixedtimeToggleLbl:'Feste Uhrzeit aktiviert',
+    toastFixedCheckinOn:'Feste Check-in-Zeit aktiviert',
+    toastFixedCheckinOff:'Feste Check-in-Zeit deaktiviert',
+    dhSetTimeLbl:'Uhrzeit für heute festlegen',
+    dhSetTimeBtn:'Uhrzeit speichern',
+    dhTimeSetLbl:'Heutige Uhrzeit',
+    dhTimeWindowHint:d=>`Check-in-Fenster: ${d} ± 10 Min.`,
+    gpNoGymDayTitle:'Kein Gym-Tag heute',
+    gpNoGymDaySub:'Heute steht kein Training auf dem Plan.',
+    gpLogCheckinBtn:'Trotzdem einchecken',
+    laTitle:'Verspätet!',
+    laSub:m=>`${m} Min. nach der festen Uhrzeit eingecheckt`,
+    laClose:'Weiter',
+    toastOnTime:'Pünktlich eingecheckt!',
+    toastLate:'Verspätet eingecheckt',
     // Streak hero + animation
     shDays: n => n===1 ? 'Tag Streak' : 'Tage Streak',
     shHintOpen:'Heute noch nicht verlängert', shHintDone:'Heute verlängert!',
@@ -2069,6 +2142,23 @@ const TRANS = {
     msetGeoToggleLbl:'Geo check-in enabled',
     msetGeoTestBtn:'Test location',
     msetGeoNoLoc:'No gym location set.',
+    // Settings fixed check-in time (beta)
+    msetFixedtimeLbl:'Fixed check-in time',
+    msetFixedtimeToggleLbl:'Fixed time enabled',
+    toastFixedCheckinOn:'Fixed check-in time enabled',
+    toastFixedCheckinOff:'Fixed check-in time disabled',
+    dhSetTimeLbl:'Set time for today',
+    dhSetTimeBtn:'Save time',
+    dhTimeSetLbl:"Today's time",
+    dhTimeWindowHint:d=>`Check-in window: ${d} ± 10 min.`,
+    gpNoGymDayTitle:'Not a gym day today',
+    gpNoGymDaySub:"There's no training scheduled today.",
+    gpLogCheckinBtn:'Log check-in anyway',
+    laTitle:'Late!',
+    laSub:m=>`Checked in ${m} min. after the fixed time`,
+    laClose:'Continue',
+    toastOnTime:'Checked in on time!',
+    toastLate:'Checked in late',
     // Streak hero + animation
     shDays: n => n===1 ? 'day streak' : 'day streak',
     shHintOpen:'Not extended today yet', shHintDone:'Extended today!',
@@ -2124,6 +2214,7 @@ const api = {
   loginUser:     (g,d)    => api.req('POST',   `/groups/${g}/users/login`, d),
   updateUser:    (g,u,d)  => api.req('PATCH',  `/groups/${g}/users/${u}`, d),
   kickUser:      (g,u,d)  => api.req('DELETE', `/groups/${g}/users/${u}`, d),
+  setCheckinTime:(g,d)    => api.req('POST',   `/groups/${g}/checkin-time`, d),
 };
 
 // ════════════════════════════════════════════════════════
@@ -2970,7 +3061,10 @@ function applyI18n() {
   set('lbl-groups',T.mgsTitle); set('pp-join-btn',T.mgsJoin); set('pp-create-btn',T.mgsCreate);
   // Overlays
   set('dh-title',T.dhTitle); set('dh-sub',T.dhSub); set('dh-close',T.dhClose);
+  set('dh-time-picker-lbl',T.dhSetTimeLbl); set('dh-time-save',T.dhSetTimeBtn); set('dh-time-display-lbl',T.dhTimeSetLbl);
   set('gp-title',T.gpTitle); set('gp-sub',T.gpSub); set('gp-checkin',T.gpCheckin); set('gp-later',T.gpLater);
+  set('gp-log-checkin',T.gpLogCheckinBtn); set('gp-later2',T.gpLater);
+  set('la-title',T.laTitle); set('la-close',T.laClose);
   set('sa-close',T.saContinue);
   // Settings location
   set('mset-location-lbl',T.msetLocationLbl); set('mset-radius-lbl',T.msetRadiusLbl);
@@ -2978,6 +3072,8 @@ function applyI18n() {
   // Settings geo toggle
   set('mset-geo-lbl',T.msetGeoLbl); set('mset-geo-toggle-lbl',T.msetGeoToggleLbl);
   set('mset-geo-test',T.msetGeoTestBtn);
+  // Settings fixed check-in time (beta)
+  set('mset-fixedtime-lbl',T.msetFixedtimeLbl); set('mset-fixedtime-toggle-lbl',T.msetFixedtimeToggleLbl);
   // Profile view gym days
   set('pv-gym-days-lbl',T.pvGymDaysLbl);
   // Admin user edit
@@ -3143,17 +3239,27 @@ document.getElementById('ml-save').addEventListener('click', async () => {
     if (mlMode === 'attend') {
       const date = document.getElementById('ml-attend-date').value;
       if (!person || !date) { errEl.textContent = '⚠'; return; }
+      const isSelfToday = person === userProfile?.name && date === todayStr();
+      const lateness = isSelfToday ? computeCheckinLateness() : null;
       const wasExtended = myStreakInfo()?.extendedToday;
       const res = await api.addEntry(data.id, { person, date, type: 'attend' });
       closeOv('modal-late');
       await refresh();
       const info = myStreakInfo();
-      if (info && person === userProfile?.name && date === todayStr() && !wasExtended) {
-        if (res.chest) window._saNext = () => showChest(res.chest);
-        showStreakAnim(info.streak);
+      const finish = () => {
+        if (info && isSelfToday && !wasExtended) {
+          if (res.chest) window._saNext = () => showChest(res.chest);
+          showStreakAnim(info.streak);
+        } else {
+          showToast(lateness ? (lateness.isLate ? T.toastLate : T.toastOnTime) : T.toastAttendSaved);
+          if (res.chest) showChest(res.chest);
+        }
+      };
+      if (lateness?.isLate) {
+        window._laNext = finish;
+        showLateAnim(lateness.minsOff);
       } else {
-        showToast(T.toastAttendSaved);
-        if (res.chest) showChest(res.chest);
+        finish();
       }
     } else if (mlMode === 'late') {
       const date = document.getElementById('ml-date').value;
@@ -3601,6 +3707,14 @@ function openSettings() {
     document.getElementById('mset-gym-error').textContent = '';
   }
 
+  // Fixed check-in time (Beta, creator or admin)
+  const fixedSection = document.getElementById('mset-fixedtime-section');
+  fixedSection.classList.toggle('hidden', !canEditGroup);
+  if (canEditGroup) {
+    document.getElementById('mset-fixedtime-toggle').checked = !!data?.fixedCheckinEnabled;
+    document.getElementById('mset-fixedtime-hint').textContent = '';
+  }
+
   // Gym location section (creator or admin)
   const mapSection = document.getElementById('mset-map-section');
   mapSection.classList.toggle('hidden', !canEditGroup);
@@ -3649,6 +3763,26 @@ document.getElementById('modal-settings').addEventListener('click', e => { if (e
 
 document.getElementById('mset-geo-toggle').addEventListener('change', e => {
   localStorage.setItem('gymGeoEnabled', e.target.checked ? '1' : '0');
+});
+
+document.getElementById('mset-fixedtime-toggle').addEventListener('change', async e => {
+  const checked = e.target.checked;
+  const hintEl = document.getElementById('mset-fixedtime-hint');
+  e.target.disabled = true;
+  try {
+    const body = adminMode && adminPassword
+      ? { adminPassword, fixed_checkin_enabled: checked }
+      : { creatorUserId: userProfile.userId, creatorRecoveryCode: userProfile.recoveryCode, fixed_checkin_enabled: checked };
+    await api.patchGroup(data.id, body);
+    hintEl.textContent = '';
+    showToast(checked ? T.toastFixedCheckinOn : T.toastFixedCheckinOff);
+    await refresh();
+  } catch {
+    e.target.checked = !checked;
+    hintEl.textContent = T.errServer;
+  } finally {
+    e.target.disabled = false;
+  }
 });
 
 document.getElementById('mset-geo-test').addEventListener('click', () => {
@@ -3990,6 +4124,66 @@ document.getElementById('sa-close').addEventListener('click', () => {
 });
 
 // ════════════════════════════════════════════════════════
+//  FIXED CHECK-IN TIME WINDOW (Beta)
+// ════════════════════════════════════════════════════════
+// Returns null if the beta feature isn't active for today, else { isLate, minsOff }.
+// On-time = within ±10 minutes of the group's fixed check-in time for today.
+function computeCheckinLateness() {
+  if (!data?.fixedCheckinEnabled) return null;
+  const today = todayStr();
+  if (data.checkinTimeDate !== today || !data.checkinTime) return null;
+  const [h, m] = data.checkinTime.split(':').map(Number);
+  const now = new Date();
+  const targetMins = h * 60 + m;
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const diff = nowMins - targetMins;
+  return { isLate: Math.abs(diff) > 10, minsOff: Math.abs(diff) };
+}
+
+function showLateAnim(minsOff) {
+  document.getElementById('la-sub').textContent = T.laSub(minsOff);
+  document.getElementById('late-anim').classList.remove('hidden');
+}
+
+document.getElementById('la-close').addEventListener('click', () => {
+  document.getElementById('late-anim').classList.add('hidden');
+  if (window._laNext) { const fn = window._laNext; window._laNext = null; fn(); }
+});
+
+// Shared submit path for a self/today attendance check-in (geo-prompt buttons).
+// Applies the fixed-checkin-time window (if active) and plays the late-checkin
+// animation before continuing into the normal streak-anim/chest/toast flow.
+async function submitSelfAttendEntry() {
+  if (!userProfile || !group || !data) return;
+  try {
+    const lateness = computeCheckinLateness();
+    const wasExtended = myStreakInfo()?.extendedToday;
+    const res = await api.addEntry(data.id, {
+      type: 'attend',
+      date: todayStr(),
+      person: userProfile.name
+    });
+    await refresh();
+    const info = myStreakInfo();
+    const finish = () => {
+      if (info && !wasExtended) {
+        if (res.chest) window._saNext = () => showChest(res.chest);
+        showStreakAnim(info.streak);
+      } else {
+        if (res.chest) showChest(res.chest);
+        showToast(lateness ? (lateness.isLate ? T.toastLate : T.toastOnTime) : T.toastAttendSaved);
+      }
+    };
+    if (lateness?.isLate) {
+      window._laNext = finish;
+      showLateAnim(lateness.minsOff);
+    } else {
+      finish();
+    }
+  } catch { showToast(T.errServer); }
+}
+
+// ════════════════════════════════════════════════════════
 //  DAILY HYPE
 // ════════════════════════════════════════════════════════
 function shouldShowDailyHype() {
@@ -3998,14 +4192,39 @@ function shouldShowDailyHype() {
   return calDayScheduled(today, data?.gymDays || '0000000');
 }
 
+function updateDailyHypeTimeUI() {
+  const picker = document.getElementById('dh-time-picker');
+  const displayEl = document.getElementById('dh-time-display');
+  const today = todayStr();
+  const enabled = !!data?.fixedCheckinEnabled;
+  const hasTimeToday = enabled && data?.checkinTimeDate === today && !!data?.checkinTime;
+  picker.classList.toggle('hidden', !enabled || hasTimeToday);
+  displayEl.classList.toggle('hidden', !hasTimeToday);
+  if (hasTimeToday) document.getElementById('dh-time-display-val').textContent = data.checkinTime;
+}
+
 function showDailyHype(force = false) {
   const el = document.getElementById('daily-hype');
+  updateDailyHypeTimeUI();
   el.classList.remove('hidden');
   if (!force) localStorage.setItem('gymDailyHypeSeen_' + todayStr(), '1');
 }
 
 document.getElementById('dh-close').addEventListener('click', () => {
   document.getElementById('daily-hype').classList.add('hidden');
+});
+
+document.getElementById('dh-time-save').addEventListener('click', async () => {
+  const val = document.getElementById('dh-time-input').value;
+  if (!val) return;
+  const btn = document.getElementById('dh-time-save');
+  btn.disabled = true;
+  try {
+    await api.setCheckinTime(data.id, { date: todayStr(), time: val });
+    await refresh();
+    updateDailyHypeTimeUI();
+  } catch { showToast(T.errServer); }
+  finally { btn.disabled = false; }
 });
 
 // ════════════════════════════════════════════════════════
@@ -4021,6 +4240,12 @@ function haversineMeters(lat1, lng1, lat2, lng2) {
 }
 
 function showGeoPrompt() {
+  const isGymDay = calDayScheduled(todayStr(), data?.gymDays || '0000000');
+  document.getElementById('gp-icon').textContent = isGymDay ? '📍' : '🚫';
+  document.getElementById('gp-title').textContent = isGymDay ? T.gpTitle : T.gpNoGymDayTitle;
+  document.getElementById('gp-sub').textContent = isGymDay ? T.gpSub : T.gpNoGymDaySub;
+  document.getElementById('gp-btns-gymday').classList.toggle('hidden', !isGymDay);
+  document.getElementById('gp-btns-nogymday').classList.toggle('hidden', isGymDay);
   document.getElementById('geo-prompt').classList.remove('hidden');
   localStorage.setItem('gymGeoPromptSeen_' + todayStr(), '1');
 }
@@ -4051,27 +4276,18 @@ function checkGeoAndPrompt(force = false) {
 document.getElementById('gp-later').addEventListener('click', () => {
   document.getElementById('geo-prompt').classList.add('hidden');
 });
+document.getElementById('gp-later2').addEventListener('click', () => {
+  document.getElementById('geo-prompt').classList.add('hidden');
+});
 
 document.getElementById('gp-checkin').addEventListener('click', async () => {
   document.getElementById('geo-prompt').classList.add('hidden');
-  if (!userProfile || !group || !data) return;
-  try {
-    const wasExtended = myStreakInfo()?.extendedToday;
-    const res = await api.addEntry(data.id, {
-      type: 'attend',
-      date: todayStr(),
-      person: userProfile.name
-    });
-    await refresh();
-    const info = myStreakInfo();
-    if (info && !wasExtended) {
-      if (res.chest) window._saNext = () => showChest(res.chest);
-      showStreakAnim(info.streak);
-    } else {
-      if (res.chest) showChest(res.chest);
-      showToast(T.toastAttendSaved);
-    }
-  } catch { showToast(T.errServer); }
+  await submitSelfAttendEntry();
+});
+
+document.getElementById('gp-log-checkin').addEventListener('click', async () => {
+  document.getElementById('geo-prompt').classList.add('hidden');
+  await submitSelfAttendEntry();
 });
 
 // ════════════════════════════════════════════════════════

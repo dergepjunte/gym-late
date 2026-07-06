@@ -161,7 +161,10 @@ async function initSchema() {
         gym_days CHAR(7) NOT NULL DEFAULT '1111111',
         gym_lat DOUBLE NULL,
         gym_lng DOUBLE NULL,
-        gym_radius INT NULL
+        gym_radius INT NULL,
+        fixed_checkin_enabled TINYINT NOT NULL DEFAULT 0,
+        checkin_time_date VARCHAR(10) NULL,
+        checkin_time VARCHAR(5) NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     await database.run(`
@@ -225,6 +228,15 @@ async function initSchema() {
     try { await database.run('ALTER TABLE `groups` ADD COLUMN gym_radius INT NULL'); } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
+    try { await database.run('ALTER TABLE `groups` ADD COLUMN fixed_checkin_enabled TINYINT NOT NULL DEFAULT 0'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run('ALTER TABLE `groups` ADD COLUMN checkin_time_date VARCHAR(10) NULL'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run('ALTER TABLE `groups` ADD COLUMN checkin_time VARCHAR(5) NULL'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
     try { await database.run('ALTER TABLE users ADD COLUMN avatar_img MEDIUMTEXT NULL'); } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
@@ -265,7 +277,10 @@ async function initSchema() {
       gym_days   TEXT NOT NULL DEFAULT '1111111',
       gym_lat    REAL,
       gym_lng    REAL,
-      gym_radius INTEGER
+      gym_radius INTEGER,
+      fixed_checkin_enabled INTEGER NOT NULL DEFAULT 0,
+      checkin_time_date TEXT,
+      checkin_time TEXT
     );
 
     CREATE TABLE IF NOT EXISTS members (
@@ -310,6 +325,9 @@ async function initSchema() {
   try { database.exec('ALTER TABLE `groups` ADD COLUMN gym_lat REAL'); } catch {}
   try { database.exec('ALTER TABLE `groups` ADD COLUMN gym_lng REAL'); } catch {}
   try { database.exec('ALTER TABLE `groups` ADD COLUMN gym_radius INTEGER'); } catch {}
+  try { database.exec('ALTER TABLE `groups` ADD COLUMN fixed_checkin_enabled INTEGER NOT NULL DEFAULT 0'); } catch {}
+  try { database.exec('ALTER TABLE `groups` ADD COLUMN checkin_time_date TEXT'); } catch {}
+  try { database.exec('ALTER TABLE `groups` ADD COLUMN checkin_time TEXT'); } catch {}
   try { database.exec('ALTER TABLE users ADD COLUMN avatar_img TEXT'); } catch {}
   try { database.exec('ALTER TABLE users ADD COLUMN avail_days TEXT'); } catch {}
   try { database.exec('ALTER TABLE users ADD COLUMN avail_edited_at INTEGER'); } catch {}
@@ -592,11 +610,34 @@ app.patch('/api/groups/:id', ah(async (req, res) => {
   if (req.body?.gym_lat !== undefined) { sets.push('gym_lat = ?'); params.push(geo.lat); }
   if (req.body?.gym_lng !== undefined) { sets.push('gym_lng = ?'); params.push(geo.lng); }
   if (req.body?.gym_radius !== undefined) { sets.push('gym_radius = ?'); params.push(geo.radius); }
+  if (req.body?.fixed_checkin_enabled !== undefined) {
+    sets.push('fixed_checkin_enabled = ?');
+    params.push(req.body.fixed_checkin_enabled ? 1 : 0);
+  }
 
   if (!sets.length) return res.json({ ok: true });
   params.push(id);
   await database.run(`UPDATE \`groups\` SET ${sets.join(', ')} WHERE id = ?`, params);
   res.json({ ok: true });
+}));
+
+function isValidTimeHHMM(v) {
+  return typeof v === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(v);
+}
+
+// Any member may set today's fixed check-in time (mirrors the low-auth model
+// of POST .../entries — whoever opens the app first sets the time for the day).
+app.post('/api/groups/:id/checkin-time', ah(async (req, res) => {
+  const { id } = req.params;
+  const date = String(req.body?.date ?? '').trim();
+  const time = String(req.body?.time ?? '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'invalid_date' });
+  if (!isValidTimeHHMM(time)) return res.status(400).json({ error: 'invalid_time' });
+  const g = await database.one('SELECT id, fixed_checkin_enabled FROM `groups` WHERE id = ?', [id]);
+  if (!g) return res.status(404).json({ error: 'not_found' });
+  if (!Number(g.fixed_checkin_enabled)) return res.status(400).json({ error: 'feature_disabled' });
+  await database.run('UPDATE `groups` SET checkin_time_date = ?, checkin_time = ? WHERE id = ?', [date, time, id]);
+  res.json({ ok: true, date, time });
 }));
 
 app.post('/api/test-group', ah(async (req, res) => {
@@ -676,7 +717,7 @@ app.post('/api/groups/join', ah(async (req, res) => {
 }));
 
 app.get('/api/groups/:id', ah(async (req, res) => {
-  const g = await database.one('SELECT id,code,name,creator_user_id,gym_days,gym_lat,gym_lng,gym_radius FROM `groups` WHERE id = ?', [req.params.id]);
+  const g = await database.one('SELECT id,code,name,creator_user_id,gym_days,gym_lat,gym_lng,gym_radius,fixed_checkin_enabled,checkin_time_date,checkin_time FROM `groups` WHERE id = ?', [req.params.id]);
   if (!g) return res.status(404).json({ error: 'not_found' });
   const rawUsers = await database.all(`
     SELECT id, name, avatar_emoji, avatar_color, avatar_img, is_creator,
@@ -708,6 +749,8 @@ app.get('/api/groups/:id', ah(async (req, res) => {
 
   res.json({ id: g.id, code: g.code, name: g.name, gymDays: g.gym_days,
     gymLat: g.gym_lat ?? null, gymLng: g.gym_lng ?? null, gymRadius: g.gym_radius ?? null,
+    fixedCheckinEnabled: Boolean(Number(g.fixed_checkin_enabled)),
+    checkinTimeDate: g.checkin_time_date ?? null, checkinTime: g.checkin_time ?? null,
     people, entries: allEntries });
 }));
 
