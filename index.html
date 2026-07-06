@@ -305,6 +305,12 @@
       background:rgba(245,158,11,.10); border:1px solid rgba(245,158,11,.22);
       padding:3px 10px; border-radius:20px;
     }
+    .checkin-time-chip {
+      display:inline-flex; align-items:center; gap:5px;
+      font-size:13px; font-weight:600; color:var(--accent);
+      background:rgba(124,58,237,.10); border:1px solid rgba(124,58,237,.24);
+      padding:3px 10px; border-radius:20px;
+    }
     /* Mode toggle (Late / Skip) */
     .mode-toggle { display:flex; gap:4px; background:var(--glass-inner); border-radius:12px; padding:4px; margin-bottom:18px; }
     .mode-btn {
@@ -1395,6 +1401,11 @@
         </div>
         <div class="streak-hero-hint" id="streak-hero-hint"></div>
       </div>
+      <div id="checkin-time-wrap" class="hidden" style="text-align:center;margin-top:8px">
+        <span class="checkin-time-chip" id="checkin-time-chip">
+          <span aria-hidden="true">⏰</span> <span id="checkin-time-chip-lbl"></span> <span id="checkin-time-chip-val"></span>
+        </span>
+      </div>
       <div class="stat-row">
         <div class="card glass stat-card"><div class="stat-val" id="s-count">0</div><div class="stat-lbl" id="s-count-lbl"></div></div>
         <div class="card glass stat-card"><div class="stat-val" id="s-mins">0</div><div class="stat-lbl" id="s-mins-lbl"></div></div>
@@ -2015,6 +2026,7 @@ const TRANS = {
     dhSetTimeBtn:'Uhrzeit speichern',
     dhTimeSetLbl:'Heutige Uhrzeit',
     dhTimeWindowHint:d=>`Check-in-Fenster: ${d} ± 10 Min.`,
+    checkinTimeChipLbl:'Check-in um',
     gpNoGymDayTitle:'Kein Gym-Tag heute',
     gpNoGymDaySub:'Heute steht kein Training auf dem Plan.',
     gpLogCheckinBtn:'Trotzdem einchecken',
@@ -2151,6 +2163,7 @@ const TRANS = {
     dhSetTimeBtn:'Save time',
     dhTimeSetLbl:"Today's time",
     dhTimeWindowHint:d=>`Check-in window: ${d} ± 10 min.`,
+    checkinTimeChipLbl:'Check in at',
     gpNoGymDayTitle:'Not a gym day today',
     gpNoGymDaySub:"There's no training scheduled today.",
     gpLogCheckinBtn:'Log check-in anyway',
@@ -4096,6 +4109,17 @@ function renderStreakHero() {
   document.getElementById('streak-hero-lbl').textContent = T.shDays(info.streak);
   document.getElementById('streak-hero-hint').textContent =
     info.extendedToday ? T.shHintDone : T.shHintOpen;
+  renderCheckinTimeChip();
+}
+
+function renderCheckinTimeChip() {
+  const wrap = document.getElementById('checkin-time-wrap');
+  const hasTimeToday = !!data?.fixedCheckinEnabled && data?.checkinTimeDate === todayStr() && !!data?.checkinTime;
+  wrap.classList.toggle('hidden', !hasTimeToday);
+  if (hasTimeToday) {
+    document.getElementById('checkin-time-chip-lbl').textContent = T.checkinTimeChipLbl;
+    document.getElementById('checkin-time-chip-val').textContent = data.checkinTime;
+  }
 }
 
 // Tap on the hero opens the check-in modal
