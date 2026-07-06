@@ -35,11 +35,12 @@
 
     /* ── THEME ───────────────────────────────────────────────── */
     :root {
-      --glass-bg:     rgba(255,255,255,0.36);
-      --glass-border: rgba(255,255,255,0.68);
-      --glass-top:    rgba(255,255,255,0.88);
-      --glass-shadow: rgba(80,30,160,0.09);
-      --glass-inner:  rgba(255,255,255,0.60);
+      --glass-bg:     rgba(255,255,255,0.22);
+      --glass-border: rgba(255,255,255,0.55);
+      --glass-top:    rgba(255,255,255,0.85);
+      --glass-shadow: rgba(80,30,160,0.10);
+      --glass-inner:  rgba(255,255,255,0.55);
+      --glass-sheen:  rgba(255,255,255,0.45);
 
       --input-bg:     rgba(255,255,255,0.45);
       --input-border: rgba(255,255,255,0.72);
@@ -58,17 +59,18 @@
       --gold:         #f59e0b;
 
       --divider:  rgba(0,0,0,0.07);
-      --blur: 24px;
+      --blur: 14px;
       --r-xl: 28px; --r-lg: 20px; --r-md: 14px; --r-sm: 10px;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --glass-bg:     rgba(255,255,255,0.07);
-        --glass-border: rgba(255,255,255,0.12);
-        --glass-top:    rgba(255,255,255,0.20);
-        --glass-shadow: rgba(0,0,0,0.55);
-        --glass-inner:  rgba(255,255,255,0.08);
+        --glass-bg:     rgba(255,255,255,0.045);
+        --glass-border: rgba(255,255,255,0.11);
+        --glass-top:    rgba(255,255,255,0.22);
+        --glass-shadow: rgba(0,0,0,0.50);
+        --glass-inner:  rgba(255,255,255,0.09);
+        --glass-sheen:  rgba(255,255,255,0.09);
 
         --input-bg:     rgba(255,255,255,0.09);
         --input-border: rgba(255,255,255,0.15);
@@ -90,22 +92,51 @@
       }
     }
 
-    /* ── GLASS ───────────────────────────────────────────────── */
+    /* ── GLASS (liquid glass) ────────────────────────────────── */
+    /* Soft color orbs behind everything — the translucency needs
+       something to refract, otherwise glass looks flat. */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(42% 34% at 18% 10%, rgba(124,58,237,.15), transparent 70%),
+        radial-gradient(38% 30% at 86% 26%, rgba(37,99,235,.11), transparent 70%),
+        radial-gradient(46% 38% at 55% 95%, rgba(219,39,119,.09), transparent 70%);
+    }
+    @media (prefers-color-scheme: dark) {
+      body::before {
+        background:
+          radial-gradient(42% 34% at 18% 10%, rgba(139,92,246,.17), transparent 70%),
+          radial-gradient(38% 30% at 86% 26%, rgba(59,130,246,.12), transparent 70%),
+          radial-gradient(46% 38% at 55% 95%, rgba(236,72,153,.10), transparent 70%);
+      }
+    }
     .glass {
-      background: var(--glass-bg);
-      backdrop-filter: blur(var(--blur)) saturate(1.8);
-      -webkit-backdrop-filter: blur(var(--blur)) saturate(1.8);
+      background:
+        linear-gradient(155deg, var(--glass-sheen) 0%, rgba(255,255,255,0) 45%),
+        var(--glass-bg);
+      backdrop-filter: blur(var(--blur)) saturate(2.2);
+      -webkit-backdrop-filter: blur(var(--blur)) saturate(2.2);
       border: 1px solid var(--glass-border);
       border-top-color: var(--glass-top);
-      box-shadow: 0 4px 28px var(--glass-shadow), inset 0 1px 0 var(--glass-inner);
+      box-shadow:
+        0 8px 32px var(--glass-shadow),
+        inset 0 1px 0 var(--glass-inner),
+        inset 1px 0 0 rgba(255,255,255,.08),
+        inset 0 -16px 30px -20px var(--glass-sheen);
     }
 
     /* ── SCREENS ─────────────────────────────────────────────── */
+    /* Page scroll is locked — the tab panes scroll instead. This keeps
+       the bottom nav truly fixed on iOS (no rubber-band displacement). */
+    html, body { overflow: hidden; height: 100%; overscroll-behavior: none; }
     .screen {
       position: relative; z-index: 1;
-      min-height: 100dvh;
+      height: 100dvh;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
       display: flex; flex-direction: column; align-items: center;
     }
+    #screen-app { overflow: hidden; }
     .hidden { display: none !important; }
     .screen.hidden { display: none; }
 
@@ -139,7 +170,7 @@
 
     /* ── APP ─────────────────────────────────────────────────── */
     #screen-app { justify-content: flex-start; }
-    .app-inner { width: 100%; max-width: 500px; padding: 0 16px; display: flex; flex-direction: column; }
+    .app-inner { width: 100%; max-width: 500px; padding: 0 16px; display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
 
     /* ── HEADER ──────────────────────────────────────────────── */
     .header { padding: calc(env(safe-area-inset-top) + 46px) 0 10px; text-align: center; }
@@ -195,6 +226,8 @@
     .group-list-code { font-size: 12px; color: var(--text-2); font-family: monospace; letter-spacing: 1px; }
     .group-list-active { color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; margin-left: auto; }
     .group-switcher-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    /* Inline card variant: the card has no own padding, so the rows bring it */
+    #groups-card .group-list-item { padding: 12px 16px; }
     .groups-inline-actions { display: flex; gap: 10px; margin-top: 10px; }
     .groups-inline-actions .btn { flex: 1; font-size: 13px; padding: 10px 8px; }
 
@@ -306,7 +339,11 @@
 
     /* ── TAB PANE ────────────────────────────────────────────── */
     .tab-pane { display:none; padding-bottom:calc(104px + env(safe-area-inset-bottom)); }
-    .tab-pane.active { display:block; }
+    .tab-pane.active {
+      display:block; flex:1; min-height:0;
+      overflow-y:auto; -webkit-overflow-scrolling:touch;
+      overscroll-behavior:contain;
+    }
 
     /* ── FAB ─────────────────────────────────────────────────── */
     #fab {
@@ -388,7 +425,8 @@
       overflow-y: scroll;
       -webkit-overflow-scrolling: touch;
       scroll-snap-type: y mandatory;
-      height: calc(100svh - 130px - env(safe-area-inset-bottom));
+      /* pane is the scroll parent now: viewport minus header+pill+nav overlay */
+      height: calc(100dvh - 250px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
       border-radius: 16px;
     }
     .week-block {
