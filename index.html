@@ -1037,6 +1037,70 @@
     }
     .overlay-btn-ghost:active { background: rgba(255,255,255,.25); }
 
+    /* ══════════════════════════════════════════════════════════ */
+    /*  STREAK HERO (startseite) + STREAK ANIMATION (duolingo)   */
+    /* ══════════════════════════════════════════════════════════ */
+    .streak-hero {
+      display:flex; align-items:center; gap:14px;
+      padding:14px 18px; border-radius:var(--r-xl); margin-bottom:14px;
+      cursor:pointer; -webkit-tap-highlight-color:transparent;
+    }
+    .streak-flame { width:44px; height:44px; flex-shrink:0; }
+    .streak-flame .flame-grey { fill:#9ca3af; opacity:.45; }
+    .streak-flame .flame-lit  { opacity:0; transition:opacity .4s; }
+    .streak-hero.lit .streak-flame .flame-lit  { opacity:1; }
+    .streak-hero.lit .streak-flame .flame-grey { opacity:0; }
+    .streak-hero.lit .streak-flame {
+      filter:drop-shadow(0 0 10px rgba(249,115,22,.65));
+      animation:flame-flicker 2.4s ease-in-out infinite;
+    }
+    @keyframes flame-flicker {
+      0%,100% { transform:scale(1); filter:drop-shadow(0 0 8px rgba(249,115,22,.55)); }
+      50%     { transform:scale(1.08); filter:drop-shadow(0 0 15px rgba(251,146,60,.9)); }
+    }
+    .streak-hero-info { display:flex; align-items:baseline; gap:8px; }
+    .streak-hero-num { font-size:30px; font-weight:800; line-height:1; color:var(--text-3); transition:color .3s; }
+    .streak-hero.lit .streak-hero-num { color:#f97316; }
+    .streak-hero-lbl { font-size:13px; font-weight:600; color:var(--text-2); }
+    .streak-hero-hint { margin-left:auto; font-size:12px; color:var(--text-3); text-align:right; max-width:42%; line-height:1.3; }
+    .streak-hero.lit .streak-hero-hint { color:#22c55e; font-weight:600; }
+
+    #streak-anim {
+      background:radial-gradient(circle at 50% 40%, #7c2d12 0%, #2a0e02 55%, #140601 100%);
+      z-index:520;
+    }
+    .sa-flame-wrap { position:relative; width:140px; height:140px; }
+    .sa-flame-wrap svg { position:absolute; inset:0; width:100%; height:100%; }
+    .sa-flame-wrap { animation:sa-pop .65s cubic-bezier(.18,1.5,.4,1) both; }
+    @keyframes sa-pop {
+      0%   { transform:scale(0) rotate(-14deg); }
+      70%  { transform:scale(1.18) rotate(3deg); }
+      100% { transform:scale(1) rotate(0); }
+    }
+    .sa-flame-grey path { fill:#9ca3af; opacity:.5; }
+    .sa-flame-lit { opacity:0; animation:sa-ignite .5s .55s ease-out forwards; }
+    @keyframes sa-ignite { to { opacity:1; } }
+    .sa-flame-lit.on { animation:none; opacity:1; }
+    .sa-glow {
+      position:absolute; inset:-40px; border-radius:50%; pointer-events:none;
+      background:radial-gradient(circle, rgba(251,146,60,.55) 0%, transparent 65%);
+      opacity:0; animation:sa-glow-in .6s .55s ease-out forwards, sa-glow-pulse 2s 1.2s ease-in-out infinite;
+    }
+    @keyframes sa-glow-in    { to { opacity:1; } }
+    @keyframes sa-glow-pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.15); } }
+    .sa-num {
+      font-size:clamp(72px,22vw,110px); font-weight:900; color:#fff; line-height:1;
+      margin-top:26px; letter-spacing:-2px;
+      text-shadow:0 0 40px rgba(249,115,22,.6);
+      animation:w-rise .5s .7s cubic-bezier(.25,.46,.45,.94) both;
+    }
+    .sa-lbl {
+      font-size:clamp(17px,5vw,24px); font-weight:700; color:rgba(255,255,255,.85);
+      margin-top:8px; text-align:center;
+      animation:w-rise .5s .85s cubic-bezier(.25,.46,.45,.94) both;
+    }
+    .sa-btn-wrap { margin-top:40px; animation:w-fade .4s 1.15s both; }
+
     /* ── Leaflet map in settings ── */
     #mset-map-section { margin-top: 16px; }
     #mset-map-container { height: 160px; border-radius: 12px; overflow: hidden; margin: 10px 0; }
@@ -1118,6 +1182,31 @@
   </div>
 </div>
 
+<!-- Streak Extended Animation (Duolingo-style) -->
+<div id="streak-anim" class="fullscreen-overlay hidden">
+  <div class="sa-flame-wrap">
+    <div class="sa-glow"></div>
+    <svg class="sa-flame-grey" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/>
+    </svg>
+    <svg class="sa-flame-lit" viewBox="0 0 24 24" aria-hidden="true">
+      <defs>
+        <linearGradient id="flameGradSA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#fde047"/>
+          <stop offset="45%" stop-color="#fb923c"/>
+          <stop offset="100%" stop-color="#dc2626"/>
+        </linearGradient>
+      </defs>
+      <path fill="url(#flameGradSA)" d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/>
+    </svg>
+  </div>
+  <div class="sa-num" id="sa-num">0</div>
+  <div class="sa-lbl" id="sa-lbl"></div>
+  <div class="sa-btn-wrap">
+    <button class="overlay-btn-primary" id="sa-close"></button>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -1193,6 +1282,25 @@
 
     <!-- ── WEEK TAB ── -->
     <div class="tab-pane active" id="pane-week">
+      <!-- Streak hero: grey flame = not extended today, glowing = extended -->
+      <div class="streak-hero glass hidden" id="streak-hero">
+        <svg class="streak-flame" viewBox="0 0 24 24" aria-hidden="true">
+          <defs>
+            <linearGradient id="flameGradHero" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#fde047"/>
+              <stop offset="45%" stop-color="#fb923c"/>
+              <stop offset="100%" stop-color="#dc2626"/>
+            </linearGradient>
+          </defs>
+          <path class="flame-grey" d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/>
+          <path class="flame-lit" fill="url(#flameGradHero)" d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67z"/>
+        </svg>
+        <div class="streak-hero-info">
+          <div class="streak-hero-num" id="streak-hero-num">0</div>
+          <div class="streak-hero-lbl" id="streak-hero-lbl"></div>
+        </div>
+        <div class="streak-hero-hint" id="streak-hero-hint"></div>
+      </div>
       <div class="stat-row">
         <div class="card glass stat-card"><div class="stat-val" id="s-count">0</div><div class="stat-lbl" id="s-count-lbl"></div></div>
         <div class="card glass stat-card"><div class="stat-val" id="s-mins">0</div><div class="stat-lbl" id="s-mins-lbl"></div></div>
@@ -1781,6 +1889,11 @@ const TRANS = {
     msetGeoToggleLbl:'Geo-Check aktiviert',
     msetGeoTestBtn:'Standort testen',
     msetGeoNoLoc:'Kein Gym-Standort gesetzt.',
+    // Streak hero + animation
+    shDays: n => n===1 ? 'Tag Streak' : 'Tage Streak',
+    shHintOpen:'Heute noch nicht verlängert', shHintDone:'Heute verlängert!',
+    saLbl: n => n===1 ? 'Tag Streak!' : 'Tage Streak!',
+    saContinue:'Weiter',
   },
   en: {
     lsTagline:'Track · Shame · Improve', lsCreate:'Create Group', lsJoin:'Enter Code', lsOr:'or',
@@ -1895,6 +2008,11 @@ const TRANS = {
     msetGeoToggleLbl:'Geo check-in enabled',
     msetGeoTestBtn:'Test location',
     msetGeoNoLoc:'No gym location set.',
+    // Streak hero + animation
+    shDays: n => n===1 ? 'day streak' : 'day streak',
+    shHintOpen:'Not extended today yet', shHintDone:'Extended today!',
+    saLbl: n => n===1 ? 'day streak!' : 'day streak!',
+    saContinue:'Continue',
   }
 };
 const T = TRANS[(navigator.language||'').toLowerCase().startsWith('de') ? 'de' : 'en'];
@@ -2504,7 +2622,7 @@ function renderAdminPanel() {
 }
 
 function renderAll() {
-  renderPill(); renderWeek(); renderHistory(); renderCalendar(); renderPeople(); renderAdminPanel();
+  renderPill(); renderStreakHero(); renderWeek(); renderHistory(); renderCalendar(); renderPeople(); renderAdminPanel();
 }
 
 function renderPill() {
@@ -2791,6 +2909,7 @@ function applyI18n() {
   // Overlays
   set('dh-title',T.dhTitle); set('dh-sub',T.dhSub); set('dh-close',T.dhClose);
   set('gp-title',T.gpTitle); set('gp-sub',T.gpSub); set('gp-checkin',T.gpCheckin); set('gp-later',T.gpLater);
+  set('sa-close',T.saContinue);
   // Settings location
   set('mset-location-lbl',T.msetLocationLbl); set('mset-radius-lbl',T.msetRadiusLbl);
   set('mset-locate-btn',T.msetLocateBtn); set('mset-location-save',T.msetLocationSave);
@@ -2962,19 +3081,32 @@ document.getElementById('ml-save').addEventListener('click', async () => {
     if (mlMode === 'attend') {
       const date = document.getElementById('ml-attend-date').value;
       if (!person || !date) { errEl.textContent = '⚠'; return; }
+      const wasExtended = myStreakInfo()?.extendedToday;
       const res = await api.addEntry(data.id, { person, date, type: 'attend' });
       closeOv('modal-late');
       await refresh();
-      showToast(T.toastAttendSaved);
-      if (res.chest) showChest(res.chest);
+      const info = myStreakInfo();
+      if (info && person === userProfile?.name && date === todayStr() && !wasExtended) {
+        if (res.chest) window._saNext = () => showChest(res.chest);
+        showStreakAnim(info.streak);
+      } else {
+        showToast(T.toastAttendSaved);
+        if (res.chest) showChest(res.chest);
+      }
     } else if (mlMode === 'late') {
       const date = document.getElementById('ml-date').value;
       const mins = parseInt(document.getElementById('ml-mins').value);
       if (!person || !date || isNaN(mins) || mins < 1) { errEl.textContent = '⚠'; return; }
+      const wasExtended = myStreakInfo()?.extendedToday;
       await api.addEntry(data.id, { person, date, mins, type: 'late' });
       closeOv('modal-late');
       await refresh();
-      showToast(T.toastSaved);
+      const info = myStreakInfo();
+      if (info && person === userProfile?.name && date === todayStr() && !wasExtended) {
+        showStreakAnim(info.streak);
+      } else {
+        showToast(T.toastSaved);
+      }
     } else {
       const date = document.getElementById('ml-skip-date').value;
       if (!person || !date) { errEl.textContent = '⚠'; return; }
@@ -3714,6 +3846,56 @@ document.getElementById('ep-submit').addEventListener('click', async () => {
 });
 
 // ════════════════════════════════════════════════════════
+//  STREAK HERO + STREAK ANIMATION
+// ════════════════════════════════════════════════════════
+function myStreakInfo() {
+  const me = data?.people?.find(p => userProfile && p.id === userProfile.userId);
+  if (!me) return null;
+  const today = todayStr();
+  const extendedToday = (data?.entries || []).some(e =>
+    e.person === me.name && e.date === today &&
+    (e.type === 'attend' || (e.type || 'late') === 'late'));
+  return { streak: me.streak ?? 0, extendedToday };
+}
+
+function renderStreakHero() {
+  const hero = document.getElementById('streak-hero');
+  const info = myStreakInfo();
+  if (!info) { hero.classList.add('hidden'); return; }
+  hero.classList.remove('hidden');
+  hero.classList.toggle('lit', info.extendedToday);
+  document.getElementById('streak-hero-num').textContent = info.streak;
+  document.getElementById('streak-hero-lbl').textContent = T.shDays(info.streak);
+  document.getElementById('streak-hero-hint').textContent =
+    info.extendedToday ? T.shHintDone : T.shHintOpen;
+}
+
+// Tap on the hero opens the check-in modal
+document.getElementById('streak-hero').addEventListener('click', () => {
+  document.getElementById('fab')?.click();
+});
+
+function showStreakAnim(newStreak) {
+  const el = document.getElementById('streak-anim');
+  const num = document.getElementById('sa-num');
+  document.getElementById('sa-lbl').textContent = `${T.saLbl(newStreak)}`;
+  document.getElementById('sa-close').textContent = T.saContinue;
+  // Restart CSS animations by re-inserting the flame wrap
+  el.querySelectorAll('.sa-flame-wrap, .sa-num, .sa-lbl, .sa-btn-wrap').forEach(n => {
+    n.style.animation = 'none'; void n.offsetHeight; n.style.animation = '';
+  });
+  num.textContent = Math.max(0, newStreak - 1);
+  el.classList.remove('hidden');
+  // Count up to the new streak as the flame ignites
+  setTimeout(() => wCount(num, newStreak), 750);
+}
+
+document.getElementById('sa-close').addEventListener('click', () => {
+  document.getElementById('streak-anim').classList.add('hidden');
+  if (window._saNext) { const fn = window._saNext; window._saNext = null; fn(); }
+});
+
+// ════════════════════════════════════════════════════════
 //  DAILY HYPE
 // ════════════════════════════════════════════════════════
 function shouldShowDailyHype() {
@@ -3780,14 +3962,21 @@ document.getElementById('gp-checkin').addEventListener('click', async () => {
   document.getElementById('geo-prompt').classList.add('hidden');
   if (!userProfile || !group || !data) return;
   try {
+    const wasExtended = myStreakInfo()?.extendedToday;
     const res = await api.addEntry(data.id, {
       type: 'attend',
       date: todayStr(),
       person: userProfile.name
     });
     await refresh();
-    if (res.chest) showChest(res.chest);
-    showToast(T.toastAttendSaved);
+    const info = myStreakInfo();
+    if (info && !wasExtended) {
+      if (res.chest) window._saNext = () => showChest(res.chest);
+      showStreakAnim(info.streak);
+    } else {
+      if (res.chest) showChest(res.chest);
+      showToast(T.toastAttendSaved);
+    }
   } catch { showToast(T.errServer); }
 });
 
