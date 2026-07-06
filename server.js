@@ -912,12 +912,15 @@ app.post('/api/groups/:id/entries', ah(async (req, res) => {
       const byRoll = !byPity && Number(dbUser.freezes) < 2 && Math.random() < 0.05;
       const gotFreeze = (byPity || byRoll) && Number(dbUser.freezes) < 2;
       if (gotFreeze) {
+        // Compute in JS — MySQL's MIN() is aggregate-only (scalar version is LEAST),
+        // SQLite has no LEAST; a plain bound value works on both engines.
+        const newFreezes = Math.min(2, Number(dbUser.freezes) + 1);
         await database.run(
-          'UPDATE users SET freezes = MIN(2, freezes + 1), last_freeze_grant = ? WHERE id = ?',
-          [now, dbUser.id]
+          'UPDATE users SET freezes = ?, last_freeze_grant = ? WHERE id = ?',
+          [newFreezes, now, dbUser.id]
         );
         dbUser.last_freeze_grant = now;
-        dbUser.freezes = Math.min(2, Number(dbUser.freezes) + 1);
+        dbUser.freezes = newFreezes;
       }
       // Recompute streak to include today's check-in
       const userEntries = await database.all(
