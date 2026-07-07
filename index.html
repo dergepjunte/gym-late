@@ -3275,7 +3275,9 @@ document.getElementById('ml-save').addEventListener('click', async () => {
       const isSelfToday = person === userProfile?.name && date === todayStr();
       const lateness = isSelfToday ? computeCheckinLateness() : null;
       const wasExtended = myStreakInfo()?.extendedToday;
-      const res = await api.addEntry(data.id, { person, date, type: 'attend' });
+      const res = await api.addEntry(data.id, lateness?.isLate
+        ? { person, date, type: 'late', mins: lateness.minsOff }
+        : { person, date, type: 'attend' });
       closeOv('modal-late');
       await refresh();
       const info = myStreakInfo();
@@ -4237,11 +4239,9 @@ async function submitSelfAttendEntry() {
   try {
     const lateness = computeCheckinLateness();
     const wasExtended = myStreakInfo()?.extendedToday;
-    const res = await api.addEntry(data.id, {
-      type: 'attend',
-      date: todayStr(),
-      person: userProfile.name
-    });
+    const res = await api.addEntry(data.id, lateness?.isLate
+      ? { type: 'late', date: todayStr(), person: userProfile.name, mins: lateness.minsOff }
+      : { type: 'attend', date: todayStr(), person: userProfile.name });
     await refresh();
     const info = myStreakInfo();
     const finish = () => {
