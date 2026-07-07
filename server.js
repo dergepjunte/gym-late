@@ -996,6 +996,40 @@ app.post('/api/groups/:id/entries', ah(async (req, res) => {
   res.json({ ok: true, id: eid, chest });
 }));
 
+app.patch('/api/groups/:id/entries/:eid', ah(async (req, res) => {
+  const { id, eid } = req.params;
+  if (!isAdmin(req)) return res.status(403).json({ error: 'not_admin' });
+
+  const old = await database.one('SELECT person, date, type FROM entries WHERE id = ? AND group_id = ?', [eid, id]);
+  if (!old) return res.status(404).json({ error: 'not_found' });
+
+  const type   = ['late', 'skip', 'attend'].includes(req.body?.type) ? req.body.type : old.type;
+  const date   = String(req.body?.date ?? old.date).trim();
+  const reason = (type === 'skip' && req.body?.reason) ? String(req.body.reason).trim().slice(0, 20) : null;
+  const mins   = (type === 'skip' || type === 'attend') ? 0 : parseInt(req.body?.mins);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'invalid_date' });
+  if (type === 'late' && (isNaN(mins) || mins < 1 || mins > 999)) return res.status(400).json({ error: 'invalid' });
+
+  await database.run('UPDATE entries SET date = ?, mins = ?, type = ?, reason = ? WHERE id = ? AND group_id = ?',
+    [date, mins, type, reason, eid, id]);
+
+  const g = await database.one('SELECT gym_days FROM `groups` WHERE id = ?', [id]);
+  const dbUser = await database.one(
+    'SELECT id, streak, freezes, last_streak_date, avail_days, last_freeze_grant, created_at FROM users WHERE group_id = ? AND LOWER(name) = LOWER(?)',
+    [id, old.person]
+  );
+  if (dbUser) {
+    const userEntries = await database.all(
+      'SELECT date, type FROM entries WHERE group_id = ? AND LOWER(person) = LOWER(?)',
+      [id, old.person]
+    );
+    // Edit can move type/date arbitrarily — force a full replay to stay correct.
+    await recomputeStreak(dbUser.id, g.gym_days, userEntries, dbUser, true);
+  }
+
+  res.json({ ok: true });
+}));
+
 app.delete('/api/groups/:id/entries/:eid', ah(async (req, res) => {
   const { id, eid } = req.params;
   if (!isAdmin(req)) {

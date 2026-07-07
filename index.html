@@ -363,6 +363,7 @@
       transition:transform .15s; flex-shrink:0; font-family:inherit;
     }
     .icon-btn:active { transform:scale(.88); }
+    .icon-btn.edit-entry-btn { background:var(--accent-light); color:var(--accent); font-size:14px; margin-right:6px; }
 
     /* ── EMPTY ───────────────────────────────────────────────── */
     .empty { text-align:center; padding:36px 24px; }
@@ -371,7 +372,7 @@
     .empty-sub { font-size:13px; color:var(--text-3); margin-top:4px; }
 
     /* ── TAB PANE ────────────────────────────────────────────── */
-    .tab-pane { display:none; padding-bottom:calc(104px + env(safe-area-inset-bottom)); }
+    .tab-pane { display:none; padding-bottom:calc(96px + min(env(safe-area-inset-bottom), 24px)); }
     .tab-pane.active {
       display:block; flex:1; min-height:0;
       overflow-y:auto; -webkit-overflow-scrolling:touch;
@@ -387,7 +388,7 @@
 
     /* ── FAB ─────────────────────────────────────────────────── */
     #fab {
-      position:fixed; bottom:calc(94px + env(safe-area-inset-bottom));
+      position:fixed; bottom:calc(86px + min(env(safe-area-inset-bottom), 24px));
       right:max(16px, calc(50vw - 234px));
       width:58px; height:58px; border-radius:50%; border:none;
       background:linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -406,7 +407,7 @@
     /* ── BOTTOM NAV — floating pill ─────────────────────────── */
     .bottom-nav {
       position:fixed;
-      bottom:calc(14px + env(safe-area-inset-bottom));
+      bottom:calc(10px + min(env(safe-area-inset-bottom), 24px));
       left:50%; transform:translateX(-50%);
       width:calc(100% - 32px); max-width:468px;
       z-index:30;
@@ -1662,6 +1663,54 @@
   </div>
 </div>
 
+<!-- Edit Entry (admin only) -->
+<div class="overlay" id="modal-edit-entry">
+  <div class="modal glass">
+    <h2 class="modal-title" id="ee-title"></h2>
+    <div class="mode-toggle">
+      <button class="mode-btn" id="ee-mode-attend"></button>
+      <button class="mode-btn" id="ee-mode-late"></button>
+      <button class="mode-btn" id="ee-mode-skip"></button>
+    </div>
+    <!-- Attend-mode fields -->
+    <div id="ee-attend-fields" style="display:none">
+      <div class="form-grp">
+        <label class="form-lbl" id="ee-lbl-attend-date"></label>
+        <input type="date" class="form-ctrl" id="ee-attend-date">
+      </div>
+    </div>
+    <!-- Late-mode fields -->
+    <div id="ee-late-fields" style="display:none">
+      <div class="modal-row">
+        <div class="form-grp">
+          <label class="form-lbl" id="ee-lbl-date"></label>
+          <input type="date" class="form-ctrl" id="ee-date">
+        </div>
+        <div class="form-grp">
+          <label class="form-lbl" id="ee-lbl-mins"></label>
+          <input type="number" class="form-ctrl" id="ee-mins" min="1" max="999">
+        </div>
+      </div>
+    </div>
+    <!-- Skip-mode fields -->
+    <div id="ee-skip-fields" style="display:none">
+      <div class="form-grp">
+        <label class="form-lbl" id="ee-lbl-skip-date"></label>
+        <input type="date" class="form-ctrl" id="ee-skip-date">
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl" id="ee-lbl-reason"></label>
+        <div class="reason-chips" id="ee-reason-chips"></div>
+      </div>
+    </div>
+    <div class="error-msg" id="ee-error"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost"   id="ee-cancel"></button>
+      <button class="btn btn-primary" id="ee-save"></button>
+    </div>
+  </div>
+</div>
+
 <!-- Admin Login -->
 <div class="overlay" id="modal-admin">
   <div class="modal glass">
@@ -1982,6 +2031,7 @@ const TRANS = {
     msTitle:'Gruppe erstellt!', msSub:'Teile diesen Code mit deinen Gym-Buddies:', msCopy:'Code kopieren', msContinue:'Weiter zur App →',
     mjTitle:'Gruppe beitreten', mjSub:'Gib den 6-stelligen Code deiner Gruppe ein.', mjLbl:'Gruppencode', mjCancel:'Abbrechen', mjSubmit:'Beitreten',
     mlTitle:'Verspätung eintragen', mlLblPerson:'Person', mlLblDate:'Datum', mlLblMins:'Minuten', mlCancel:'Abbrechen', mlSave:'Speichern',
+    eeTitle:'Eintrag bearbeiten',
     mlModeAttend:'✓ Ich war da', mlModeLate:'Verspätet', mlModeSkip:'⊘ Skip',
     mlLblAttendDate:'Datum', mlLblSkipDate:'Datum', mlLblReason:'Grund (optional)',
     mlLogSkip:'Skip speichern', mlLogAttend:'Einchecken',
@@ -2123,6 +2173,7 @@ const TRANS = {
     msTitle:'Group Created!', msSub:'Share this code with your gym buddies:', msCopy:'Copy Code', msContinue:'Open App →',
     mjTitle:'Join Group', mjSub:'Enter the 6-character code of your group.', mjLbl:'Group Code', mjCancel:'Cancel', mjSubmit:'Join',
     mlTitle:'Log Entry', mlLblPerson:'Person', mlLblDate:'Date', mlLblMins:'Minutes', mlCancel:'Cancel', mlSave:'Save',
+    eeTitle:'Edit Entry',
     mlModeAttend:'✓ I went', mlModeLate:'Late', mlModeSkip:'⊘ Skip',
     mlLblAttendDate:'Date', mlLblSkipDate:'Date', mlLblReason:'Reason (optional)',
     mlLogSkip:'Log Skip', mlLogAttend:'Check in',
@@ -2293,6 +2344,7 @@ const api = {
   delMember:     (g,n)    => api.req('DELETE', `/groups/${g}/members/${encodeURIComponent(n)}`),
   addEntry:      (g,d)    => api.req('POST',   `/groups/${g}/entries`, d),
   delEntry:      (g,e,pw) => api.req('DELETE', `/groups/${g}/entries/${e}`, pw ? {adminPassword:pw} : undefined),
+  patchEntry:    (g,e,d,pw) => api.req('PATCH',  `/groups/${g}/entries/${e}`, {...d, adminPassword:pw}),
   registerUser:  (g,d)    => api.req('POST',   `/groups/${g}/users`, d),
   loginUser:     (g,d)    => api.req('POST',   `/groups/${g}/users/login`, d),
   updateUser:    (g,u,d)  => api.req('PATCH',  `/groups/${g}/users/${u}`, d),
@@ -2619,7 +2671,9 @@ function renderWeek() {
         <div class="avatar">${esc(initials(e.person))}</div>
         <div class="entry-info"><div class="entry-name">${esc(e.person)}</div><div class="entry-meta">${fmtFull(e.date)}</div></div>
         ${badge}
-        <button class="icon-btn del-entry-btn" data-id="${esc(e.id)}">×</button>
+        ${adminMode ? `
+        <button class="icon-btn edit-entry-btn" data-id="${esc(e.id)}" title="Edit">✎</button>
+        <button class="icon-btn del-entry-btn" data-id="${esc(e.id)}">×</button>` : ''}
       </div>`;
   }).join('');
 }
@@ -3021,6 +3075,7 @@ function activateAdmin({ silent = false } = {}) {
   if (group) {
     switchTab('people');
     renderAdminPanel();
+    renderWeek();
   }
 }
 
@@ -3030,7 +3085,7 @@ function exitAdmin() {
   adminPassword = '';
   document.getElementById('admin-badge').classList.add('hidden');
   showToast(T.toastAdmOut);
-  renderLandingAdminTools(); renderAdminPanel(); renderHistory();
+  renderLandingAdminTools(); renderAdminPanel(); renderHistory(); renderWeek();
 }
 
 document.getElementById('ma-cancel').addEventListener('click', () => closeOv('modal-admin'));
@@ -3139,6 +3194,9 @@ function applyI18n() {
   set('mset-title',T.msetTitle); set('mset-gymdays-lbl',T.msetGymDaysLbl); set('mset-avail-lbl',T.msetAvailLbl);
   set('mset-gym-save',T.msetGymSave); set('mset-avail-save',T.msetAvailSave); set('mset-close',T.msetClose);
   set('ml-lbl-skip-date',T.mlLblSkipDate); set('ml-lbl-reason',T.mlLblReason);
+  set('ee-title',T.eeTitle); set('ee-mode-attend',T.mlModeAttend); set('ee-mode-late',T.mlModeLate); set('ee-mode-skip',T.mlModeSkip);
+  set('ee-lbl-attend-date',T.mlLblAttendDate); set('ee-lbl-date',T.mlLblDate); set('ee-lbl-mins',T.mlLblMins);
+  set('ee-lbl-skip-date',T.mlLblSkipDate); set('ee-lbl-reason',T.mlLblReason); set('ee-cancel',T.mlCancel); set('ee-save',T.mlSave);
   set('ma-title',T.maTitle); set('ma-lbl',T.maLbl); set('ma-cancel',T.maCancel); set('ma-submit',T.maSubmit);
   set('adm-title',T.admTitle); set('adm-add-btn',T.admAdd); set('adm-del-btn',T.admDel); set('adm-exit-btn',T.admExit); set('adm-replay-btn',T.admReplay);
   set('adm-force-hype-btn',T.admForceHype); set('adm-force-geo-btn',T.admForceGeo); set('adm-clear-flags-btn',T.admClearFlags);
@@ -3377,6 +3435,83 @@ document.getElementById('ml-save').addEventListener('click', async () => {
 });
 
 // ════════════════════════════════════════════════════════
+//  MODAL: EDIT ENTRY (admin only)
+// ════════════════════════════════════════════════════════
+let eeMode = 'attend', eeSelReason = null, eeEditingId = null;
+
+function setEeMode(mode) {
+  eeMode = mode;
+  document.getElementById('ee-attend-fields').style.display = mode === 'attend' ? '' : 'none';
+  document.getElementById('ee-late-fields').style.display   = mode === 'late'   ? '' : 'none';
+  document.getElementById('ee-skip-fields').style.display   = mode === 'skip'   ? '' : 'none';
+  document.getElementById('ee-mode-attend').classList.toggle('active', mode === 'attend');
+  document.getElementById('ee-mode-late').classList.toggle('active',   mode === 'late');
+  document.getElementById('ee-mode-skip').classList.toggle('active',   mode === 'skip');
+}
+document.getElementById('ee-mode-attend').addEventListener('click', () => setEeMode('attend'));
+document.getElementById('ee-mode-late').addEventListener('click',   () => setEeMode('late'));
+document.getElementById('ee-mode-skip').addEventListener('click',   () => setEeMode('skip'));
+
+function openEditEntry(entryId) {
+  if (!adminMode || !adminPassword || !data) return;
+  const e = data.entries.find(x => x.id === entryId);
+  if (!e) return;
+  eeEditingId = entryId;
+  document.getElementById('ee-title').textContent = `${T.eeTitle} — ${e.person}`;
+  document.getElementById('ee-error').textContent = '';
+  document.getElementById('ee-attend-date').value = e.date;
+  document.getElementById('ee-date').value        = e.date;
+  document.getElementById('ee-skip-date').value    = e.date;
+  document.getElementById('ee-mins').value         = e.type === 'late' ? e.mins : 10;
+  eeSelReason = e.type === 'skip' ? (e.reason || null) : null;
+  const chips = document.getElementById('ee-reason-chips');
+  chips.innerHTML = SKIP_REASONS.map(r =>
+    `<button class="reason-chip${r === eeSelReason ? ' sel' : ''}" data-reason="${r}">${esc(T.reasons[r])}</button>`
+  ).join('');
+  chips.querySelectorAll('.reason-chip').forEach(c => {
+    c.addEventListener('click', () => {
+      const already = c.classList.contains('sel');
+      chips.querySelectorAll('.reason-chip').forEach(x => x.classList.remove('sel'));
+      if (!already) { c.classList.add('sel'); eeSelReason = c.dataset.reason; }
+      else eeSelReason = null;
+    });
+  });
+  setEeMode(e.type === 'attend' ? 'attend' : e.type === 'skip' ? 'skip' : 'late');
+  openOv('modal-edit-entry');
+}
+
+document.getElementById('ee-cancel').addEventListener('click', () => closeOv('modal-edit-entry'));
+document.getElementById('modal-edit-entry').addEventListener('click', e => { if (e.target === e.currentTarget) closeOv('modal-edit-entry'); });
+document.getElementById('ee-save').addEventListener('click', async () => {
+  const errEl = document.getElementById('ee-error');
+  errEl.textContent = '';
+  if (!eeEditingId) return;
+  document.getElementById('ee-save').disabled = true;
+  try {
+    let body;
+    if (eeMode === 'attend') {
+      const date = document.getElementById('ee-attend-date').value;
+      if (!date) { errEl.textContent = '⚠'; return; }
+      body = { date, type: 'attend' };
+    } else if (eeMode === 'late') {
+      const date = document.getElementById('ee-date').value;
+      const mins = parseInt(document.getElementById('ee-mins').value);
+      if (!date || isNaN(mins) || mins < 1) { errEl.textContent = '⚠'; return; }
+      body = { date, mins, type: 'late' };
+    } else {
+      const date = document.getElementById('ee-skip-date').value;
+      if (!date) { errEl.textContent = '⚠'; return; }
+      body = { date, type: 'skip', reason: eeSelReason };
+    }
+    await api.patchEntry(data.id, eeEditingId, body, adminPassword);
+    closeOv('modal-edit-entry');
+    await refresh();
+    showToast(T.toastSaved);
+  } catch { errEl.textContent = T.errServer; }
+  finally  { document.getElementById('ee-save').disabled = false; }
+});
+
+// ════════════════════════════════════════════════════════
 //  PILL, LEAVE, ADD PERSON, DELETE
 // ════════════════════════════════════════════════════════
 document.getElementById('pill-code').addEventListener('click',()=>{ if(data?.code) copyToClipboard(data.code); });
@@ -3515,8 +3650,10 @@ document.getElementById('invite-btn').addEventListener('click', () => {
 });
 
 document.addEventListener('click', async e => {
+  const edb = e.target.closest('.edit-entry-btn');
+  if (edb && data) { openEditEntry(edb.dataset.id); return; }
   const eb = e.target.closest('.del-entry-btn');
-  if (eb && data) { try{await api.delEntry(data.id,eb.dataset.id); await refresh();}catch{showToast(T.errServer);} return; }
+  if (eb && data) { try{await api.delEntry(data.id,eb.dataset.id,adminPassword); await refresh();}catch{showToast(T.errServer);} return; }
   // Tap on person row → open profile or admin-edit (when admin)
   const pr = e.target.closest('.person-row[data-uid]');
   if (pr && data) {
