@@ -554,7 +554,7 @@
       .nav-top .nav-indicator { display: none; }
 
       /* ── Main content area: week/history panes ── */
-      #pane-week, #pane-history {
+      #pane-week, #pane-history, #pane-recap {
         grid-area: main;
         overflow-y: auto; padding: 16px 24px 40px;
         height: calc(100svh - 56px);
@@ -572,7 +572,7 @@
         z-index: 5;
       }
       /* Push main content left of people panel */
-      #pane-week, #pane-history { margin-right: 300px; }
+      #pane-week, #pane-history, #pane-recap { margin-right: 300px; }
 
       #week-recap { max-height: none; }
 
@@ -1162,8 +1162,8 @@
     .streak-hero-num { font-size:30px; font-weight:800; line-height:1; color:var(--text-3); transition:color .3s; }
     .streak-hero.lit .streak-hero-num { color:#f97316; }
     .streak-hero-lbl { font-size:13px; font-weight:600; color:var(--text-2); }
-    .streak-hero-hint { margin-left:auto; font-size:12px; color:var(--text-3); text-align:right; max-width:42%; line-height:1.3; }
-    .streak-hero.lit .streak-hero-hint { color:#22c55e; font-weight:600; }
+    .streak-hero-hint { margin-left:auto; font-size:12px; color:var(--accent); font-weight:700; text-align:right; max-width:42%; line-height:1.3; }
+    .streak-hero.lit .streak-hero-hint { color:#22c55e; }
 
     #streak-anim {
       background:radial-gradient(circle at 50% 40%, #7c2d12 0%, #2a0e02 55%, #140601 100%);
@@ -1417,6 +1417,9 @@
         <button class="nav-btn" data-tab="history">
           <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="15" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="19" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg></span><span class="nav-lbl"></span>
         </button>
+        <button class="nav-btn" data-tab="recap">
+          <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="13" width="4" height="8"/></svg></span><span class="nav-lbl"></span>
+        </button>
         <button class="nav-btn" data-tab="people">
           <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg></span><span class="nav-lbl"></span>
         </button>
@@ -1456,6 +1459,7 @@
         </div>
         <div class="streak-hero-hint" id="checkin-time-hint"></div>
       </div>
+      <div class="sec-label" id="lbl-week"></div>
       <div class="stat-row">
         <div class="card glass stat-card"><div class="stat-val" id="s-count">0</div><div class="stat-lbl" id="s-count-lbl"></div></div>
         <div class="card glass stat-card"><div class="stat-val" id="s-mins">0</div><div class="stat-lbl" id="s-mins-lbl"></div></div>
@@ -1463,13 +1467,10 @@
       <div id="skip-stat-wrap" class="hidden" style="text-align:center;margin-top:8px">
         <span class="skip-chip" id="skip-stat-chip"></span>
       </div>
-      <div class="sec-label" id="lbl-week"></div>
-      <div class="card glass" id="week-card">
+      <div class="card glass" id="week-card" style="margin-top:14px">
         <div class="empty" id="week-empty"><div class="empty-txt" id="empty-week-txt"></div></div>
         <div id="week-list"></div>
       </div>
-      <div class="sec-label" id="lbl-history" style="margin-top:24px"></div>
-      <div id="week-recap"></div>
     </div>
 
     <!-- ── HISTORY / CALENDAR TAB ── -->
@@ -1481,6 +1482,12 @@
       </div>
       <div class="cal-weekdays" id="cal-weekdays"></div>
       <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <!-- ── RECAP TAB ── -->
+    <div class="tab-pane" id="pane-recap">
+      <div class="sec-label" id="lbl-history"></div>
+      <div id="week-recap"></div>
     </div>
 
     <!-- ── PEOPLE TAB ── -->
@@ -1538,7 +1545,10 @@
         <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span><span class="nav-lbl" id="nav-week"></span>
       </button>
       <button class="nav-btn" data-tab="history">
-        <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="13" width="4" height="8"/></svg></span><span class="nav-lbl" id="nav-history"></span>
+        <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="15" r="1.2" fill="currentColor" stroke="none"/><circle cx="16" cy="15" r="1.2" fill="currentColor" stroke="none"/><circle cx="8" cy="19" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.2" fill="currentColor" stroke="none"/></svg></span><span class="nav-lbl" id="nav-history"></span>
+      </button>
+      <button class="nav-btn" data-tab="recap">
+        <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="13" width="4" height="8"/></svg></span><span class="nav-lbl" id="nav-recap"></span>
       </button>
       <button class="nav-btn" data-tab="people">
         <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg></span><span class="nav-lbl" id="nav-people"></span>
@@ -1963,7 +1973,7 @@ const TRANS = {
     lsOr:'oder',
     lsAdmin:'Admin aktivieren', lsTestGroup:'Testgruppe mit 1 Jahr Verlauf', lsAdminNote:'Admin aktiv. Du kannst jetzt eine fertige Testgruppe erstellen.',
     pillHint:'tippen zum kopieren',
-    navWeek:'Woche', navHistory:'Verlauf', navPeople:'Personen',
+    navWeek:'Woche', navHistory:'Verlauf', navRecap:'Rückblick', navPeople:'Personen',
     lblWeek:'Diese Woche', lblHistory:'Wochenrückblick', lblPeople:'Mitglieder',
     sCountLbl:'Verspätungen', sMinLbl:'Min. gesamt',
     emptyWeek:'Noch niemand zu spät!', emptyPeople:'Noch keine Personen', emptyPeopleSub:'Füge unten Personen hinzu', emptyHistory:'Noch keine abgeschlossenen Wochen',
@@ -2092,7 +2102,7 @@ const TRANS = {
     toastLate:'Verspätet eingecheckt',
     // Streak hero + animation
     shDays: n => n===1 ? 'Tag Streak' : 'Tage Streak',
-    shHintOpen:'Heute noch nicht verlängert', shHintDone:'Heute verlängert!',
+    shHintOpen:'Jetzt einchecken →', shHintDone:'Heute verlängert!',
     saLbl: n => n===1 ? 'Tag Streak!' : 'Tage Streak!',
     saContinue:'Weiter',
   },
@@ -2104,7 +2114,7 @@ const TRANS = {
     lsOr:'or',
     lsAdmin:'Activate Admin', lsTestGroup:'Test group with 1 year history', lsAdminNote:'Admin is active. You can create a ready-made test group now.',
     pillHint:'tap to copy',
-    navWeek:'Week', navHistory:'History', navPeople:'People',
+    navWeek:'Week', navHistory:'History', navRecap:'Recap', navPeople:'People',
     lblWeek:'This Week', lblHistory:'Weekly Recap', lblPeople:'Members',
     sCountLbl:'Late Arrivals', sMinLbl:'Total Mins',
     emptyWeek:'Nobody was late this week!', emptyPeople:'No people added yet', emptyPeopleSub:'Add people below', emptyHistory:'No completed weeks yet',
@@ -2234,7 +2244,7 @@ const TRANS = {
     toastLate:'Checked in late',
     // Streak hero + animation
     shDays: n => n===1 ? 'day streak' : 'day streak',
-    shHintOpen:'Not extended today yet', shHintDone:'Extended today!',
+    shHintOpen:'Check in now →', shHintDone:'Extended today!',
     saLbl: n => n===1 ? 'day streak!' : 'day streak!',
     saContinue:'Continue',
   }
@@ -2933,9 +2943,10 @@ function switchTab(name) {
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('pane-'+name).classList.add('active');
   document.querySelectorAll(`.nav-btn[data-tab="${name}"]`).forEach(b=>b.classList.add('active'));
-  document.getElementById('fab').classList.toggle('hidden', name==='people');
+  document.getElementById('fab').classList.toggle('hidden', name==='people' || name==='recap');
   updateNavIndicator();
   if (name === 'history') renderCalendar();
+  if (name === 'recap') renderHistory();
 }
 document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
 // ════════════════════════════════════════════════════════
@@ -3051,8 +3062,8 @@ document.getElementById('adm-replay-btn').addEventListener('click', () => showWr
 document.getElementById('adm-week-btn').addEventListener('click', () => {
   adminShowCurWeek = !adminShowCurWeek;
   renderAdminPanel();
-  // if history tab is active, re-render it
-  if (document.getElementById('pane-history').classList.contains('active')) renderHistory();
+  // if recap tab is active, re-render it
+  if (document.getElementById('pane-recap').classList.contains('active')) renderHistory();
 });
 
 document.getElementById('adm-add-btn').addEventListener('click', async () => {
@@ -3113,6 +3124,7 @@ function applyI18n() {
   set('ls-admin-lbl',T.lsAdmin); set('ls-test-lbl',T.lsTestGroup); set('ls-admin-note',T.lsAdminNote);
   document.querySelectorAll('[data-tab="week"] .nav-lbl').forEach(el=>el.textContent=T.navWeek);
   document.querySelectorAll('[data-tab="history"] .nav-lbl').forEach(el=>el.textContent=T.navHistory);
+  document.querySelectorAll('[data-tab="recap"] .nav-lbl').forEach(el=>el.textContent=T.navRecap);
   document.querySelectorAll('[data-tab="people"] .nav-lbl').forEach(el=>el.textContent=T.navPeople);
   set('lbl-week',T.lblWeek); set('lbl-history',T.lblHistory); set('lbl-people',T.lblPeople);
   set('s-count-lbl',T.sCountLbl); set('s-mins-lbl',T.sMinLbl);
