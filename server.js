@@ -102,6 +102,10 @@ function createSqliteDatabase() {
   sqlite.pragma('foreign_keys = ON');
   console.log(`📂 SQLite database: ${DB_PATH}`);
 
+  // Serializes transactions: the async callback yields at await points, so a
+  // concurrent request could otherwise issue a nested BEGIN on this connection.
+  let txChain = Promise.resolve();
+
   return {
     isMySQL: false,
     exec(sql) { sqlite.exec(sql); },
@@ -109,8 +113,22 @@ function createSqliteDatabase() {
     async one(sql, params = []) { return sqlite.prepare(sql).get(...params) || null; },
     async all(sql, params = []) { return sqlite.prepare(sql).all(...params); },
     async transaction(fn) {
-      const wrapped = sqlite.transaction(() => fn(this));
-      return wrapped();
+      // better-sqlite3's own transaction() rejects async callbacks, so manage
+      // BEGIN/COMMIT/ROLLBACK manually — mirroring the MySQL wrapper below.
+      const exec = async () => {
+        sqlite.exec('BEGIN');
+        try {
+          const result = await fn(this);
+          sqlite.exec('COMMIT');
+          return result;
+        } catch (e) {
+          if (sqlite.inTransaction) sqlite.exec('ROLLBACK');
+          throw e;
+        }
+      };
+      const p = txChain.then(exec, exec);
+      txChain = p.catch(() => {});
+      return p;
     },
   };
 }
