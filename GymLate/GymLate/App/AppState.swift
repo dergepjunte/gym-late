@@ -33,6 +33,15 @@ final class AppState: ObservableObject {
         activeGroup = store.activeGroup
         if let g = activeGroup {
             userProfile = store.userProfile(for: g.id)
+            // Cold start into a restored group: render cache, sync, poll —
+            // same pipeline as enterGroup/switchGroup.
+            showCachedDataOrSpinner(for: g.id)
+            Task {
+                await refreshData()
+                isLoading = false
+                startPolling()
+                runOpeningSequence()
+            }
         }
 
         sync.$pendingCount

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum K {
     static let accent      = Color(hex: "#facc15")   // yellow-400
@@ -9,6 +10,7 @@ enum K {
     static let red         = Color(hex: "#ef4444")
     static let green       = Color(hex: "#22c55e")
     static let gold        = Color(hex: "#f59e0b")   // == accentDeep; status-gold stays the deep end of the accent family
+    static let amberText   = Color(light: "#b45309", dark: "#fbbf24")  // readable amber for labels on glass
 
     // Deployed server URL (Railway)
     static let apiBaseURL  = "https://gym-late-production.up.railway.app"
@@ -42,6 +44,13 @@ enum K {
 }
 
 extension Color {
+    /// Adaptive color that switches hex values with the system appearance.
+    init(light: String, dark: String) {
+        self.init(uiColor: UIColor { tc in
+            UIColor(Color(hex: tc.userInterfaceStyle == .dark ? dark : light))
+        })
+    }
+
     init(hex: String) {
         let h = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var val: UInt64 = 0

@@ -10,7 +10,7 @@ struct PeopleView: View {
         ScrollView {
             VStack(spacing: 16) {
                 Text("Mitglieder")
-                    .font(.system(size: 22, weight: .bold))
+                    .font(Theme.heading(24))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
                     .padding(.top, 8)
@@ -45,7 +45,7 @@ struct PeopleView: View {
                                 .font(.system(size: 20))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Freunde einladen")
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(Theme.body(14, .bold))
                                     .foregroundColor(.primary)
                                 Text("Code teilen: \(code)")
                                     .font(.system(size: 12, design: .monospaced))
@@ -67,8 +67,7 @@ struct PeopleView: View {
 
                 // Multi-group section
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Meine Gruppen")
-                        .font(.system(size: 16, weight: .semibold))
+                    Text("Meine Gruppen").eyebrow()
                         .padding(.horizontal, 20)
                     ForEach(LocalStore.shared.allGroups) { g in
                         GroupListRow(group: g, isActive: g.id == appState.activeGroup?.id)
@@ -84,8 +83,8 @@ struct PeopleView: View {
                 HStack(spacing: 12) {
                     Button { showGroupSwitcher = true } label: {
                         Label("Gruppe beitreten", systemImage: "link")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(K.accentDark)
+                            .font(Theme.body(14, .bold))
+                            .foregroundColor(K.amberText)
                             .padding(12)
                             .frame(maxWidth: .infinity)
                             .glassCard()
@@ -113,7 +112,7 @@ struct PersonRow: View {
             }
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(person.name).font(.system(size: 15, weight: .semibold))
+                    Text(person.name).font(Theme.body(15, .bold))
                     if person.isCreator {
                         Image(systemName: "star.fill").foregroundColor(K.gold).font(.system(size: 10))
                     }
@@ -145,14 +144,14 @@ struct GroupListRow: View {
         HStack(spacing: 12) {
             Text("🏋️").font(.system(size: 24))
             VStack(alignment: .leading, spacing: 2) {
-                Text(group.name).font(.system(size: 14, weight: .semibold))
+                Text(group.name).font(Theme.body(14, .bold))
                 Text(group.code)
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundColor(.secondary)
             }
             Spacer()
             if isActive {
-                Text("Aktiv").font(.system(size: 11, weight: .semibold)).foregroundColor(K.accentDark)
+                Text("Aktiv").font(Theme.body(11, .bold)).foregroundColor(K.amberText)
             } else {
                 Text("Wechseln").font(.system(size: 11)).foregroundColor(.secondary)
             }

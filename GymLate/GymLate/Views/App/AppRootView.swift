@@ -31,7 +31,9 @@ struct AppRootView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-
+            }
+            // Floating glass bar: content scrolls underneath it.
+            .safeAreaInset(edge: .bottom, spacing: 0) {
                 BottomNav(selected: $selectedTab)
             }
 
@@ -92,10 +94,10 @@ struct GroupPillHeader: View {
                 HStack(spacing: 6) {
                     Text(appState.groupData?.code ?? "")
                         .font(.system(size: 13, weight: .bold, design: .monospaced))
-                        .foregroundColor(K.accentDark)
+                        .foregroundColor(K.amberText)
                     if LocalStore.shared.allGroups.count > 1 {
                         Image(systemName: "chevron.down.circle.fill")
-                            .foregroundColor(K.accentDark).font(.system(size: 14))
+                            .foregroundColor(K.amberText).font(.system(size: 14))
                     }
                 }
                 .padding(.horizontal, 14).padding(.vertical, 8)
@@ -107,7 +109,7 @@ struct GroupPillHeader: View {
 
             HStack(spacing: 6) {
                 Text(appState.groupData?.name ?? "")
-                    .font(.system(size: 15, weight: .semibold))
+                    .font(Theme.heading(15))
                     .lineLimit(1)
                 if appState.pendingSyncCount > 0 {
                     HStack(spacing: 2) {
@@ -139,70 +141,87 @@ struct GroupPillHeader: View {
 
 // MARK: - Bottom Nav
 
+/// Floating Liquid Glass capsule bar. On iOS 26 it uses the real glassEffect;
+/// earlier systems fall back to the shared glass recipe. The selected tab
+/// carries a yellow gradient pill that slides between items.
 struct BottomNav: View {
     @Binding var selected: AppTab
+    @Namespace private var pillNS
 
     var body: some View {
-        HStack {
-            NavItem(tab: .week, icon: "calendar.badge.clock", label: K.L.navWeek, selected: $selected)
-            NavItem(tab: .history, icon: "clock.arrow.circlepath", label: K.L.navHistory, selected: $selected)
-            NavItem(tab: .recap, icon: "star.fill", label: K.L.navRecap, selected: $selected)
-            NavItem(tab: .people, icon: "person.3.fill", label: K.L.navPeople, selected: $selected)
+        HStack(spacing: 2) {
+            navItem(.week, icon: "calendar.badge.clock", label: K.L.navWeek)
+            navItem(.history, icon: "clock.arrow.circlepath", label: K.L.navHistory)
+            navItem(.recap, icon: "star.fill", label: K.L.navRecap)
+            navItem(.people, icon: "person.3.fill", label: K.L.navPeople)
         }
-        .padding(.horizontal, 8)
-        .padding(.top, 8)
-        .padding(.bottom, 4 + (UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .first?.windows.first?.safeAreaInsets.bottom ?? 0))
-        .background(NavGlassBar())
+        .padding(5)
+        .background(NavGlassCapsule())
+        .padding(.horizontal, 20)
+        .padding(.bottom, 6)
+    }
+
+    @ViewBuilder
+    private func navItem(_ tab: AppTab, icon: String, label: String) -> some View {
+        let isSelected = selected == tab
+        Button {
+            withAnimation(.spring(response: 0.32, dampingFraction: 0.78)) { selected = tab }
+            haptic(.light)
+        } label: {
+            VStack(spacing: 3) {
+                Image(systemName: icon)
+                    .font(.system(size: 19, weight: .semibold))
+                Text(label)
+                    .font(Theme.body(10, .bold))
+            }
+            .foregroundColor(isSelected ? K.onAccent : .secondary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 9)
+            .background {
+                if isSelected {
+                    Capsule()
+                        .fill(LinearGradient(colors: Theme.accentGradient,
+                                             startPoint: .topLeading, endPoint: .bottomTrailing))
+                        .overlay(
+                            Capsule().fill(LinearGradient(
+                                stops: [.init(color: .white.opacity(0.40), location: 0),
+                                        .init(color: .clear, location: 0.5)],
+                                startPoint: .top, endPoint: .bottom))
+                        )
+                        .matchedGeometryEffect(id: "navPill", in: pillNS)
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 
-/// Glass treatment for the full-width bottom nav bar: material base,
-/// gloss sheen and a brighter top hairline instead of a plain Divider.
-private struct NavGlassBar: View {
+/// Capsule-shaped Liquid Glass base for the floating nav bar.
+private struct NavGlassCapsule: View {
     @Environment(\.colorScheme) private var scheme
 
     var body: some View {
         let g = Theme.Glass.tokens(for: scheme)
-        Rectangle()
-            .fill(.ultraThinMaterial)
-            .overlay(
-                LinearGradient(
-                    stops: [.init(color: g.sheen.opacity(0.5), location: 0),
-                            .init(color: .clear, location: 0.45)],
-                    startPoint: .top, endPoint: .bottom)
-                .allowsHitTesting(false)
-            )
-            .overlay(alignment: .top) {
-                g.borderTop.frame(height: 1).allowsHitTesting(false)
+        Group {
+            if #available(iOS 26.0, *) {
+                Color.clear.glassEffect(.regular.interactive(), in: .capsule)
+            } else {
+                Capsule().fill(.ultraThinMaterial)
             }
-            .ignoresSafeArea(edges: .bottom)
-    }
-}
-
-struct NavItem: View {
-    let tab: AppTab
-    let icon: String
-    let label: String
-    @Binding var selected: AppTab
-
-    var isSelected: Bool { selected == tab }
-
-    var body: some View {
-        Button {
-            withAnimation(.spring(response: 0.25)) { selected = tab }
-            haptic(.light)
-        } label: {
-            VStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: isSelected ? 20 : 18))
-                Text(label).font(.system(size: 10, weight: .medium))
-            }
-            .foregroundColor(isSelected ? K.accentDeep : .secondary)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 6)
         }
-        .buttonStyle(.plain)
+        .overlay(
+            Capsule().fill(LinearGradient(
+                stops: [.init(color: g.sheen, location: 0),
+                        .init(color: .clear, location: 0.45)],
+                startPoint: .topLeading, endPoint: .bottom))
+            .allowsHitTesting(false)
+        )
+        .overlay(
+            Capsule().strokeBorder(LinearGradient(
+                colors: [g.borderTop, g.border],
+                startPoint: .top, endPoint: .bottom), lineWidth: 1)
+            .allowsHitTesting(false)
+        )
+        .shadow(color: g.shadow, radius: 20, x: 0, y: 10)
     }
 }

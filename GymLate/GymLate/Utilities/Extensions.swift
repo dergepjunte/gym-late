@@ -151,13 +151,15 @@ struct GymBackground: View {
         let dark = scheme == .dark
         ZStack {
             Color(.systemBackground).ignoresSafeArea()
-            RadialGradient(colors: [Color(hex: dark ? "#fbbf24" : "#f59e0b").opacity(dark ? 0.15 : 0.16), .clear],
-                          center: .init(x: 0.18, y: 0.10), startRadius: 0, endRadius: 300)
+            // All-warm palette: dominant amber, rosé counterpoint (ties into the
+            // Wrapped slide pinks), orange base glow near the nav bar.
+            RadialGradient(colors: [Color(hex: dark ? "#fbbf24" : "#f59e0b").opacity(dark ? 0.18 : 0.20), .clear],
+                          center: .init(x: 0.18, y: 0.10), startRadius: 0, endRadius: 340)
             .ignoresSafeArea()
-            RadialGradient(colors: [Color(hex: dark ? "#60a5fa" : "#3b82f6").opacity(dark ? 0.10 : 0.09), .clear],
+            RadialGradient(colors: [Color(hex: dark ? "#f472b6" : "#fb7185").opacity(dark ? 0.09 : 0.08), .clear],
                           center: .init(x: 0.86, y: 0.26), startRadius: 0, endRadius: 250)
             .ignoresSafeArea()
-            RadialGradient(colors: [Color(hex: dark ? "#f97316" : "#fb923c").opacity(dark ? 0.09 : 0.08), .clear],
+            RadialGradient(colors: [Color(hex: dark ? "#f97316" : "#fb923c").opacity(dark ? 0.11 : 0.10), .clear],
                           center: .init(x: 0.55, y: 0.95), startRadius: 0, endRadius: 320)
             .ignoresSafeArea()
         }

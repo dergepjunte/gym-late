@@ -61,15 +61,13 @@ struct WeekHistoryCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text(weekLabel)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.secondary)
+                Text(weekLabel).eyebrow(.secondary)
                 Spacer()
                 HStack(spacing: 12) {
                     Label("\(lateEntries.count)", systemImage: "clock.fill")
-                        .font(.system(size: 13)).foregroundColor(K.red)
+                        .font(Theme.body(13, .bold)).foregroundColor(K.red)
                     Label("\(totalMins) Min", systemImage: "timer")
-                        .font(.system(size: 13)).foregroundColor(.secondary)
+                        .font(Theme.body(13)).foregroundColor(.secondary)
                 }
             }
 
@@ -82,23 +80,23 @@ struct WeekHistoryCard: View {
                 let count = lateEntries.filter { $0.person == king.person }.count
                 HStack(spacing: 6) {
                     Image(systemName: "crown.fill").foregroundColor(K.gold)
-                    Text(king.person).font(.system(size: 13, weight: .semibold))
+                    Text(king.person).font(Theme.body(13, .bold))
                     Text("–").foregroundColor(.secondary)
-                    Text("\(count)× zu spät").font(.system(size: 13)).foregroundColor(.secondary)
+                    Text("\(count)× zu spät").font(Theme.body(13)).foregroundColor(.secondary)
                 }
             }
 
             // Mini entry list
             ForEach(lateEntries.prefix(4)) { e in
                 HStack {
-                    Text(e.person).font(.system(size: 13))
+                    Text(e.person).font(Theme.body(13))
                     Spacer()
-                    Text("\(e.mins) Min.").font(.system(size: 13)).foregroundColor(K.red)
+                    Text("\(e.mins) Min.").font(Theme.body(13, .semibold)).foregroundColor(K.red)
                 }
             }
             if lateEntries.count > 4 {
                 Text("+ \(lateEntries.count - 4) weitere")
-                    .font(.system(size: 12)).foregroundColor(.secondary)
+                    .font(Theme.body(12)).foregroundColor(.secondary)
             }
         }
         .padding(16)

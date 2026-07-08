@@ -26,8 +26,9 @@ struct RecapView: View {
             VStack(spacing: 16) {
                 Text("📊").font(.system(size: 60))
                 Text("Noch kein Rückblick")
-                    .font(.title3.bold())
+                    .font(Theme.heading(20))
                 Text("Komm nächste Woche wieder!")
+                    .font(Theme.body(15))
                     .foregroundColor(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -35,29 +36,29 @@ struct RecapView: View {
             TabView(selection: $slideIndex) {
                 SlideView(index: 0, content: {
                     VStack(spacing: 12) {
-                        Text("LETZTE").font(.system(size: 40, weight: .black)).foregroundColor(.white.opacity(0.7))
-                        Text("WOCHE").font(.system(size: 60, weight: .black)).foregroundColor(.white)
+                        Text("LETZTE").font(.system(size: 36, weight: .black).width(.expanded)).foregroundColor(.white.opacity(0.7))
+                        Text("WOCHE").font(.system(size: 54, weight: .black).width(.expanded)).foregroundColor(.white)
                     }
                 })
                 .tag(0)
 
                 SlideView(index: 1, content: {
                     VStack(spacing: 8) {
-                        Text("ihr wart").font(.system(size: 22)).foregroundColor(.white.opacity(0.7))
-                        Text("\(lateEntries.count)×").font(.system(size: 80, weight: .black)).foregroundColor(.white)
-                        Text("zu spät").font(.system(size: 22)).foregroundColor(.white.opacity(0.7))
+                        Text("ihr wart").font(Theme.body(22)).foregroundColor(.white.opacity(0.7))
+                        Text("\(lateEntries.count)×").font(Theme.display(80)).foregroundColor(.white)
+                        Text("zu spät").font(Theme.body(22)).foregroundColor(.white.opacity(0.7))
                     }
                 })
                 .tag(1)
 
                 SlideView(index: 2, content: {
                     VStack(spacing: 8) {
-                        Text("ihr habt verbraten").font(.system(size: 18)).foregroundColor(.white.opacity(0.7))
-                        Text("\(totalMins)").font(.system(size: 80, weight: .black)).foregroundColor(.white)
-                        Text("Minuten").font(.system(size: 22)).foregroundColor(.white.opacity(0.7))
+                        Text("ihr habt verbraten").font(Theme.body(18)).foregroundColor(.white.opacity(0.7))
+                        Text("\(totalMins)").font(Theme.display(80)).foregroundColor(.white)
+                        Text("Minuten").font(Theme.body(22)).foregroundColor(.white.opacity(0.7))
                         if totalMins >= 60 {
                             Text("das sind \(totalMins / 60)h \(totalMins % 60)min")
-                                .font(.system(size: 15)).foregroundColor(.white.opacity(0.5))
+                                .font(Theme.body(15)).foregroundColor(.white.opacity(0.5))
                         }
                     }
                 })
@@ -67,8 +68,8 @@ struct RecapView: View {
                     SlideView(index: 3, content: {
                         VStack(spacing: 12) {
                             Text("👑").font(.system(size: 80))
-                            Text(king).font(.system(size: 40, weight: .black)).foregroundColor(.white)
-                            Text("Zuspätkommer der Woche").font(.system(size: 16)).foregroundColor(.white.opacity(0.7))
+                            Text(king).font(Theme.display(40)).foregroundColor(.white)
+                            Text("Zuspätkommer der Woche").font(Theme.body(16)).foregroundColor(.white.opacity(0.7))
                         }
                     })
                     .tag(3)

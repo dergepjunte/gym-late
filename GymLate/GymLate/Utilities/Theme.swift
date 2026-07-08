@@ -14,6 +14,30 @@ enum Theme {
     static let hype: [Color] = [Color(hex: "#f59e0b"), Color(hex: "#ea580c")]
     static let accentGradient: [Color] = [K.accent, K.accentDeep]
 
+    // MARK: - Typography ("scoreboard" type system)
+    //
+    // Three roles: display = big black rounded numbers (scoreboard),
+    // heading = heavy rounded titles/names, body = rounded UI text.
+    // Micro-labels use Text.eyebrow() below (expanded uppercase, jersey style).
+
+    static func display(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .black, design: .rounded)
+    }
+    static func heading(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .heavy, design: .rounded)
+    }
+    static func body(_ size: CGFloat, _ weight: Font.Weight = .medium) -> Font {
+        .system(size: size, weight: weight, design: .rounded)
+    }
+
+    /// Adaptive amber gradient for big streak numbers — deeper in light mode
+    /// for contrast, brighter in dark mode for glow.
+    static func numberGradient(for scheme: ColorScheme) -> [Color] {
+        scheme == .dark
+        ? [K.accentLight, K.accentDeep]
+        : [K.accentDeep, Color(hex: "#c2540a")]
+    }
+
     // MARK: - Glass surface tokens (mirrors the web app's --glass-* variables)
 
     struct Glass {
@@ -33,5 +57,17 @@ enum Theme {
                     border: .white.opacity(0.55),
                     shadow: Color(hex: "#a06e14").opacity(0.10))
         }
+    }
+}
+
+extension Text {
+    /// Athletic uppercase micro-label (jersey style): expanded SF, heavy,
+    /// tracked out, amber by default.
+    func eyebrow(_ color: Color = K.amberText) -> some View {
+        self
+            .font(.system(size: 11, weight: .heavy).width(.expanded))
+            .tracking(1.5)
+            .textCase(.uppercase)
+            .foregroundColor(color)
     }
 }
