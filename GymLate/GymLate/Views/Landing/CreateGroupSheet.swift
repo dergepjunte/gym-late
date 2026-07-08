@@ -1,0 +1,80 @@
+import SwiftUI
+
+struct CreateGroupSheet: View {
+    @EnvironmentObject var appState: AppState
+    @Environment(\.dismiss) var dismiss
+    @State private var groupName = ""
+    @State private var gymDays = Array(repeating: true, count: 7)
+    @State private var isLoading = false
+    @State private var error = ""
+    @State private var createdGroup: GroupInfo?
+    @State private var showProfile = false
+
+    let dayLabels = K.L.dayNames
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Gruppenname") {
+                    TextField("z.B. Montag-Crew", text: $groupName)
+                }
+                Section("Gym-Tage") {
+                    HStack {
+                        ForEach(0..<7) { i in
+                            Button {
+                                gymDays[i].toggle()
+                            } label: {
+                                Text(dayLabels[i])
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .frame(width: 36, height: 36)
+                                    .background(gymDays[i] ? K.accent : Color(.secondarySystemFill))
+                                    .foregroundColor(gymDays[i] ? K.onAccent : .secondary)
+                                    .clipShape(Circle())
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+                }
+                if !error.isEmpty {
+                    Section { Text(error).foregroundColor(.red) }
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(GymBackground())
+            .navigationTitle("Neue Gruppe")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Abbrechen") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Erstellen") { Task { await create() } }
+                        .disabled(isLoading || groupName.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+            .sheet(isPresented: $showProfile) {
+                if let g = createdGroup {
+                    ProfileSetupSheet(group: g, isNew: true)
+                }
+            }
+        }
+    }
+
+    private func create() async {
+        let name = groupName.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { error = K.L.errServer; return }
+        guard gymDays.contains(true) else { error = "Mindestens 1 Tag wählen."; return }
+        let mask = gymDays.map { $0 ? "1" : "0" }.joined()
+        isLoading = true
+        do {
+            let g = try await APIClient.shared.createGroup(name: name, gymDays: mask)
+            createdGroup = g
+            showProfile = true
+        } catch {
+            self.error = error.localizedDescription
+        }
+        isLoading = false
+    }
+}
