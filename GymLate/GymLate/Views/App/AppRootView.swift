@@ -4,7 +4,15 @@ enum AppTab { case week, history, recap, people }
 
 struct AppRootView: View {
     @EnvironmentObject var appState: AppState
-    @State private var selectedTab: AppTab = .week
+    // Screenshot/UI-test hook: SIMCTL_CHILD_GYMLATE_TAB=<tab> picks the start tab
+    @State private var selectedTab: AppTab = {
+        switch ProcessInfo.processInfo.environment["GYMLATE_TAB"] {
+        case "history": return .history
+        case "recap":   return .recap
+        case "people":  return .people
+        default:        return .week
+        }
+    }()
     @State private var showLogEntry = false
     @State private var showSettings = false
     @State private var showGroupSwitcher = false
