@@ -13,10 +13,16 @@ struct LogEntrySheet: View {
     @State private var isLoading = false
     @State private var error = ""
 
-    enum EntryMode: String, CaseIterable {
-        case attend = "✓ Eingecheckt"
-        case late   = "⏱ Verspätet"
-        case skip   = "⊘ Skip"
+    enum EntryMode: CaseIterable {
+        case attend, late, skip
+
+        var label: String {
+            switch self {
+            case .attend: return K.L.mlModeAttend
+            case .late:   return K.L.mlModeLate
+            case .skip:   return K.L.mlModeSkip
+            }
+        }
     }
 
     private var people: [Person] {
@@ -28,9 +34,9 @@ struct LogEntrySheet: View {
             Form {
                 // Mode picker
                 Section {
-                    Picker("Modus", selection: $mode) {
+                    Picker("", selection: $mode) {
                         ForEach(EntryMode.allCases, id: \.self) { m in
-                            Text(m.rawValue).tag(m)
+                            Text(m.label).tag(m)
                         }
                     }
                     .pickerStyle(.segmented)
@@ -38,12 +44,12 @@ struct LogEntrySheet: View {
                 }
 
                 // Person
-                Section("Person") {
+                Section(K.L.mlLblPerson) {
                     if people.isEmpty {
-                        Text("Erst Personen hinzufügen!").foregroundColor(.secondary)
+                        Text(K.L.noPeople).foregroundColor(.secondary)
                     } else {
-                        Picker("Person", selection: $selectedPerson) {
-                            Text("Wählen…").tag("")
+                        Picker(K.L.mlLblPerson, selection: $selectedPerson) {
+                            Text(K.L.de ? "Wählen…" : "Choose…").tag("")
                             ForEach(people, id: \.id) { p in
                                 Text(p.name).tag(p.name)
                             }
@@ -52,8 +58,8 @@ struct LogEntrySheet: View {
                 }
 
                 // Date
-                Section("Datum") {
-                    DatePicker("Datum", selection: Binding(
+                Section(K.L.mlLblDate) {
+                    DatePicker(K.L.mlLblDate, selection: Binding(
                         get: { parseDate(date) ?? Date() },
                         set: { date = dateYMD($0) }
                     ), displayedComponents: .date)
@@ -62,14 +68,14 @@ struct LogEntrySheet: View {
 
                 // Mode-specific fields
                 if mode == .late {
-                    Section("Minuten zu spät") {
-                        Stepper("\(mins) Min.", value: $mins, in: 1...999)
+                    Section(K.L.mlLblMins) {
+                        Stepper("\(mins) \(K.L.minsShort)", value: $mins, in: 1...999)
                     }
                 }
                 if mode == .skip {
-                    Section("Grund (optional)") {
-                        Picker("Grund", selection: $selectedReason) {
-                            Text("Kein Grund").tag("")
+                    Section(K.L.mlLblReason) {
+                        Picker(K.L.mlLblReason, selection: $selectedReason) {
+                            Text(K.L.de ? "Kein Grund" : "No reason").tag("")
                             ForEach(K.L.reasons, id: \.id) { r in
                                 Text(r.label).tag(r.id)
                             }
@@ -83,12 +89,12 @@ struct LogEntrySheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(GymBackground())
-            .navigationTitle("Eintragen")
+            .navigationTitle(K.L.mlTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Abbrechen") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button(K.L.cancel) { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Speichern") { Task { await save() } }
+                    Button(K.L.save) { Task { await save() } }
                         .disabled(isLoading || selectedPerson.isEmpty)
                 }
             }
@@ -99,35 +105,55 @@ struct LogEntrySheet: View {
         }
     }
 
+    /// Save + check-in ceremony — mirrors the website's ml-save handler:
+    /// a self/today attend inside the fixed-time window may become a late
+    /// entry, then late-anim → streak-anim → chest → toast chain.
     private func save() async {
         guard appState.activeGroup != nil, !selectedPerson.isEmpty else { return }
         isLoading = true; error = ""
+        let isSelfToday = selectedPerson == appState.userProfile?.name && date == dateYMD(Date())
+        let wasExtended = appState.myStreakInfo()?.extendedToday ?? false
         do {
-            let result = try await appState.logEntry(
-                person: selectedPerson,
-                date: date,
-                type: mode == .attend ? "attend" : mode == .late ? "late" : "skip",
-                mins: mode == .late ? mins : nil,
-                reason: mode == .skip && !selectedReason.isEmpty ? selectedReason : nil)
-            switch result {
-            case .synced(let resp):
-                switch mode {
-                case .attend:
-                    if let chest = resp.chest, chest.got_freeze {
-                        toast = "❄️ Freeze erhalten! Streak: 🔥 \(chest.streak)"
+            switch mode {
+            case .attend:
+                let lateness = isSelfToday ? appState.computeCheckinLateness() : nil
+                let result = try await appState.logEntry(
+                    person: selectedPerson, date: date,
+                    type: (lateness?.isLate == true) ? "late" : "attend",
+                    mins: (lateness?.isLate == true) ? lateness?.minsOff : nil)
+                dismiss()
+                switch result {
+                case .synced(let resp):
+                    if isSelfToday {
+                        appState.runCheckinCeremony(chest: resp.chest, wasExtended: wasExtended,
+                                                    lateness: lateness) { toast = $0 }
                     } else {
-                        toast = "Eingecheckt ✓"
+                        toast = K.L.toastAttendSaved
+                        if let chest = resp.chest { appState.chestResult = chest }
                     }
-                case .late:
-                    toast = K.L.toastSaved
-                case .skip:
-                    toast = "Skip gespeichert ⊘"
+                case .queued:
+                    toast = K.L.toastQueuedOffline
                 }
-            case .queued:
-                toast = "Offline gespeichert – wird synchronisiert ✓"
+            case .late:
+                let result = try await appState.logEntry(
+                    person: selectedPerson, date: date, type: "late", mins: mins)
+                dismiss()
+                if case .queued = result {
+                    toast = K.L.toastQueuedOffline
+                } else if isSelfToday, !wasExtended, let info = appState.myStreakInfo() {
+                    appState.streakAnimStreak = info.streak
+                } else {
+                    toast = K.L.toastSaved
+                }
+            case .skip:
+                let result = try await appState.logEntry(
+                    person: selectedPerson, date: date, type: "skip",
+                    reason: selectedReason.isEmpty ? nil : selectedReason)
+                dismiss()
+                toast = { if case .queued = result { return K.L.toastQueuedOffline }
+                          return K.L.toastSkipSaved }()
             }
             hapticSuccess()
-            dismiss()
         } catch {
             self.error = error.localizedDescription
         }

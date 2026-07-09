@@ -22,6 +22,22 @@ final class AppState: ObservableObject {
     @Published var showGeoPrompt = false
     @Published var geoCheckinPossible = false
 
+    // Admin mode (password lives in memory only, mirroring the website)
+    @Published var adminMode = false
+    @Published var adminShowCurrentWeek = false
+    var adminPassword: String? {
+        get { store.adminPassword }
+        set { store.adminPassword = newValue; adminMode = newValue != nil }
+    }
+
+    // Check-in ceremony overlays (website: streak-anim / late-anim / chest modal).
+    // `afterStreakAnim`/`afterLateAnim` chain the next step like the web's _saNext/_laNext.
+    @Published var streakAnimStreak: Int?
+    @Published var lateAnimMins: Int?
+    @Published var chestResult: ChestResult?
+    var afterStreakAnim: (() -> Void)?
+    var afterLateAnim: (() -> Void)?
+
     private var pollingTask: Task<Void, Never>?
     private let store = LocalStore.shared
     private let api = APIClient.shared
@@ -269,7 +285,82 @@ final class AppState: ObservableObject {
         }
     }
 
+    // MARK: - Streak info & check-in ceremony (website parity)
+
+    /// Website `myStreakInfo()`: my streak plus whether I already extended it today.
+    func myStreakInfo() -> (streak: Int, extendedToday: Bool)? {
+        guard let profile = userProfile,
+              let me = groupData?.people.first(where: { $0.id == profile.userId }) else { return nil }
+        let today = dateYMD(Date())
+        let extended = (groupData?.entries ?? []).contains {
+            $0.person == me.name && $0.date == today && ($0.type == "attend" || $0.type == "late")
+        }
+        return (me.streak, extended)
+    }
+
+    /// Website `computeCheckinLateness()`: ±10-minute window around the fixed
+    /// check-in time; nil when the beta feature isn't active for today.
+    func computeCheckinLateness() -> (isLate: Bool, minsOff: Int)? {
+        guard let data = groupData, data.fixedCheckinEnabled,
+              data.checkinTimeDate == dateYMD(Date()),
+              let t = data.checkinTime else { return nil }
+        let parts = t.split(separator: ":").compactMap { Int($0) }
+        guard parts.count == 2 else { return nil }
+        let now = Calendar.current.dateComponents([.hour, .minute], from: Date())
+        let diff = (now.hour! * 60 + now.minute!) - (parts[0] * 60 + parts[1])
+        return (abs(diff) > 10, abs(diff))
+    }
+
+    /// Website `finish()` chain after logging a check-in: late-anim → streak-anim
+    /// → chest → toast, matching ml-save / submitSelfAttendEntry.
+    func runCheckinCeremony(chest: ChestResult?, wasExtended: Bool,
+                            lateness: (isLate: Bool, minsOff: Int)?,
+                            toast: @escaping (String) -> Void) {
+        let info = myStreakInfo()
+        let finish = { [weak self] in
+            guard let self else { return }
+            if let info, !wasExtended {
+                if let chest { self.afterStreakAnim = { self.chestResult = chest } }
+                self.streakAnimStreak = info.streak
+            } else {
+                if let chest { self.chestResult = chest }
+                if let lateness {
+                    toast(lateness.isLate ? K.L.toastLate : K.L.toastOnTime)
+                } else {
+                    toast(K.L.toastAttendSaved)
+                }
+            }
+        }
+        if let lateness, lateness.isLate {
+            afterLateAnim = finish
+            lateAnimMins = lateness.minsOff
+        } else {
+            finish()
+        }
+    }
+
+    // MARK: - Admin debug helpers (website: admin panel debug section)
+
+    func forceDailyHype() { showDailyHype = true }
+
+    func forceGeoPrompt() {
+        geoCheckinPossible = true
+        showGeoPrompt = true
+    }
+
+    func clearTodayFlags() {
+        let today = dateYMD(Date())
+        store.clearDailyFlags(for: today)
+    }
+
+    func replayWrapped() {
+        let weekStart = dateYMD(Calendar.iso8601UTC.startOfWeek(for: Date()))
+        store.clearWrappedSeen(weekStart: weekStart)
+        showWrapped = true
+    }
+
     private func checkGeoPrompt() async {
+        guard store.geoEnabled else { return }
         let today = dateYMD(Date())
         guard !store.isGeoPromptSeen(date: today),
               let data = groupData,

@@ -29,28 +29,28 @@ struct WrappedView: View {
                 // Slide 0: Title
                 WrappedSlide(gradient: Theme.slideTitle) {
                     VStack(spacing: 8) {
-                        Text("DIESE").font(.system(size: 44, weight: .black)).foregroundColor(.white.opacity(0.6))
-                        Text("WOCHE").font(.system(size: 64, weight: .black)).foregroundColor(.white)
+                        Text(K.L.de ? "DIESE" : "THIS").font(.system(size: 44, weight: .black)).foregroundColor(.white.opacity(0.6))
+                        Text(K.L.de ? "WOCHE" : "WEEK").font(.system(size: 64, weight: .black)).foregroundColor(.white)
                     }
                 }.tag(0)
 
                 // Slide 1: Late count
                 WrappedSlide(gradient: Theme.slideLate) {
                     VStack(spacing: 8) {
-                        Text("ihr wart").font(.system(size: 20)).foregroundColor(.white.opacity(0.7))
+                        Text(K.L.de ? "ihr wart" : "you were late").font(.system(size: 20)).foregroundColor(.white.opacity(0.7))
                         Text("\(lateEntries.count)×").font(.system(size: 88, weight: .black)).foregroundColor(.white)
-                        Text("zu spät").font(.system(size: 20)).foregroundColor(.white.opacity(0.7))
+                        Text(K.L.de ? "zu spät" : "times").font(.system(size: 20)).foregroundColor(.white.opacity(0.7))
                     }
                 }.tag(1)
 
                 // Slide 2: Total minutes
                 WrappedSlide(gradient: Theme.slideMinutes) {
                     VStack(spacing: 8) {
-                        Text("ihr habt verbraten").font(.system(size: 18)).foregroundColor(.white.opacity(0.7))
+                        Text(K.L.de ? "ihr habt verbraten" : "you wasted").font(.system(size: 18)).foregroundColor(.white.opacity(0.7))
                         Text("\(totalMins)").font(.system(size: 88, weight: .black)).foregroundColor(.white)
-                        Text("Minuten").font(.system(size: 20)).foregroundColor(.white.opacity(0.7))
+                        Text(K.L.de ? "Minuten" : "minutes").font(.system(size: 20)).foregroundColor(.white.opacity(0.7))
                         if totalMins >= 60 {
-                            Text("das sind \(totalMins/60)h \(totalMins%60)min")
+                            Text(K.L.de ? "das sind \(totalMins/60)h \(totalMins%60)min" : "that's \(totalMins/60)h \(totalMins%60)min")
                                 .font(.system(size: 15)).foregroundColor(.white.opacity(0.5))
                         }
                     }
@@ -62,7 +62,7 @@ struct WrappedView: View {
                         VStack(spacing: 16) {
                             Text("👑").font(.system(size: 88))
                             Text(king).font(.system(size: 44, weight: .black)).foregroundColor(.white)
-                            Text("Zuspätkommer\nder Woche")
+                            Text(K.L.de ? "Zuspätkommer\nder Woche" : "Latecomer\nof the Week")
                                 .font(.system(size: 18)).foregroundColor(.white.opacity(0.7))
                                 .multilineTextAlignment(.center)
                         }
@@ -72,14 +72,14 @@ struct WrappedView: View {
                 // Last slide: CTA
                 WrappedSlide(gradient: Theme.slideCTA) {
                     VStack(spacing: 16) {
-                        Text("NÄCHSTE").font(.system(size: 38, weight: .black)).foregroundColor(.white.opacity(0.6))
-                        Text("WOCHE\nBESSER.").font(.system(size: 52, weight: .black)).foregroundColor(.white)
+                        Text(K.L.de ? "NÄCHSTE" : "DO BETTER").font(.system(size: 38, weight: .black)).foregroundColor(.white.opacity(0.6))
+                        Text(K.L.de ? "WOCHE\nBESSER." : "NEXT WEEK.").font(.system(size: 52, weight: .black)).foregroundColor(.white)
                             .multilineTextAlignment(.center)
                         Button {
                             hapticSuccess()
                             onDismiss()
                         } label: {
-                            Text("Los geht's")
+                            Text(K.L.de ? "Los geht's" : "Let's go")
                                 .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(K.accentDark)
                                 .padding(.horizontal, 40).padding(.vertical, 16)

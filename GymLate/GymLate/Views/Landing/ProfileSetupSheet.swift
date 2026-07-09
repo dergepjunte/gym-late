@@ -18,8 +18,8 @@ struct ProfileSetupSheet: View {
 
     enum Mode { case create, login }
 
-    private let colorOptions = ["#7c3aed", "#db2777", "#ea580c", "#16a34a", "#0891b2", "#ca8a04"]
-    private let emojiOptions = ["🏋️", "💪", "🔥", "⚡", "🎯", "🦾", "🚀", "🏆"]
+    private let colorOptions = K.avatarColors
+    private let emojiOptions = K.avatarEmojis
 
     var body: some View {
         NavigationStack {
@@ -35,14 +35,14 @@ struct ProfileSetupSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(GymBackground())
-            .navigationTitle(mode == .create ? "Profil erstellen" : "Willkommen zurück!")
+            .navigationTitle(mode == .create ? (K.L.de ? "Profil erstellen" : "Create your profile") : (K.L.de ? "Willkommen zurück!" : "Welcome back!"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Abbrechen") { dismiss() }
+                    Button(K.L.cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(mode == .create ? "Erstellen" : "Einloggen") {
+                    Button(mode == .create ? (K.L.de ? "Erstellen" : "Create") : (K.L.de ? "Einloggen" : "Log in")) {
                         Task { await submit() }
                     }
                     .disabled(isLoading || name.trimmingCharacters(in: .whitespaces).isEmpty)
@@ -59,10 +59,10 @@ struct ProfileSetupSheet: View {
 
     private var createSection: some View {
         Group {
-            Section("Dein Name") {
-                TextField("Name eingeben…", text: $name)
+            Section(K.L.de ? "Dein Name" : "Your name") {
+                TextField(K.L.de ? "Name eingeben…" : "Enter name…", text: $name)
             }
-            Section("Avatar") {
+            Section(K.L.epEmojiLbl) {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(emojiOptions, id: \.self) { e in
@@ -81,7 +81,7 @@ struct ProfileSetupSheet: View {
                     .padding(.vertical, 4)
                 }
             }
-            Section("Farbe") {
+            Section(K.L.epColorLbl) {
                 HStack(spacing: 12) {
                     ForEach(colorOptions, id: \.self) { c in
                         Button { color = c } label: {
@@ -97,7 +97,7 @@ struct ProfileSetupSheet: View {
             }
             if !isNew {
                 Section {
-                    Button("Bereits registriert? Einloggen →") {
+                    Button(K.L.de ? "Bereits registriert? Einloggen →" : "Already registered? Log in →") {
                         withAnimation { mode = .login }
                     }
                     .foregroundColor(K.accentDark)
@@ -108,15 +108,15 @@ struct ProfileSetupSheet: View {
 
     private var loginSection: some View {
         Group {
-            Section("Dein Name") {
-                TextField("Name eingeben…", text: $name)
+            Section(K.L.de ? "Dein Name" : "Your name") {
+                TextField(K.L.de ? "Name eingeben…" : "Enter name…", text: $name)
             }
             Section("Recovery Code") {
                 SecureField("XXXX-XXXX-XXXX", text: $recoveryCode)
                     .textInputAutocapitalization(.characters)
             }
             Section {
-                Button("Neu hier? Profil erstellen →") {
+                Button(K.L.de ? "Neu hier? Profil erstellen →" : "New here? Create profile →") {
                     withAnimation { mode = .create }
                 }
                 .foregroundColor(K.accentDark)
@@ -126,7 +126,7 @@ struct ProfileSetupSheet: View {
 
     private func submit() async {
         let n = name.trimmingCharacters(in: .whitespaces)
-        guard !n.isEmpty else { error = "Bitte Namen eingeben."; return }
+        guard !n.isEmpty else { error = K.L.de ? "Bitte Namen eingeben." : "Please enter a name."; return }
         isLoading = true; error = ""
         do {
             if mode == .create {
@@ -150,11 +150,11 @@ struct ProfileSetupSheet: View {
                 dismiss()
             }
         } catch APIError.nameTaken {
-            error = "Dieser Name ist bereits vergeben."
+            error = K.L.errNameTaken
         } catch APIError.unauthorized {
-            error = "Falscher Recovery Code."
+            error = K.L.errWrongCode
         } catch APIError.notFound {
-            error = "Nutzer nicht gefunden."
+            error = K.L.de ? "Nutzer nicht gefunden." : "User not found."
         } catch {
             self.error = error.localizedDescription
         }
@@ -172,9 +172,9 @@ struct RecoveryCodeSheet: View {
             VStack(spacing: 24) {
                 Text("🔑")
                     .font(.system(size: 60))
-                Text("Recovery Code sichern!")
+                Text(K.L.de ? "Recovery Code sichern!" : "Save your Recovery Code!")
                     .font(.title2.bold())
-                Text("Ohne diesen Code kannst du dich auf neuen Geräten nicht einloggen.")
+                Text(K.L.de ? "Ohne diesen Code kannst du dich auf neuen Geräten nicht einloggen." : "Without this code you can't log in on new devices.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -188,12 +188,12 @@ struct RecoveryCodeSheet: View {
                     .onTapGesture { copyCode() }
 
                 Button { copyCode() } label: {
-                    Label(copied ? "Kopiert ✓" : "Code kopieren", systemImage: "doc.on.doc")
+                    Label(copied ? (K.L.de ? "Kopiert ✓" : "Copied ✓") : (K.L.de ? "Code kopieren" : "Copy Code"), systemImage: "doc.on.doc")
                         .accentButton()
                 }
                 .padding(.horizontal)
 
-                Button("Ich hab's gespeichert! →") {
+                Button(K.L.de ? "Ich hab's gespeichert! →" : "I've saved it! →") {
                     onDone()
                 }
                 .foregroundColor(K.accentDark)

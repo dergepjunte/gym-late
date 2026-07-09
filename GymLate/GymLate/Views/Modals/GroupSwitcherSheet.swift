@@ -4,6 +4,7 @@ struct GroupSwitcherSheet: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) var dismiss
     @State private var showJoin = false
+    @State private var showCreate = false
 
     private var allGroups: [GroupInfo] { LocalStore.shared.allGroups }
 
@@ -28,11 +29,11 @@ struct GroupSwitcherSheet: View {
                             }
                             Spacer()
                             if g.id == appState.activeGroup?.id {
-                                Text("Aktiv")
+                                Text(K.L.mgsActive)
                                     .font(.system(size: 11, weight: .semibold))
                                     .foregroundColor(K.accentDark)
                             } else {
-                                Text("Wechseln")
+                                Text(K.L.mgsSwitch)
                                     .font(.system(size: 11))
                                     .foregroundColor(.secondary)
                             }
@@ -48,21 +49,31 @@ struct GroupSwitcherSheet: View {
                             showJoin = true
                         }
                     } label: {
-                        Label("Einer anderen Gruppe beitreten", systemImage: "link")
+                        Label(K.L.mgsJoin, systemImage: "link")
+                            .foregroundColor(K.accentDark)
+                    }
+                    Button {
+                        dismiss()
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            showCreate = true
+                        }
+                    } label: {
+                        Label(K.L.mgsCreate, systemImage: "plus.circle")
                             .foregroundColor(K.accentDark)
                     }
                 }
             }
             .scrollContentBackground(.hidden)
             .background(GymBackground())
-            .navigationTitle("Meine Gruppen")
+            .navigationTitle(K.L.mgsTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Schließen") { dismiss() }
+                    Button(K.L.close) { dismiss() }
                 }
             }
         }
         .sheet(isPresented: $showJoin) { JoinGroupSheet() }
+        .sheet(isPresented: $showCreate) { CreateGroupSheet() }
     }
 }

@@ -178,7 +178,36 @@ final class APIClient {
                       adminPassword: adminPassword))
     }
 
+    func patchEntry(groupId: String, entryId: String, type: String, date: String,
+                    mins: Int? = nil, reason: String? = nil, adminPassword: String) async throws {
+        struct Body: Encodable {
+            let type: String; let date: String; let mins: Int?; let reason: String?
+            let adminPassword: String
+        }
+        let _: OkResponse = try await request("PATCH",
+            path: "/api/groups/\(groupId)/entries/\(entryId)",
+            body: Body(type: type, date: date, mins: mins, reason: reason,
+                      adminPassword: adminPassword))
+    }
+
+    // MARK: - Fixed check-in time (beta)
+
+    func setCheckinTime(groupId: String, date: String, time: String) async throws {
+        struct Body: Encodable { let date: String; let time: String }
+        struct Resp: Decodable { let ok: Bool }
+        let _: Resp = try await request("POST", path: "/api/groups/\(groupId)/checkin-time",
+                                        body: Body(date: date, time: time))
+    }
+
     // MARK: - Admin
+
+    func createTestGroup(adminPassword: String) async throws -> (group: GroupInfo, user: RegisterResponse) {
+        struct Body: Encodable { let adminPassword: String }
+        struct Resp: Decodable { let group: GroupInfo; let user: RegisterResponse }
+        let r: Resp = try await request("POST", path: "/api/test-group",
+                                        body: Body(adminPassword: adminPassword))
+        return (r.group, r.user)
+    }
 
     func verifyAdmin(password: String) async throws -> Bool {
         struct Body: Encodable { let adminPassword: String }

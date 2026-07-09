@@ -1,77 +1,81 @@
 import SwiftUI
 
+/// Woche tab — mirrors the website's #pane-week:
+/// streak hero (grey/lit flame + check-in hint), fixed-time hero,
+/// "Diese Woche" label, stat strip, skip chip, entry list.
 struct WeekView: View {
     @EnvironmentObject var appState: AppState
     @Binding var showLogEntry: Bool
     @Binding var toast: String?
 
+    @State private var editingEntry: Entry?
+
     private var weekEntries: [Entry] {
         appState.groupData?.entriesThisWeek() ?? []
     }
-
-    private var lateEntries: [Entry] {
-        weekEntries.filter { $0.type == "late" }
-    }
-
-    private var me: Person? {
-        guard let profile = appState.userProfile,
-              let data = appState.groupData else { return nil }
-        return data.people.first { $0.id == profile.userId }
-    }
+    private var lateEntries: [Entry] { weekEntries.filter { $0.type == "late" } }
+    private var skipEntries: [Entry] { weekEntries.filter { $0.type == "skip" } }
+    private var totalMins: Int { lateEntries.reduce(0) { $0 + $1.mins } }
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                // My streak card
-                if let me = me {
-                    StreakCard(person: me)
+            VStack(spacing: 14) {
+                // Streak hero — tap opens the check-in modal, like the website
+                if let info = appState.myStreakInfo() {
+                    StreakHero(streak: info.streak, extendedToday: info.extendedToday) {
+                        showLogEntry = true
+                        haptic(.medium)
+                    }
+                    .padding(.horizontal, 16)
                 }
 
-                // Log button
-                Button {
-                    showLogEntry = true
-                    haptic(.medium)
-                } label: {
-                    HStack {
-                        Image(systemName: "plus.circle.fill").font(.title2)
-                        Text("Check-in / Verspätung eintragen")
-                            .font(Theme.body(15, .bold))
-                    }
-                    .foregroundColor(K.onAccent)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(
-                        LinearGradient(colors: Theme.accentGradient,
-                                      startPoint: .leading, endPoint: .trailing)
-                        .cornerRadius(18)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 18, style: .continuous)
-                            .fill(LinearGradient(
-                                stops: [.init(color: .white.opacity(0.35), location: 0),
-                                        .init(color: .clear, location: 0.45)],
-                                startPoint: .topLeading, endPoint: .bottom))
-                            .allowsHitTesting(false)
-                    )
+                // Fixed check-in time hero (beta)
+                if let data = appState.groupData, data.fixedCheckinEnabled,
+                   data.checkinTimeDate == dateYMD(Date()), let time = data.checkinTime {
+                    CheckinTimeHero(time: time, toast: $toast)
+                        .padding(.horizontal, 16)
                 }
+
+                // Section label + stat strip
+                Text(K.L.lblWeek).eyebrow()
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 6)
+
+                HStack(spacing: 0) {
+                    VStack(spacing: 2) {
+                        Text("\(lateEntries.count)")
+                            .font(Theme.display(28))
+                            .foregroundColor(lateEntries.isEmpty ? .primary : K.red)
+                        Text(K.L.sCountLbl)
+                            .font(Theme.body(11)).foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    Divider().frame(height: 36)
+                    VStack(spacing: 2) {
+                        Text("\(totalMins)")
+                            .font(Theme.display(28))
+                        Text(K.L.sMinLbl)
+                            .font(Theme.body(11)).foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .padding(.vertical, 12)
+                .glassCard()
                 .padding(.horizontal, 16)
 
-                // This week's header
-                HStack(alignment: .firstTextBaseline) {
-                    Text("Diese Woche").eyebrow()
-                    Spacer()
-                    Text("\(lateEntries.count) Verspätungen")
-                        .font(Theme.body(12, .semibold))
-                        .foregroundColor(.secondary)
+                if !skipEntries.isEmpty {
+                    Text("⊘ \(skipEntries.count) \(K.L.skipped)")
+                        .font(Theme.body(12, .bold)).foregroundColor(K.gold)
+                        .padding(.horizontal, 12).padding(.vertical, 5)
+                        .background(Capsule().fill(K.gold.opacity(0.14)))
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 6)
 
                 // Entries
                 if weekEntries.isEmpty {
                     VStack(spacing: 8) {
                         Text("🏃").font(.system(size: 48))
-                        Text("Noch niemand zu spät!")
+                        Text(K.L.emptyWeek)
                             .font(Theme.body(15))
                             .foregroundColor(.secondary)
                     }
@@ -80,7 +84,10 @@ struct WeekView: View {
                 } else {
                     LazyVStack(spacing: 8) {
                         ForEach(weekEntries) { entry in
-                            EntryRow(entry: entry)
+                            EntryRow(entry: entry,
+                                     adminMode: appState.adminMode,
+                                     onEdit: { editingEntry = entry },
+                                     onDelete: { Task { await deleteEntry(entry) } })
                         }
                     }
                     .padding(.horizontal, 16)
@@ -90,108 +97,156 @@ struct WeekView: View {
             }
             .padding(.top, 12)
         }
+        .sheet(item: $editingEntry) { e in
+            EditEntrySheet(entry: e, toast: $toast)
+        }
+    }
+
+    private func deleteEntry(_ entry: Entry) async {
+        guard let group = appState.activeGroup, let pw = appState.adminPassword else { return }
+        do {
+            try await APIClient.shared.deleteEntry(groupId: group.id, entryId: entry.id,
+                                                   adminPassword: pw)
+            await appState.refreshData()
+            haptic(.medium)
+        } catch {
+            toast = K.L.errServer
+        }
     }
 }
 
-// MARK: - Streak Card
+// MARK: - Streak Hero (website: #streak-hero, grey vs. lit flame)
 
-struct StreakCard: View {
-    let person: Person
-    @Environment(\.colorScheme) private var scheme
+struct StreakHero: View {
+    let streak: Int
+    let extendedToday: Bool
+    let onTap: () -> Void
 
     var body: some View {
-        let numberGradient = LinearGradient(
-            colors: Theme.numberGradient(for: scheme),
-            startPoint: .top, endPoint: .bottom)
+        Button { onTap() } label: {
+            HStack(spacing: 14) {
+                Image(systemName: "flame.fill")
+                    .font(.system(size: 40))
+                    .foregroundStyle(
+                        extendedToday
+                        ? AnyShapeStyle(LinearGradient(
+                            colors: [Color(hex: "#fde047"), Color(hex: "#fb923c"), Color(hex: "#dc2626")],
+                            startPoint: .top, endPoint: .bottom))
+                        : AnyShapeStyle(Color.secondary.opacity(0.45)))
+                    .shadow(color: extendedToday ? Color(hex: "#fb923c").opacity(0.55) : .clear,
+                            radius: 12)
 
-        HStack(spacing: 16) {
-            ZStack {
-                Circle()
-                    .fill(Color(hex: person.avatarColor).opacity(0.22))
-                    .frame(width: 60, height: 60)
-                Circle()
-                    .strokeBorder(LinearGradient(colors: Theme.accentGradient,
-                                                 startPoint: .topLeading, endPoint: .bottomTrailing),
-                                  lineWidth: 2)
-                    .frame(width: 60, height: 60)
-                Text(person.avatarEmoji)
-                    .font(.system(size: 30))
-            }
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text("\(person.name) · Streak").eyebrow()
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    HStack(alignment: .firstTextBaseline, spacing: 5) {
-                        Image(systemName: "flame.fill")
-                            .font(.system(size: 26))
-                            .foregroundStyle(numberGradient)
-                        Text("\(person.streak)")
-                            .font(Theme.display(42))
-                            .foregroundStyle(numberGradient)
-                    }
-                    Text(person.streak == 1 ? "Tag" : "Tage")
-                        .font(Theme.body(13, .semibold))
+                    Text("\(streak)")
+                        .font(Theme.display(44))
+                        .lineLimit(1)
+                        .fixedSize()
+                        .foregroundColor(extendedToday ? Color(hex: "#f97316") : .secondary)
+                    Text(K.L.shDays(streak))
+                        .font(Theme.body(14, .semibold))
                         .foregroundColor(.secondary)
                 }
+
+                Spacer()
+
+                Text(extendedToday ? K.L.shHintDone : K.L.shHintOpen)
+                    .font(Theme.body(12, .bold))
+                    .foregroundColor(K.amberText)
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 130, alignment: .trailing)
             }
-            Spacer()
-            if person.freezes > 0 {
-                HStack(spacing: 4) {
-                    Image(systemName: "snowflake")
-                    Text("\(person.freezes)")
-                }
-                .font(Theme.body(14, .bold))
-                .foregroundColor(.cyan)
-                .padding(.horizontal, 12).padding(.vertical, 7)
-                .background(Capsule().fill(Color.cyan.opacity(0.14)))
-            }
+            .padding(16)
+            .glassCard()
         }
-        .padding(16)
-        .glassCard()
-        .padding(.horizontal, 16)
+        .buttonStyle(.plain)
     }
 }
 
-// MARK: - Entry Row
+// MARK: - Fixed check-in time hero (website: #checkin-time-hero)
+
+struct CheckinTimeHero: View {
+    let time: String
+    @Binding var toast: String?
+    @EnvironmentObject var appState: AppState
+
+    @State private var editing = false
+    @State private var pickedTime = Date()
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Text("⏰").font(.system(size: 22))
+            if editing {
+                DatePicker("", selection: $pickedTime, displayedComponents: .hourAndMinute)
+                    .labelsHidden()
+                Button(K.L.save) { Task { await saveTime() } }
+                    .font(Theme.body(13, .bold))
+                    .foregroundColor(K.amberText)
+                Spacer()
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(K.L.checkinTimeChipLbl)
+                        .font(Theme.body(12)).foregroundColor(.secondary)
+                    Text(time)
+                        .font(Theme.body(17, .heavy))
+                        .foregroundColor(K.amberText)
+                }
+                Spacer()
+                Button(K.L.checkinTimeChangeBtn) {
+                    if let d = parseTimeHHMM(time) { pickedTime = d }
+                    editing = true
+                }
+                .font(Theme.body(12, .bold))
+                .foregroundColor(K.amberText)
+            }
+        }
+        .padding(.horizontal, 16).padding(.vertical, 12)
+        .glassCard()
+    }
+
+    private func saveTime() async {
+        guard let group = appState.activeGroup else { return }
+        let f = DateFormatter(); f.dateFormat = "HH:mm"
+        let hhmm = f.string(from: pickedTime)
+        do {
+            try await APIClient.shared.setCheckinTime(groupId: group.id,
+                                                      date: dateYMD(Date()), time: hhmm)
+            await appState.refreshData()
+            editing = false
+        } catch {
+            toast = K.L.errServer
+        }
+    }
+
+    private func parseTimeHHMM(_ s: String) -> Date? {
+        let f = DateFormatter(); f.dateFormat = "HH:mm"
+        return f.date(from: s)
+    }
+}
+
+// MARK: - Entry Row (website: .entry — initials avatar, name, date, type badge)
 
 struct EntryRow: View {
     let entry: Entry
-
-    var typeIcon: String {
-        switch entry.type {
-        case "attend": return "checkmark.circle.fill"
-        case "skip":   return "xmark.circle.fill"
-        default:       return "clock.fill"
-        }
-    }
-    var typeColor: Color {
-        switch entry.type {
-        case "attend": return K.green
-        case "skip":   return .secondary
-        default:       return K.red
-        }
-    }
-    var typeLabel: String {
-        switch entry.type {
-        case "attend": return "eingecheckt"
-        case "skip":   return "skip"
-        default:       return "\(entry.mins) Min."
-        }
-    }
+    var adminMode = false
+    var onEdit: (() -> Void)? = nil
+    var onDelete: (() -> Void)? = nil
 
     /// Entry logged offline, still waiting to reach the server.
     private var isPendingSync: Bool { entry.id.hasPrefix("local-") }
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: typeIcon)
-                .foregroundColor(typeColor)
-                .font(.system(size: 20))
+            Text(initials(entry.person))
+                .font(Theme.body(13, .bold))
+                .foregroundColor(K.onAccent)
+                .frame(width: 40, height: 40)
+                .background(Circle().fill(LinearGradient(colors: Theme.accentGradient,
+                                                         startPoint: .topLeading, endPoint: .bottomTrailing)))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.person)
                     .font(Theme.body(15, .semibold))
-                Text(entry.date)
+                Text(fmtFull(entry.date))
                     .font(Theme.body(12))
                     .foregroundColor(.secondary)
             }
@@ -201,9 +256,26 @@ struct EntryRow: View {
                     .font(.system(size: 12))
                     .foregroundColor(.secondary)
             }
-            Text(typeLabel)
-                .font(Theme.body(13, .bold))
-                .foregroundColor(typeColor)
+            EntryBadge(entry: entry)
+
+            if adminMode {
+                Button { onEdit?() } label: {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .frame(width: 28, height: 28)
+                        .background(Circle().fill(Color(.secondarySystemFill)))
+                }
+                .buttonStyle(.plain)
+                Button { onDelete?() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(K.red)
+                        .frame(width: 28, height: 28)
+                        .background(Circle().fill(K.red.opacity(0.12)))
+                }
+                .buttonStyle(.plain)
+            }
         }
         .padding(14)
         .opacity(isPendingSync ? 0.6 : 1)

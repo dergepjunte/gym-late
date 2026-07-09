@@ -20,7 +20,7 @@ struct JoinGroupSheet: View {
                 } header: {
                     Text("6-stelliger Gruppencode")
                 } footer: {
-                    Text("Den Code bekommst du von jemandem der Gruppe.")
+                    Text(K.L.de ? "Den Code bekommst du von jemandem der Gruppe." : "Get the code from someone in the group.")
                 }
                 if !error.isEmpty {
                     Section { Text(error).foregroundColor(.red) }
@@ -28,14 +28,14 @@ struct JoinGroupSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(GymBackground())
-            .navigationTitle("Gruppe beitreten")
+            .navigationTitle(K.L.de ? "Gruppe beitreten" : "Join Group")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Abbrechen") { dismiss() }
+                    Button(K.L.cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Beitreten") { Task { await join() } }
+                    Button(K.L.de ? "Beitreten" : "Join") { Task { await join() } }
                         .disabled(isLoading || code.count < 6)
                 }
             }
@@ -48,7 +48,7 @@ struct JoinGroupSheet: View {
     }
 
     private func join() async {
-        guard code.count == 6 else { error = "Code muss 6 Zeichen haben."; return }
+        guard code.count == 6 else { error = K.L.de ? "Code muss 6 Zeichen haben." : "Code must be 6 characters."; return }
         isLoading = true
         do {
             let g = try await APIClient.shared.joinGroup(code: code)

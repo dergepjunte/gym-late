@@ -16,6 +16,8 @@ struct AppRootView: View {
     @State private var showLogEntry = false
     @State private var showSettings = false
     @State private var showGroupSwitcher = false
+    @State private var showMyProfile = false
+    @State private var showAdminLogin = false
     @State private var toast: String?
 
     var body: some View {
@@ -23,10 +25,12 @@ struct AppRootView: View {
             GymBackground().ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Group pill header
-                GroupPillHeader(
+                AppHeader(
                     onSettings: { showSettings = true },
-                    onSwitchGroup: { showGroupSwitcher = true }
+                    onMyProfile: { showMyProfile = true },
+                    onAdminUnlock: { showAdminLogin = true },
+                    onSwitchGroup: { showGroupSwitcher = true },
+                    toast: $toast
                 )
 
                 if #available(iOS 18.0, *) {
@@ -49,10 +53,35 @@ struct AppRootView: View {
                 GeoPromptView { Task { await doGeoCheckin() } }
                     .zIndex(500)
             }
+            // Check-in ceremony (website: late-anim → streak-anim → chest)
+            if let mins = appState.lateAnimMins {
+                LateAnimView(minsOff: mins) {
+                    appState.lateAnimMins = nil
+                    let next = appState.afterLateAnim; appState.afterLateAnim = nil
+                    next?()
+                }
+                .zIndex(600)
+            }
+            if let streak = appState.streakAnimStreak {
+                StreakAnimView(newStreak: streak) {
+                    appState.streakAnimStreak = nil
+                    let next = appState.afterStreakAnim; appState.afterStreakAnim = nil
+                    next?()
+                }
+                .zIndex(610)
+            }
+            if let chest = appState.chestResult {
+                ChestView(chest: chest) { appState.chestResult = nil }
+                    .zIndex(620)
+            }
         }
         .sheet(isPresented: $showLogEntry) { LogEntrySheet(toast: $toast) }
         .sheet(isPresented: $showSettings) { SettingsSheet() }
         .sheet(isPresented: $showGroupSwitcher) { GroupSwitcherSheet() }
+        .sheet(isPresented: $showMyProfile) {
+            if let me = myPerson { ProfileView(person: me) }
+        }
+        .sheet(isPresented: $showAdminLogin) { AdminLoginSheet(toast: $toast) }
         .onReceive(SyncEngine.shared.$syncErrorMessage) { msg in
             if let msg {
                 toast = msg
@@ -62,25 +91,30 @@ struct AppRootView: View {
         .toast($toast)
     }
 
+    private var myPerson: Person? {
+        guard let profile = appState.userProfile else { return nil }
+        return appState.groupData?.people.first { $0.id == profile.userId }
+    }
+
     /// iOS 18+: native TabView. On iOS 26 this renders the floating Liquid
     /// Glass bar — the glass pill grows on touch and tracks the finger,
     /// exactly like Apple Music. No custom animation code needed.
     @available(iOS 18.0, *)
     private var nativeTabView: some View {
         TabView(selection: $selectedTab) {
-            Tab(K.L.navWeek, systemImage: "calendar.badge.clock", value: AppTab.week) {
+            Tab(K.L.navWeek, systemImage: "calendar", value: AppTab.week) {
                 WeekView(showLogEntry: $showLogEntry, toast: $toast)
                     .background(GymBackground().ignoresSafeArea())
             }
-            Tab(K.L.navHistory, systemImage: "clock.arrow.circlepath", value: AppTab.history) {
+            Tab(K.L.navHistory, systemImage: "calendar.badge.clock", value: AppTab.history) {
                 HistoryView()
                     .background(GymBackground().ignoresSafeArea())
             }
-            Tab(K.L.navRecap, systemImage: "star.fill", value: AppTab.recap) {
+            Tab(K.L.navRecap, systemImage: "chart.bar.fill", value: AppTab.recap) {
                 RecapView()
                     .background(GymBackground().ignoresSafeArea())
             }
-            Tab(K.L.navPeople, systemImage: "person.3.fill", value: AppTab.people) {
+            Tab(K.L.navPeople, systemImage: "person.2.fill", value: AppTab.people) {
                 PeopleView()
                     .background(GymBackground().ignoresSafeArea())
             }
@@ -108,14 +142,20 @@ struct AppRootView: View {
     private func doGeoCheckin() async {
         guard let profile = appState.userProfile else { return }
         appState.showGeoPrompt = false
+        let lateness = appState.computeCheckinLateness()
+        let wasExtended = appState.myStreakInfo()?.extendedToday ?? false
         do {
             let today = dateYMD(Date())
-            let result = try await appState.logEntry(person: profile.name,
-                                                     date: today, type: "attend")
-            if case .queued = result {
-                toast = "Offline gespeichert – wird synchronisiert ✓"
-            } else {
-                toast = K.L.attend + " ✓"
+            let result = try await appState.logEntry(
+                person: profile.name, date: today,
+                type: (lateness?.isLate == true) ? "late" : "attend",
+                mins: (lateness?.isLate == true) ? lateness?.minsOff : nil)
+            switch result {
+            case .synced(let resp):
+                appState.runCheckinCeremony(chest: resp.chest, wasExtended: wasExtended,
+                                            lateness: lateness) { toast = $0 }
+            case .queued:
+                toast = K.L.toastQueuedOffline
             }
         } catch {
             toast = K.L.errServer
@@ -123,65 +163,128 @@ struct AppRootView: View {
     }
 }
 
-// MARK: - Group Pill Header
+// MARK: - Header (website: 🏋️ GymLate · gear · avatar, group pill below)
 
-struct GroupPillHeader: View {
+struct AppHeader: View {
     @EnvironmentObject var appState: AppState
     let onSettings: () -> Void
+    let onMyProfile: () -> Void
+    let onAdminUnlock: () -> Void
     let onSwitchGroup: () -> Void
+    @Binding var toast: String?
+
+    @State private var logoTaps = 0
+    @State private var lastTap = Date.distantPast
 
     var body: some View {
-        HStack {
-            Button { onSwitchGroup() } label: {
-                HStack(spacing: 6) {
+        VStack(spacing: 8) {
+            // Title row
+            ZStack {
+                HStack(spacing: 8) {
+                    // 5× tap on the logo unlocks admin, like the website
+                    Text("🏋️")
+                        .font(.system(size: 24))
+                        .onTapGesture { registerLogoTap() }
+                    Text(K.L.appName)
+                        .font(Theme.heading(20))
+                    if appState.adminMode {
+                        Text("ADMIN")
+                            .font(.system(size: 9, weight: .black))
+                            .foregroundColor(K.onAccent)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(Capsule().fill(K.accent))
+                    }
+                }
+
+                HStack(spacing: 8) {
+                    Spacer()
+                    if appState.pendingSyncCount > 0 {
+                        HStack(spacing: 2) {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                            Text("\(appState.pendingSyncCount)")
+                        }
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(K.accentDeep)
+                    } else if appState.isOffline {
+                        Image(systemName: "wifi.slash")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    Button { onSettings() } label: {
+                        Image(systemName: "gearshape.fill")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 16))
+                            .frame(width: 34, height: 34)
+                            .glassCard(radius: 17)
+                    }
+                    .buttonStyle(.plain)
+                    Button { onMyProfile() } label: {
+                        AvatarView(emoji: appState.userProfile?.avatarEmoji ?? "🏋️",
+                                   color: appState.userProfile?.avatarColor ?? "#7c3aed",
+                                   img: appState.userProfile?.avatarImg,
+                                   size: 34)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16)
+
+            // Group pill: [switch] name · CODE (tap to copy)
+            HStack(spacing: 8) {
+                if LocalStore.shared.allGroups.count > 1 {
+                    Button { onSwitchGroup() } label: {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(K.amberText)
+                    }
+                    .buttonStyle(.plain)
+                }
+                Text(appState.groupData?.name ?? "")
+                    .font(Theme.body(14, .bold))
+                    .lineLimit(1)
+                Text("·").foregroundColor(.secondary)
+                Button {
+                    UIPasteboard.general.string = appState.groupData?.code ?? ""
+                    toast = K.L.toastCopied
+                    hapticSuccess()
+                } label: {
                     Text(appState.groupData?.code ?? "")
                         .font(.system(size: 13, weight: .bold, design: .monospaced))
+                        .kerning(2)
                         .foregroundColor(K.amberText)
-                    if LocalStore.shared.allGroups.count > 1 {
-                        Image(systemName: "chevron.down.circle.fill")
-                            .foregroundColor(K.amberText).font(.system(size: 14))
-                    }
                 }
-                .padding(.horizontal, 14).padding(.vertical, 8)
-                .glassCard(radius: 20)
+                .buttonStyle(.plain)
+                Text(K.L.pillHint)
+                    .font(Theme.body(10))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
-            .buttonStyle(.plain)
-
-            Spacer()
-
-            HStack(spacing: 6) {
-                Text(appState.groupData?.name ?? "")
-                    .font(Theme.heading(15))
-                    .lineLimit(1)
-                if appState.pendingSyncCount > 0 {
-                    HStack(spacing: 2) {
-                        Image(systemName: "arrow.triangle.2.circlepath")
-                        Text("\(appState.pendingSyncCount)")
-                    }
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(K.accentDeep)
-                } else if appState.isOffline {
-                    Image(systemName: "wifi.slash")
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                }
-            }
-
-            Spacer()
-
-            Button { onSettings() } label: {
-                Image(systemName: "gearshape.fill")
-                    .foregroundColor(.secondary)
-                    .font(.system(size: 18))
-            }
+            .padding(.horizontal, 16).padding(.vertical, 9)
+            .glassCard(radius: 22)
+            .padding(.horizontal, 16)
         }
-        .padding(.horizontal, 16)
         .padding(.top, 8)
         .padding(.bottom, 4)
     }
+
+    private func registerLogoTap() {
+        let now = Date()
+        if now.timeIntervalSince(lastTap) > 2 { logoTaps = 0 }
+        lastTap = now
+        logoTaps += 1
+        if logoTaps >= 5 {
+            logoTaps = 0
+            if appState.adminMode {
+                appState.adminPassword = nil
+                toast = K.L.toastAdmOut
+            } else {
+                onAdminUnlock()
+            }
+            haptic(.medium)
+        }
+    }
 }
 
-// MARK: - Bottom Nav
+// MARK: - Bottom Nav (iOS 17 fallback)
 
 /// Floating Liquid Glass capsule bar. On iOS 26 it uses the real glassEffect;
 /// earlier systems fall back to the shared glass recipe. The selected tab
@@ -192,10 +295,10 @@ struct BottomNav: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            navItem(.week, icon: "calendar.badge.clock", label: K.L.navWeek)
-            navItem(.history, icon: "clock.arrow.circlepath", label: K.L.navHistory)
-            navItem(.recap, icon: "star.fill", label: K.L.navRecap)
-            navItem(.people, icon: "person.3.fill", label: K.L.navPeople)
+            navItem(.week, icon: "calendar", label: K.L.navWeek)
+            navItem(.history, icon: "calendar.badge.clock", label: K.L.navHistory)
+            navItem(.recap, icon: "chart.bar.fill", label: K.L.navRecap)
+            navItem(.people, icon: "person.2.fill", label: K.L.navPeople)
         }
         .padding(5)
         .background(NavGlassCapsule())
@@ -264,6 +367,6 @@ private struct NavGlassCapsule: View {
                 startPoint: .top, endPoint: .bottom), lineWidth: 1)
             .allowsHitTesting(false)
         )
-        .shadow(color: g.shadow, radius: 20, x: 0, y: 10)
+        .shadow(color: g.shadow, radius: 16, x: 0, y: 8)
     }
 }

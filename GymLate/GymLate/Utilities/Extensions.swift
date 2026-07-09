@@ -96,6 +96,48 @@ extension Date {
     var isoWeekStart: Date { Calendar.iso8601UTC.startOfWeek(for: self) }
 }
 
+// MARK: - Localized date strings (mirror the website's fmtShort/fmtFull)
+
+/// "6. Juli" / "Jul 6" — short day+month in the user's locale.
+func fmtShort(_ ymd: String) -> String {
+    guard let d = parseDate(ymd) else { return ymd }
+    let f = DateFormatter()
+    f.timeZone = TimeZone(identifier: "UTC")
+    f.setLocalizedDateFormatFromTemplate("d MMM")
+    return f.string(from: d)
+}
+
+/// "Mo., 6. Juli" / "Mon, Jul 6" — weekday+day+month in the user's locale.
+func fmtFull(_ ymd: String) -> String {
+    guard let d = parseDate(ymd) else { return ymd }
+    let f = DateFormatter()
+    f.timeZone = TimeZone(identifier: "UTC")
+    f.setLocalizedDateFormatFromTemplate("EEE d MMM")
+    return f.string(from: d)
+}
+
+/// Up to two initials, like the website's `initials()`.
+func initials(_ name: String) -> String {
+    let parts = name.split(separator: " ")
+    if parts.count >= 2, let a = parts[0].first, let b = parts[1].first {
+        return String([a, b]).uppercased()
+    }
+    return String(name.prefix(2)).uppercased()
+}
+
+/// Mon=0 … Sun=6 index for a yyyy-MM-dd date (ISO week order).
+func isoWeekdayIndex(_ ymd: String) -> Int {
+    guard let d = parseDate(ymd) else { return 0 }
+    let w = Calendar.iso8601UTC.component(.weekday, from: d) // 1=Sun
+    return w == 1 ? 6 : w - 2
+}
+
+/// True when the gym-days mask marks this date as a scheduled day.
+func dayScheduled(_ ymd: String, mask: String) -> Bool {
+    guard mask.count == 7 else { return false }
+    return Array(mask)[isoWeekdayIndex(ymd)] == "1"
+}
+
 // MARK: - Haptics
 
 import UIKit

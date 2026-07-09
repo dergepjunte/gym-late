@@ -30,9 +30,9 @@ struct LandingView: View {
 
                     // Feature pills
                     HStack(spacing: 10) {
-                        FeaturePill(icon: "flame.fill", label: "Streak")
-                        FeaturePill(icon: "clock.fill", label: "Zu spät?")
-                        FeaturePill(icon: "person.3.fill", label: "Crew")
+                        FeaturePill(icon: "flame.fill", label: K.L.lsFeatStreak)
+                        FeaturePill(icon: "clock.fill", label: K.L.lsFeatCheckin)
+                        FeaturePill(icon: "person.3.fill", label: K.L.lsFeatGroup)
                     }
 
                     // CTA buttons

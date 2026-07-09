@@ -1,99 +1,171 @@
 import SwiftUI
 
-/// Wrapped-style weekly recap — shows last week's summary as story slides.
+/// Rückblick tab — week blocks with a ranking list, mirrors the website's
+/// #pane-recap (renderHistory): one full-height block per completed week,
+/// hero with the most-often-late member, rows ranked by minutes.
 struct RecapView: View {
     @EnvironmentObject var appState: AppState
-    @State private var slideIndex = 0
 
-    private var lastWeekEntries: [Entry] {
-        guard let entries = appState.groupData?.entries else { return [] }
-        let cal = Calendar.iso8601UTC
-        let lastMon = cal.date(byAdding: .weekOfYear, value: -1, to: cal.startOfWeek(for: Date()))!
-        let lastSun = cal.date(byAdding: .day, value: 6, to: lastMon)!
-        let monStr = dateYMD(lastMon); let sunStr = dateYMD(lastSun)
-        return entries.filter { $0.date >= monStr && $0.date <= sunStr }
+    private struct PersonStat {
+        var count = 0, mins = 0, skips = 0
     }
 
-    private var lateEntries: [Entry] { lastWeekEntries.filter { $0.type == "late" } }
-    private var totalMins: Int { lateEntries.reduce(0) { $0 + $1.mins } }
-    private var lateKing: String? {
-        let counts = Dictionary(grouping: lateEntries, by: \.person).mapValues(\.count)
-        return counts.max(by: { $0.value < $1.value })?.key
+    private struct WeekBlock: Identifiable {
+        let id: String            // week start (Monday, yyyy-MM-dd)
+        let end: String           // Sunday
+        let byMins: [(name: String, stat: PersonStat)]
+        let skipOnly: [(name: String, stat: PersonStat)]
+    }
+
+    private var blocks: [WeekBlock] {
+        guard let entries = appState.groupData?.entries else { return [] }
+        let currentMon = dateYMD(Calendar.iso8601UTC.startOfWeek(for: Date()))
+
+        var weeks: [String: [Entry]] = [:]
+        for e in entries {
+            guard let d = parseDate(e.date) else { continue }
+            let mon = dateYMD(Calendar.iso8601UTC.startOfWeek(for: d))
+            if mon == currentMon && !appState.adminShowCurrentWeek { continue }
+            weeks[mon, default: []].append(e)
+        }
+
+        return weeks.keys.sorted(by: >).map { mon in
+            let sun = dateYMD(Calendar.iso8601UTC.date(byAdding: .day, value: 6, to: parseDate(mon)!)!)
+            var ps: [String: PersonStat] = [:]
+            for e in weeks[mon]! where e.type == "late" || e.type.isEmpty {
+                ps[e.person, default: PersonStat()].count += 1
+                ps[e.person, default: PersonStat()].mins += e.mins
+            }
+            for e in weeks[mon]! where e.type == "skip" {
+                ps[e.person, default: PersonStat()].skips += 1
+            }
+            let byMins = ps.filter { $0.value.count > 0 }
+                .sorted { ($0.value.mins, $0.value.count) > ($1.value.mins, $1.value.count) }
+                .map { (name: $0.key, stat: $0.value) }
+            let skipOnly = ps.filter { $0.value.count == 0 && $0.value.skips > 0 }
+                .sorted { $0.value.skips > $1.value.skips }
+                .map { (name: $0.key, stat: $0.value) }
+            return WeekBlock(id: mon, end: sun, byMins: byMins, skipOnly: skipOnly)
+        }
     }
 
     var body: some View {
-        if lastWeekEntries.isEmpty {
-            VStack(spacing: 16) {
-                Text("📊").font(.system(size: 60))
-                Text("Noch kein Rückblick")
-                    .font(Theme.heading(20))
-                Text("Komm nächste Woche wieder!")
-                    .font(Theme.body(15))
-                    .foregroundColor(.secondary)
+        let blocks = self.blocks
+        if blocks.isEmpty {
+            VStack(spacing: 8) {
+                Text("📅").font(.system(size: 48))
+                Text(K.L.emptyHistory)
+                    .font(Theme.body(15)).foregroundColor(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            TabView(selection: $slideIndex) {
-                SlideView(index: 0, content: {
-                    VStack(spacing: 12) {
-                        Text("LETZTE").font(.system(size: 36, weight: .black).width(.expanded)).foregroundColor(.white.opacity(0.7))
-                        Text("WOCHE").font(.system(size: 54, weight: .black).width(.expanded)).foregroundColor(.white)
+            ScrollView {
+                LazyVStack(spacing: 24) {
+                    ForEach(blocks) { block in
+                        weekBlockView(block)
                     }
-                })
-                .tag(0)
-
-                SlideView(index: 1, content: {
-                    VStack(spacing: 8) {
-                        Text("ihr wart").font(Theme.body(22)).foregroundColor(.white.opacity(0.7))
-                        Text("\(lateEntries.count)×").font(Theme.display(80)).foregroundColor(.white)
-                        Text("zu spät").font(Theme.body(22)).foregroundColor(.white.opacity(0.7))
-                    }
-                })
-                .tag(1)
-
-                SlideView(index: 2, content: {
-                    VStack(spacing: 8) {
-                        Text("ihr habt verbraten").font(Theme.body(18)).foregroundColor(.white.opacity(0.7))
-                        Text("\(totalMins)").font(Theme.display(80)).foregroundColor(.white)
-                        Text("Minuten").font(Theme.body(22)).foregroundColor(.white.opacity(0.7))
-                        if totalMins >= 60 {
-                            Text("das sind \(totalMins / 60)h \(totalMins % 60)min")
-                                .font(Theme.body(15)).foregroundColor(.white.opacity(0.5))
-                        }
-                    }
-                })
-                .tag(2)
-
-                if let king = lateKing {
-                    SlideView(index: 3, content: {
-                        VStack(spacing: 12) {
-                            Text("👑").font(.system(size: 80))
-                            Text(king).font(Theme.display(40)).foregroundColor(.white)
-                            Text("Zuspätkommer der Woche").font(Theme.body(16)).foregroundColor(.white.opacity(0.7))
-                        }
-                    })
-                    .tag(3)
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 12)
+                .padding(.bottom, 24)
             }
-            .tabViewStyle(.page(indexDisplayMode: .always))
-            .indexViewStyle(.page(backgroundDisplayMode: .always))
         }
     }
-}
 
-struct SlideView<Content: View>: View {
-    let index: Int
-    @ViewBuilder let content: () -> Content
+    @ViewBuilder
+    private func weekBlockView(_ block: WeekBlock) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(K.L.weekRange(block.id, block.end)).eyebrow()
+                .padding(.horizontal, 4)
 
-    private var bgColors: [[Color]] { Theme.slides }
+            VStack(spacing: 0) {
+                // Hero: most-often-late or "all skipped"
+                if let top = block.byMins.first {
+                    VStack(spacing: 6) {
+                        Text("★")
+                            .font(.system(size: 44))
+                            .foregroundStyle(LinearGradient(colors: Theme.accentGradient,
+                                                            startPoint: .top, endPoint: .bottom))
+                        Text(top.name).font(Theme.heading(22))
+                        Text(K.L.lateKing).font(Theme.body(13)).foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
+                } else {
+                    VStack(spacing: 6) {
+                        Text("⊘").font(.system(size: 36))
+                        Text(K.L.allSkippedTitle).font(Theme.heading(18))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 18)
+                }
 
-    var body: some View {
-        ZStack {
-            LinearGradient(
-                colors: bgColors[index % bgColors.count],
-                startPoint: .topLeading, endPoint: .bottomTrailing)
-            .ignoresSafeArea()
-            content()
+                // Ranked rows (by minutes, like the website)
+                ForEach(Array(block.byMins.enumerated()), id: \.element.name) { i, row in
+                    rankRow(rank: "\(i + 1).", gold: i == 0,
+                            name: row.name,
+                            skipTag: row.stat.skips,
+                            meta: K.L.timesLate(row.stat.count),
+                            badge: .late(row.stat.mins))
+                }
+                ForEach(block.skipOnly, id: \.name) { row in
+                    rankRow(rank: "⊘", gold: false,
+                            name: row.name,
+                            skipTag: 0,
+                            meta: "\(row.stat.skips)× \(K.L.skipped)",
+                            badge: .skip(row.stat.skips))
+                }
+            }
+            .glassCard()
         }
+    }
+
+    private enum RankBadge {
+        case late(Int), skip(Int)
+    }
+
+    @ViewBuilder
+    private func rankRow(rank: String, gold: Bool, name: String, skipTag: Int,
+                         meta: String, badge: RankBadge) -> some View {
+        HStack(spacing: 12) {
+            Text(rank)
+                .font(Theme.body(14, .bold))
+                .foregroundColor(gold ? K.gold : .secondary)
+                .frame(width: 26)
+            Text(initials(name))
+                .font(Theme.body(13, .bold))
+                .foregroundColor(K.onAccent)
+                .frame(width: 38, height: 38)
+                .background(Circle().fill(LinearGradient(colors: Theme.accentGradient,
+                                                         startPoint: .topLeading, endPoint: .bottomTrailing)))
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(name).font(Theme.body(14, .semibold))
+                    if skipTag > 0 {
+                        Text("⊘\(skipTag)")
+                            .font(Theme.body(10, .bold)).foregroundColor(K.gold)
+                            .padding(.horizontal, 6).padding(.vertical, 1)
+                            .background(Capsule().fill(K.gold.opacity(0.14)))
+                    }
+                }
+                Text(meta).font(Theme.body(12)).foregroundColor(.secondary)
+            }
+            Spacer()
+            switch badge {
+            case .late(let mins):
+                Text("\(mins) \(K.L.minsShort)")
+                    .font(Theme.body(13, .bold)).foregroundColor(K.red)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(Capsule().fill(K.red.opacity(0.14)))
+            case .skip(let n):
+                Text("⊘ \(n)")
+                    .font(Theme.body(13, .bold)).foregroundColor(K.gold)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .background(Capsule().fill(K.gold.opacity(0.14)))
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
+        .background(gold ? K.gold.opacity(0.06) : .clear)
     }
 }

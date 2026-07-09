@@ -15,10 +15,10 @@ struct CreateGroupSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Section("Gruppenname") {
-                    TextField("z.B. Montag-Crew", text: $groupName)
+                Section(K.L.de ? "Gruppenname" : "Group Name") {
+                    TextField(K.L.de ? "z.B. Montag-Crew" : "e.g. Monday Crew", text: $groupName)
                 }
-                Section("Gym-Tage") {
+                Section(K.L.de ? "Gym-Tage" : "Gym days") {
                     HStack {
                         ForEach(0..<7) { i in
                             Button {
@@ -43,14 +43,14 @@ struct CreateGroupSheet: View {
             }
             .scrollContentBackground(.hidden)
             .background(GymBackground())
-            .navigationTitle("Neue Gruppe")
+            .navigationTitle(K.L.de ? "Neue Gruppe" : "New Group")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Abbrechen") { dismiss() }
+                    Button(K.L.cancel) { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Erstellen") { Task { await create() } }
+                    Button(K.L.de ? "Erstellen" : "Create") { Task { await create() } }
                         .disabled(isLoading || groupName.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
@@ -65,7 +65,7 @@ struct CreateGroupSheet: View {
     private func create() async {
         let name = groupName.trimmingCharacters(in: .whitespaces)
         guard !name.isEmpty else { error = K.L.errServer; return }
-        guard gymDays.contains(true) else { error = "Mindestens 1 Tag wählen."; return }
+        guard gymDays.contains(true) else { error = K.L.errAtLeastOneDay; return }
         let mask = gymDays.map { $0 ? "1" : "0" }.joined()
         isLoading = true
         do {

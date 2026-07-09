@@ -77,6 +77,17 @@ final class LocalStore {
         defaults.removeObject(forKey: geoPromptSeenKey(for: date))
     }
 
+    // MARK: - Geo check-in opt-out (website: localStorage 'gymGeoEnabled')
+
+    var geoEnabled: Bool {
+        get { defaults.string(forKey: "gymGeoEnabled") != "0" }
+        set { defaults.set(newValue ? "1" : "0", forKey: "gymGeoEnabled") }
+    }
+
+    func clearWrappedSeen(weekStart: String) {
+        defaults.removeObject(forKey: wrappedSeenKey(for: weekStart))
+    }
+
     // MARK: - Admin (in-memory only — never persisted)
 
     var adminPassword: String? = nil

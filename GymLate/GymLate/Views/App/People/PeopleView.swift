@@ -1,15 +1,20 @@
 import SwiftUI
 
+/// Personen tab — mirrors the website's #pane-people:
+/// members, invite card, my groups (+ join/create), leave group, admin panel.
 struct PeopleView: View {
     @EnvironmentObject var appState: AppState
     @State private var selectedPerson: Person?
-    @State private var showGroupSwitcher = false
+    @State private var adminEditPerson: Person?
+    @State private var showJoin = false
+    @State private var showCreate = false
     @State private var toast: String?
+    @State private var confirmLeave = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
-                Text("Mitglieder")
+                Text(K.L.lblPeople)
                     .font(Theme.heading(24))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
@@ -18,7 +23,9 @@ struct PeopleView: View {
                 if let people = appState.groupData?.people, !people.isEmpty {
                     LazyVStack(spacing: 10) {
                         ForEach(people) { person in
-                            PersonRow(person: person)
+                            PersonRow(person: person,
+                                      adminMode: appState.adminMode,
+                                      onAdminEdit: { adminEditPerson = person })
                                 .onTapGesture {
                                     selectedPerson = person
                                     haptic(.light)
@@ -27,48 +34,32 @@ struct PeopleView: View {
                     }
                     .padding(.horizontal, 16)
                 } else {
-                    Text("Noch keine Mitglieder")
+                    Text(K.L.emptyPeople)
                         .foregroundColor(.secondary)
                         .padding(.top, 40)
                 }
 
-                // Invite card
+                // Invite card (website: share hint + "Code teilen" button)
                 if let code = appState.activeGroup?.code {
-                    Button {
-                        UIPasteboard.general.string = code
-                        toast = K.L.toastCopied
-                        hapticSuccess()
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "person.badge.plus")
-                                .foregroundColor(K.accentDeep)
-                                .font(.system(size: 20))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Freunde einladen")
-                                    .font(Theme.body(14, .bold))
-                                    .foregroundColor(.primary)
-                                Text("Code teilen: \(code)")
-                                    .font(.system(size: 12, design: .monospaced))
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-                            Image(systemName: "doc.on.doc")
-                                .foregroundColor(K.accentDark)
-                                .font(.system(size: 14))
+                    VStack(spacing: 10) {
+                        Text(K.L.inviteHint)
+                            .font(Theme.body(13))
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                        ShareLink(item: code) {
+                            Text(K.L.inviteBtn).accentButton()
                         }
-                        .padding(14)
-                        .glassCard()
                     }
-                    .buttonStyle(.plain)
+                    .padding(16)
+                    .glassCard()
                     .padding(.horizontal, 16)
                 }
 
-                Divider().padding(.vertical, 8)
-
                 // Multi-group section
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Meine Gruppen").eyebrow()
+                    Text(K.L.mgsTitle).eyebrow()
                         .padding(.horizontal, 20)
+                        .padding(.top, 10)
                     ForEach(LocalStore.shared.allGroups) { g in
                         GroupListRow(group: g, isActive: g.id == appState.activeGroup?.id)
                             .onTapGesture {
@@ -80,11 +71,23 @@ struct PeopleView: View {
                     }
                 }
 
+                // Join / create — the website offers both inline
                 HStack(spacing: 12) {
-                    Button { showGroupSwitcher = true } label: {
-                        Label("Gruppe beitreten", systemImage: "link")
-                            .font(Theme.body(14, .bold))
+                    Button { showJoin = true } label: {
+                        Label(K.L.mgsJoin, systemImage: "link")
+                            .font(Theme.body(13, .bold))
                             .foregroundColor(K.amberText)
+                            .lineLimit(1).minimumScaleFactor(0.8)
+                            .padding(12)
+                            .frame(maxWidth: .infinity)
+                            .glassCard()
+                    }
+                    .buttonStyle(.plain)
+                    Button { showCreate = true } label: {
+                        Label(K.L.mgsCreate, systemImage: "plus.circle")
+                            .font(Theme.body(13, .bold))
+                            .foregroundColor(K.amberText)
+                            .lineLimit(1).minimumScaleFactor(0.8)
                             .padding(12)
                             .frame(maxWidth: .infinity)
                             .glassCard()
@@ -92,24 +95,49 @@ struct PeopleView: View {
                     .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 16)
-                .padding(.bottom, 20)
+
+                // Leave group (website: red button at the bottom of the tab)
+                Button { confirmLeave = true } label: {
+                    Text(K.L.leaveGroup)
+                        .font(Theme.body(14, .bold))
+                        .foregroundColor(K.red)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 13)
+                        .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(K.red.opacity(0.10)))
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
+
+                if appState.adminMode {
+                    AdminPanelSection(toast: $toast)
+                        .padding(.horizontal, 16)
+                }
+
+                Spacer(minLength: 20)
             }
         }
         .sheet(item: $selectedPerson) { p in ProfileView(person: p) }
-        .sheet(isPresented: $showGroupSwitcher) { GroupSwitcherSheet() }
+        .sheet(item: $adminEditPerson) { p in AdminUserEditSheet(person: p, toast: $toast) }
+        .sheet(isPresented: $showJoin) { JoinGroupSheet() }
+        .sheet(isPresented: $showCreate) { CreateGroupSheet() }
+        .confirmationDialog(K.L.confirmLeave, isPresented: $confirmLeave, titleVisibility: .visible) {
+            Button(K.L.leaveGroup, role: .destructive) { appState.leaveCurrentGroup() }
+            Button(K.L.cancel, role: .cancel) {}
+        }
         .toast($toast)
     }
 }
 
 struct PersonRow: View {
     let person: Person
+    var adminMode = false
+    var onAdminEdit: (() -> Void)? = nil
 
     var body: some View {
         HStack(spacing: 14) {
-            ZStack {
-                Circle().fill(Color(hex: person.avatarColor).opacity(0.2)).frame(width: 48, height: 48)
-                Text(person.avatarEmoji).font(.system(size: 26))
-            }
+            AvatarView(emoji: person.avatarEmoji, color: person.avatarColor,
+                       img: person.avatarImg, size: 48)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(person.name).font(Theme.body(15, .bold))
@@ -129,6 +157,16 @@ struct PersonRow: View {
                 }
             }
             Spacer()
+            if adminMode {
+                Button { onAdminEdit?() } label: {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(K.amberText)
+                        .frame(width: 30, height: 30)
+                        .background(Circle().fill(K.accent.opacity(0.14)))
+                }
+                .buttonStyle(.plain)
+            }
             Image(systemName: "chevron.right").foregroundColor(Color(.tertiaryLabel)).font(.system(size: 12))
         }
         .padding(14)
@@ -151,9 +189,9 @@ struct GroupListRow: View {
             }
             Spacer()
             if isActive {
-                Text("Aktiv").font(Theme.body(11, .bold)).foregroundColor(K.amberText)
+                Text(K.L.mgsActive).font(Theme.body(11, .bold)).foregroundColor(K.amberText)
             } else {
-                Text("Wechseln").font(.system(size: 11)).foregroundColor(.secondary)
+                Text(K.L.mgsSwitch).font(.system(size: 11)).foregroundColor(.secondary)
             }
         }
         .padding(12)
