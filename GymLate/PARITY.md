@@ -1,9 +1,9 @@
 # Website ↔ iOS Parity Checklist
 
 Structural comparison of the reference web app (`../index.html`) against the
-SwiftUI app. Colors intentionally differ: the iOS app uses the yellow Liquid
-Glass theme, the website stays purple. Last full audit: 2026-07-09;
-gap-closing pass same day.
+SwiftUI app. Since 2026-07-09 the designs are unified: the website adopted
+the app's yellow Liquid Glass theme (structure stays web-canonical, design
+stays app-canonical). Last full audit: 2026-07-09; gap-closing pass same day.
 
 ## Struktur (Screens & Navigation)
 

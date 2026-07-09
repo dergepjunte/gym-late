@@ -11,8 +11,8 @@
 
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#7c3aed" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#a78bfa" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f0e9da" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0e0903" media="(prefers-color-scheme: dark)">
 
   <!-- iOS home screen -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,10 +27,10 @@
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', 'Segoe UI', sans-serif;
       min-height: 100dvh;
       -webkit-font-smoothing: antialiased;
-      background: #e9e4f8;
+      background: #f0e9da;
     }
     @media (prefers-color-scheme: dark) {
-      body { background: #09060f; }
+      body { background: #0e0903; }
     }
 
     /* ── THEME ───────────────────────────────────────────────── */
@@ -38,7 +38,7 @@
       --glass-bg:     rgba(255,255,255,0.22);
       --glass-border: rgba(255,255,255,0.55);
       --glass-top:    rgba(255,255,255,0.85);
-      --glass-shadow: rgba(80,30,160,0.10);
+      --glass-shadow: rgba(160,110,20,0.10);
       --glass-inner:  rgba(255,255,255,0.55);
       --glass-sheen:  rgba(255,255,255,0.45);
 
@@ -49,10 +49,12 @@
       --text-2: rgba(0,0,0,0.50);
       --text-3: rgba(0,0,0,0.28);
 
-      --accent:       #7c3aed;
-      --accent-2:     #a855f7;
-      --accent-glow:  rgba(124,58,237,0.35);
-      --accent-light: rgba(124,58,237,0.12);
+      --accent:       #facc15;
+      --accent-2:     #f59e0b;
+      --accent-text:  #b45309;
+      --on-accent:    #422006;
+      --accent-glow:  rgba(245,158,11,0.35);
+      --accent-light: rgba(245,158,11,0.12);
       --red:          #ef4444;
       --red-light:    rgba(239,68,68,0.12);
       --green:        #22c55e;
@@ -79,10 +81,12 @@
         --text-2: rgba(255,255,255,0.52);
         --text-3: rgba(255,255,255,0.28);
 
-        --accent:       #a78bfa;
-        --accent-2:     #c4b5fd;
-        --accent-glow:  rgba(167,139,250,0.30);
-        --accent-light: rgba(167,139,250,0.14);
+        --accent:       #facc15;
+        --accent-2:     #f59e0b;
+        --accent-text:  #fbbf24;
+        --on-accent:    #422006;
+        --accent-glow:  rgba(251,191,36,0.30);
+        --accent-light: rgba(251,191,36,0.14);
         --red:          #f87171;
         --red-light:    rgba(248,113,113,0.14);
         --green:        #4ade80;
@@ -92,6 +96,13 @@
       }
     }
 
+    /* Scoreboard type — mirrors the app's rounded display/heading fonts */
+    .landing-title, .header-title, .streak-hero-num, .stat-val, .sa-num,
+    .recap-name, .cal-month-label, .modal-title, .checkin-time-num,
+    .success-title, .chest-msg {
+      font-family: ui-rounded, 'SF Pro Rounded', -apple-system, system-ui, sans-serif;
+    }
+
     /* ── GLASS (liquid glass) ────────────────────────────────── */
     /* Soft color orbs behind everything — the translucency needs
        something to refract, otherwise glass looks flat. */
@@ -99,16 +110,16 @@
       content: '';
       position: fixed; inset: 0; z-index: 0; pointer-events: none;
       background:
-        radial-gradient(42% 34% at 18% 10%, rgba(124,58,237,.15), transparent 70%),
-        radial-gradient(38% 30% at 86% 26%, rgba(37,99,235,.11), transparent 70%),
-        radial-gradient(46% 38% at 55% 95%, rgba(219,39,119,.09), transparent 70%);
+        radial-gradient(42% 34% at 18% 10%, rgba(245,158,11,.20), transparent 70%),
+        radial-gradient(38% 30% at 86% 26%, rgba(251,113,133,.08), transparent 70%),
+        radial-gradient(46% 38% at 55% 95%, rgba(251,146,60,.10), transparent 70%);
     }
     @media (prefers-color-scheme: dark) {
       body::before {
         background:
-          radial-gradient(42% 34% at 18% 10%, rgba(139,92,246,.17), transparent 70%),
-          radial-gradient(38% 30% at 86% 26%, rgba(59,130,246,.12), transparent 70%),
-          radial-gradient(46% 38% at 55% 95%, rgba(236,72,153,.10), transparent 70%);
+          radial-gradient(42% 34% at 18% 10%, rgba(251,191,36,.18), transparent 70%),
+          radial-gradient(38% 30% at 86% 26%, rgba(244,114,182,.09), transparent 70%),
+          radial-gradient(46% 38% at 55% 95%, rgba(249,115,22,.11), transparent 70%);
       }
     }
     .glass {
@@ -164,7 +175,7 @@
     }
     .landing-feature-ico {
       width: 34px; height: 34px; border-radius: 10px;
-      background: var(--accent-light); color: var(--accent);
+      background: var(--accent-light); color: var(--accent-text);
       display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .landing-feature-txt { font-size: 11.5px; font-weight: 600; color: var(--text-2); line-height: 1.3; }
@@ -221,7 +232,7 @@
       padding: 3px 10px; border-radius: 20px; cursor: pointer; font-family: inherit;
       transition: transform .15s, opacity .15s, color .15s, border-color .15s;
     }
-    .pill-code-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .pill-code-btn:hover { color: var(--accent-text); border-color: var(--accent-2); }
     .pill-code-btn:active { transform: scale(.92); opacity: .7; }
     .pill-copy-hint { font-size: 11px; color: var(--text-3); white-space: nowrap; }
     .pill-switch-btn {
@@ -229,7 +240,7 @@
       display: flex; align-items: center; padding: 2px 4px; border-radius: 6px;
       transition: color .15s;
     }
-    .pill-switch-btn:hover { color: var(--accent); }
+    .pill-switch-btn:hover { color: var(--accent-text); }
     /* Group switcher modal */
     .group-list-item {
       display: flex; align-items: center; gap: 12px;
@@ -243,7 +254,7 @@
     }
     .group-list-name { font-size: 15px; font-weight: 700; color: var(--text-1); }
     .group-list-code { font-size: 12px; color: var(--text-2); font-family: monospace; letter-spacing: 1px; }
-    .group-list-active { color: var(--accent); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; margin-left: auto; }
+    .group-list-active { color: var(--accent-text); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; margin-left: auto; }
     .group-switcher-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
     /* Inline card variant: the card has no own padding, so the rows bring it */
     #groups-card .group-list-item { padding: 12px 16px; }
@@ -278,7 +289,7 @@
     .avatar {
       width: 40px; height: 40px; border-radius: 50%;
       background: var(--accent-light); display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 700; color: var(--accent);
+      font-size: 14px; font-weight: 700; color: var(--accent-text);
       flex-shrink: 0; border: 1.5px solid var(--glass-border);
     }
     .entry-info { flex:1; min-width:0; }
@@ -312,7 +323,7 @@
       background:var(--glass-inner); font-size:12px; font-weight:600;
       color:var(--text-2); cursor:pointer; transition:background .15s, color .15s, border-color .15s;
     }
-    .day-btn.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .day-btn.active { background:var(--accent); color:var(--on-accent); border-color:var(--accent-2); }
     .avail-lock-info {
       font-size:12px; color:var(--text-2); margin-top:4px;
       padding:7px 10px; background:rgba(255,255,255,.08); border-radius:8px;
@@ -332,15 +343,15 @@
     }
     /* Compact status row — deliberately quieter than the streak hero above it */
     .streak-hero.checkin-time-hero {
-      background:rgba(124,58,237,.07);
+      background:rgba(245,158,11,.07);
       padding:10px 14px; gap:10px; margin-bottom:12px;
       border-radius:var(--r-lg);
     }
     .checkin-time-icon { font-size:18px; width:24px; flex-shrink:0; text-align:center; line-height:1; }
-    .checkin-time-num { color:var(--accent); }
+    .checkin-time-num { color:var(--accent-text); }
     .checkin-time-hero .streak-hero-num { font-size:17px; font-weight:800; letter-spacing:0; }
     .checkin-time-hero .streak-hero-lbl { font-size:12px; }
-    .checkin-time-hero .streak-hero-hint { color:var(--accent); font-weight:600; cursor:pointer; }
+    .checkin-time-hero .streak-hero-hint { color:var(--accent-text); font-weight:600; cursor:pointer; }
     .checkin-time-editor {
       display:flex; align-items:center; gap:10px; flex:1;
     }
@@ -351,7 +362,7 @@
     }
     .checkin-time-save-btn {
       padding:8px 16px; border-radius:10px; border:none; font-family:inherit;
-      font-size:14px; font-weight:700; color:#fff; background:var(--accent);
+      font-size:14px; font-weight:700; color:var(--on-accent); background:var(--accent);
       cursor:pointer; -webkit-tap-highlight-color:transparent;
     }
     /* Mode toggle (Late / Skip) */
@@ -370,7 +381,7 @@
       color:var(--text-1); cursor:pointer; font-family:inherit;
       transition:border-color .15s, background .15s, transform .1s;
     }
-    .reason-chip.sel { border-color:var(--accent); background:var(--accent-light); color:var(--accent); }
+    .reason-chip.sel { border-color:var(--accent-2); background:var(--accent-light); color:var(--accent-text); }
     .reason-chip:active { transform:scale(.94); }
     .icon-btn {
       width:30px; height:30px; border-radius:50%; border:none;
@@ -379,7 +390,7 @@
       transition:transform .15s; flex-shrink:0; font-family:inherit;
     }
     .icon-btn:active { transform:scale(.88); }
-    .icon-btn.edit-entry-btn { background:var(--accent-light); color:var(--accent); font-size:14px; margin-right:6px; }
+    .icon-btn.edit-entry-btn { background:var(--accent-light); color:var(--accent-text); font-size:14px; margin-right:6px; }
 
     /* ── EMPTY ───────────────────────────────────────────────── */
     .empty { text-align:center; padding:36px 24px; }
@@ -408,7 +419,7 @@
       right:max(16px, calc(50vw - 234px));
       width:58px; height:58px; border-radius:50%; border:none;
       background:linear-gradient(135deg, var(--accent), var(--accent-2));
-      color:white; font-size:28px; cursor:pointer;
+      color:var(--on-accent); font-size:28px; cursor:pointer;
       box-shadow:0 6px 24px var(--accent-glow), 0 2px 8px rgba(0,0,0,.2);
       transition:transform .2s cubic-bezier(.34,1.56,.64,1);
       z-index:20; display:flex; align-items:center; justify-content:center;
@@ -452,9 +463,9 @@
     }
     @media (prefers-reduced-motion:reduce) { .nav-indicator { transition:none; } }
     .nav-ico { font-size:22px; color:var(--text-2); transition:transform .25s cubic-bezier(.34,1.56,.64,1),color .2s; }
-    .nav-btn.active .nav-ico { transform:scale(1.12) translateY(-1px); color:var(--accent); }
+    .nav-btn.active .nav-ico { transform:scale(1.12) translateY(-1px); color:var(--accent-text); }
     .nav-lbl { font-size:11px; font-weight:500; color:var(--text-2); transition:color .2s,font-weight .15s; }
-    .nav-btn.active .nav-lbl { color:var(--accent); font-weight:700; }
+    .nav-btn.active .nav-lbl { color:var(--accent-text); font-weight:700; }
 
     /* ── CALENDAR ────────────────────────────────────────────── */
     .cal-nav { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; padding:4px 0; }
@@ -468,7 +479,7 @@
     .cal-has-entries { cursor:pointer; transition:opacity .15s; }
     .cal-has-entries:active { opacity:.65; }
     .cal-today { box-shadow:0 0 0 1.5px var(--accent); }
-    .cal-today .cal-day-num { font-weight:900; color:var(--accent); }
+    .cal-today .cal-day-num { font-weight:900; color:var(--accent-text); }
     .cal-day-num { font-size:13px; font-weight:500; color:var(--text-1); line-height:1; }
     .cal-dot { display:block; font-size:9px; line-height:1.3; margin-top:1px; }
     .cal-dot-late { color:rgba(239,68,68,.95); }
@@ -569,7 +580,7 @@
       .nav-top .nav-btn .nav-lbl {
         font-size: 14px; font-weight: 600; color: var(--text-1); display: inline !important;
       }
-      .nav-top .nav-btn.active .nav-lbl { color: var(--accent); }
+      .nav-top .nav-btn.active .nav-lbl { color: var(--accent-text); }
       .nav-top .nav-indicator { display: none; }
 
       /* ── Main content area: week/history panes ── */
@@ -668,7 +679,7 @@
     }
     .admin-btn:last-child { margin-bottom: 0; }
     .admin-btn:active { transform: scale(.96); opacity: .8; }
-    .admin-btn-add  { background: var(--accent-light); color: var(--accent); border: 1.5px solid var(--accent); }
+    .admin-btn-add  { background: var(--accent-light); color: var(--accent-text); border: 1.5px solid var(--accent-2); }
     .admin-btn-week { background: rgba(251,191,36,.12); color: var(--gold);  border: 1.5px solid rgba(251,191,36,.4); }
     .admin-btn-week.active { background: rgba(251,191,36,.25); }
     .admin-btn-del  { background: var(--red-light);    color: var(--red);    border: 1.5px solid rgba(239,68,68,.3); }
@@ -723,7 +734,7 @@
     }
     .btn:active { transform:scale(.94); opacity:.85; }
     .btn-xl  { padding:17px; font-size:17px; border-radius:var(--r-lg); }
-    .btn-primary { background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:white; box-shadow:0 4px 16px var(--accent-glow); }
+    .btn-primary { background:linear-gradient(135deg, var(--accent), var(--accent-2)); color:var(--on-accent); box-shadow:0 4px 16px var(--accent-glow); }
     .btn-ghost   { background:var(--glass-bg); color:var(--text-1); border:1.5px solid var(--glass-border); backdrop-filter:blur(8px); }
     .btn-full    { width:100%; flex:none; }
 
@@ -758,11 +769,11 @@
     .code-char {
       width:44px; height:52px; display:flex; align-items:center; justify-content:center;
       font-size:22px; font-weight:900;
-      color:var(--accent); background:var(--accent-light); border:2px solid var(--accent); border-radius:12px;
+      color:var(--accent-text); background:var(--accent-light); border:2px solid var(--accent-2); border-radius:12px;
     }
     .copy-code-btn {
       width:100%; padding:13px; border-radius:var(--r-md);
-      border:1.5px solid var(--accent); background:var(--accent-light); color:var(--accent);
+      border:1.5px solid var(--accent-2); background:var(--accent-light); color:var(--accent-text);
       font-size:15px; font-weight:700; font-family:inherit; cursor:pointer;
       transition:transform .15s; margin-bottom:10px;
     }
@@ -786,7 +797,7 @@
     .loading-screen {
       position:fixed; inset:0; z-index:200;
       display:flex; align-items:center; justify-content:center;
-      background: #e9e4f8;
+      background: #f0e9da;
     }
     @media (prefers-color-scheme: dark) { .loading-screen { background: #09060f; } }
     .loading-screen.hidden { display:none; }
@@ -897,7 +908,7 @@
     .emoji-cell.sel { border-color:var(--accent); transform:scale(1.18); }
     .emoji-cell:active { transform:scale(.92); }
     .avatar-upload-wrap { text-align:center; margin:0 0 8px; }
-    .btn-upload-photo { background:none; border:1px solid var(--accent); color:var(--accent); font-size:13px; cursor:pointer; padding:5px 14px; border-radius:20px; transition:opacity .15s; }
+    .btn-upload-photo { background:none; border:1px solid var(--accent-2); color:var(--accent-text); font-size:13px; cursor:pointer; padding:5px 14px; border-radius:20px; transition:opacity .15s; }
     .btn-upload-photo:active { opacity:.6; }
     .btn-upload-photo:disabled { opacity:.45; cursor:not-allowed; }
     .avatar-upload-msg { font-size:12px; text-align:center; margin-bottom:6px; min-height:16px; }
@@ -918,8 +929,8 @@
     .rc-row { display:flex; gap:8px; justify-content:center; margin:20px 0 10px; }
     .rc-box {
       padding:10px 14px; border-radius:12px;
-      background:var(--accent-light); border:2px solid var(--accent);
-      font-size:17px; font-weight:900; color:var(--accent);
+      background:var(--accent-light); border:2px solid var(--accent-2);
+      font-size:17px; font-weight:900; color:var(--accent-text);
       letter-spacing:4px; font-family:monospace;
     }
 
@@ -929,8 +940,8 @@
     .pv-badge        {
       display:inline-block; margin-top:4px; margin-bottom:4px;
       font-size:11px; font-weight:700; letter-spacing:.4px;
-      background:var(--accent-light); color:var(--accent);
-      border:1px solid rgba(124,58,237,.25); padding:2px 8px; border-radius:20px;
+      background:var(--accent-light); color:var(--accent-text);
+      border:1px solid rgba(245,158,11,.28); padding:2px 8px; border-radius:20px;
     }
     .rc-blur-wrap { position:relative; margin-bottom:6px; }
     .rc-blur {
@@ -949,7 +960,7 @@
 
     /* ── TOGGLE LINK ─────────────────────────────────────────── */
     .toggle-link {
-      background:none; border:none; color:var(--accent);
+      background:none; border:none; color:var(--accent-text);
       font-size:13px; font-weight:600; cursor:pointer;
       font-family:inherit; text-decoration:underline; padding:4px; opacity:.8;
     }
@@ -1136,7 +1147,7 @@
       padding: calc(env(safe-area-inset-top) + 32px) 32px calc(env(safe-area-inset-bottom) + 40px);
     }
     .fullscreen-overlay.hidden { display: none; }
-    #daily-hype  { background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%); }
+    #daily-hype  { background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); }
     #geo-prompt  { background: linear-gradient(135deg, #16a34a 0%, #0891b2 100%); }
 
     .overlay-icon  { font-size: 72px; line-height: 1; animation: w-pop .6s cubic-bezier(.34,1.56,.64,1) both; }
@@ -1204,7 +1215,7 @@
     .streak-hero-num { font-size:46px; font-weight:900; letter-spacing:-1.5px; line-height:1; color:var(--text-2); transition:color .3s; font-variant-numeric:tabular-nums; }
     .streak-hero.lit .streak-hero-num { color:#f97316; }
     .streak-hero-lbl { font-size:14px; font-weight:600; color:var(--text-2); }
-    .streak-hero-hint { margin-left:auto; font-size:12px; color:var(--accent); font-weight:700; text-align:right; max-width:42%; line-height:1.3; }
+    .streak-hero-hint { margin-left:auto; font-size:12px; color:var(--accent-text); font-weight:700; text-align:right; max-width:42%; line-height:1.3; }
     /* The one loud element on the dashboard: a full-width CTA while today's
        check-in is open, a calm green confirmation once it's done. */
     #streak-hero .streak-hero-hint {
@@ -1279,11 +1290,11 @@
     .toggle-switch input { opacity:0; width:0; height:0; position:absolute; }
     .toggle-slider { position:absolute; inset:0; background:var(--c-muted,#94a3b8); border-radius:26px; cursor:pointer; transition:.22s; }
     .toggle-slider::before { content:''; position:absolute; height:20px; width:20px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.22s; box-shadow:0 1px 3px rgba(0,0,0,.3); }
-    .toggle-switch input:checked + .toggle-slider { background:var(--c-primary,#7c3aed); }
+    .toggle-switch input:checked + .toggle-slider { background:var(--c-primary,#f59e0b); }
     .toggle-switch input:checked + .toggle-slider::before { transform:translateX(20px); }
     .mset-geo-hint { font-size:12px; opacity:.6; text-align:center; margin-top:6px; min-height:1em; }
-.beta-badge { display:inline-block; font-size:9px; font-weight:700; letter-spacing:.05em; color:var(--accent); background:var(--accent-light); border:1px solid rgba(124,58,237,.25); border-radius:5px; padding:1px 5px; vertical-align:middle; text-transform:uppercase; }
-    .mset-locate-btn { font-size: 13px; color: var(--accent); background: none; border: none; font-family: inherit;
+.beta-badge { display:inline-block; font-size:9px; font-weight:700; letter-spacing:.05em; color:var(--accent-text); background:var(--accent-light); border:1px solid rgba(245,158,11,.28); border-radius:5px; padding:1px 5px; vertical-align:middle; text-transform:uppercase; }
+    .mset-locate-btn { font-size: 13px; color: var(--accent-text); background: none; border: none; font-family: inherit;
                        cursor: pointer; padding: 4px 0; text-decoration: underline; }
 
     /* ── Gym days chips in profile view ── */
@@ -1292,8 +1303,8 @@
                        text-transform: uppercase; margin-bottom: 6px; }
     .pv-day-chips { display: flex; flex-wrap: wrap; gap: 6px; }
     .pv-day-chip { font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
-                   background: rgba(124,58,237,.12); color: var(--accent);
-                   border: 1px solid rgba(124,58,237,.25); }
+                   background: var(--accent-light); color: var(--accent-text);
+                   border: 1px solid rgba(245,158,11,.28); }
 
     /* ── Admin user edit modal ── */
     #modal-admin-user .modal { max-height: 90svh; overflow-y: auto; }
@@ -1587,7 +1598,7 @@
         <button class="admin-btn admin-btn-add"  id="adm-add-btn"></button>
         <button class="admin-btn admin-btn-week" id="adm-week-btn"></button>
         <button class="admin-btn admin-btn-del"  id="adm-del-btn"></button>
-        <button class="admin-btn" style="background:rgba(167,139,250,.12);color:var(--accent-2);border:1.5px solid var(--accent)" id="adm-replay-btn"></button>
+        <button class="admin-btn" style="background:var(--accent-light);color:var(--accent-text);border:1.5px solid var(--accent-2)" id="adm-replay-btn"></button>
         <div class="admin-section-divider"></div>
         <button class="admin-btn" style="background:rgba(34,197,94,.1);color:#22c55e;border:1.5px solid rgba(34,197,94,.3)" id="adm-force-hype-btn"></button>
         <button class="admin-btn" style="background:rgba(8,145,178,.1);color:#0891b2;border:1.5px solid rgba(8,145,178,.3)" id="adm-force-geo-btn"></button>
@@ -2634,7 +2645,7 @@ function renderLandingAdminTools() {
 //  CONFETTI
 // ════════════════════════════════════════════════════════
 function spawnConfetti(host) {
-  const colors = ['#a78bfa','#fbbf24','#f472b6','#34d399','#60a5fa','#fb923c','#fff176','#c084fc'];
+  const colors = ['#facc15','#fbbf24','#f472b6','#34d399','#60a5fa','#fb923c','#fff176','#f59e0b'];
   for (let i = 0; i < 48; i++) {
     const el   = document.createElement('div');
     el.className = 'cbit';
@@ -2949,7 +2960,7 @@ function renderPeople() {
     const freezeBadge = (p.freezes > 0) ? `<span class="freeze-badge">❄️ ×${p.freezes}</span>` : '';
     return `<div class="person-row animate" style="animation-delay:${i*35}ms;cursor:pointer" data-uid="${esc(p.id)}">
       ${avatarHtml(p)}
-      <div class="person-name">${esc(p.name)}${isMe ? ' <span style="font-size:11px;color:var(--accent);font-weight:700">(Du)</span>' : ''}${p.isCreator ? ' <span style="font-size:10px;color:var(--text-3)">★</span>' : ''}</div>
+      <div class="person-name">${esc(p.name)}${isMe ? ' <span style="font-size:11px;color:var(--accent-text);font-weight:700">(Du)</span>' : ''}${p.isCreator ? ' <span style="font-size:10px;color:var(--text-3)">★</span>' : ''}</div>
       <div style="display:flex;gap:5px;flex-shrink:0">${streakBadge}${freezeBadge}</div>
     </div>`;
   }).join('');
@@ -4805,7 +4816,7 @@ function buildWrappedSlides(anyWeek = false) {
   const slides = [];
 
   /* ── Slide 1: Intro ── */
-  slides.push({ dur: 3, bg: 'linear-gradient(160deg,#12002a 0%,#2d0d5c 100%)', html: `
+  slides.push({ dur: 3, bg: 'linear-gradient(160deg,#f59e0b 0%,#ea580c 100%)', html: `
     <div class="w-group w-fade">${esc(data.name)}</div>
     <div class="w-gap-sm"></div>
     <div class="w-emoji w-pop">🏋️</div>
@@ -4818,7 +4829,7 @@ function buildWrappedSlides(anyWeek = false) {
 
   /* ── Slide 2: Late count ── */
   slides.push({ dur: 4, countId:'wn-late', countTarget: totalLate,
-    bg: 'linear-gradient(160deg,#b5004f 0%,#e0106a 100%)', html: `
+    bg: 'linear-gradient(160deg,#db2777 0%,#ea580c 100%)', html: `
     <div class="w-label w-fade">${T.wS2label}</div>
     <div class="w-gap-xs"></div>
     <div class="w-number w-pop" id="wn-late" style="animation-delay:.1s">0</div>
@@ -4830,7 +4841,7 @@ function buildWrappedSlides(anyWeek = false) {
 
   /* ── Slide 3: Minutes ── */
   slides.push({ dur: 4, countId:'wn-mins', countTarget: totalMins,
-    bg: 'linear-gradient(160deg,#c44200 0%,#ff7a00 100%)', html: `
+    bg: 'linear-gradient(160deg,#059669 0%,#0891b2 100%)', html: `
     <div class="w-label w-fade">${T.wS3label}</div>
     <div class="w-gap-xs"></div>
     <div class="w-number w-pop" id="wn-mins" style="animation-delay:.1s">0</div>
@@ -4839,7 +4850,7 @@ function buildWrappedSlides(anyWeek = false) {
   `});
 
   /* ── Slide 4: Top latecomer ── */
-  slides.push({ dur: 4.5, bg: 'linear-gradient(160deg,#1d0082 0%,#5200d4 100%)', html: `
+  slides.push({ dur: 4.5, bg: 'linear-gradient(160deg,#ca8a04 0%,#dc2626 100%)', html: `
     <div class="w-emoji w-pop">👑</div>
     <div class="w-gap-sm"></div>
     <div class="w-label w-rise" style="animation-delay:.2s">${T.wS4label}</div>
@@ -4851,7 +4862,7 @@ function buildWrappedSlides(anyWeek = false) {
 
   /* ── Slide 5: Ranking (only if >1 person) ── */
   if (ranking.length > 1) {
-    slides.push({ dur: 5, bg: 'linear-gradient(160deg,#003040 0%,#005a6e 100%)', html: `
+    slides.push({ dur: 5, bg: 'linear-gradient(160deg,#b45309 0%,#78350f 100%)', html: `
       <div class="w-headline-md w-rise">${T.wS5title}</div>
       <div class="w-divider"></div>
       <div class="w-ranks">
@@ -4866,7 +4877,7 @@ function buildWrappedSlides(anyWeek = false) {
   }
 
   /* ── Slide 6: End card ── */
-  slides.push({ isLast: true, bg: 'linear-gradient(160deg,#0c0118 0%,#1e0044 100%)', html: `
+  slides.push({ isLast: true, bg: 'linear-gradient(160deg,#78350f 0%,#b45309 100%)', html: `
     <div class="w-emoji w-pop">💪</div>
     <div class="w-gap-sm"></div>
     <div class="w-headline w-rise" style="animation-delay:.2s;font-size:clamp(44px,14vw,78px)">${T.wS6a}</div>
