@@ -102,7 +102,7 @@ struct AppRootView: View {
     @available(iOS 18.0, *)
     private var nativeTabView: some View {
         TabView(selection: $selectedTab) {
-            Tab(K.L.navWeek, systemImage: "calendar", value: AppTab.week) {
+            Tab(K.L.navHome, systemImage: "house.fill", value: AppTab.week) {
                 WeekView(showLogEntry: $showLogEntry, toast: $toast)
                     .background(GymBackground().ignoresSafeArea())
             }
@@ -218,6 +218,7 @@ struct AppHeader: View {
                             .glassCard(radius: 17)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(K.L.de ? "Einstellungen" : "Settings")
                     Button { onMyProfile() } label: {
                         AvatarView(emoji: appState.userProfile?.avatarEmoji ?? "🏋️",
                                    color: appState.userProfile?.avatarColor ?? "#7c3aed",
@@ -225,6 +226,7 @@ struct AppHeader: View {
                                    size: 34)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(K.L.de ? "Mein Profil" : "My profile")
                 }
             }
             .padding(.horizontal, 16)
@@ -295,7 +297,7 @@ struct BottomNav: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            navItem(.week, icon: "calendar", label: K.L.navWeek)
+            navItem(.week, icon: "house.fill", label: K.L.navHome)
             navItem(.history, icon: "calendar.badge.clock", label: K.L.navHistory)
             navItem(.recap, icon: "chart.bar.fill", label: K.L.navRecap)
             navItem(.people, icon: "person.2.fill", label: K.L.navPeople)

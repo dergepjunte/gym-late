@@ -63,7 +63,8 @@ struct HistoryView: View {
             .padding(.bottom, 16)
         }
         .sheet(item: $selectedDay) { day in
-            CalDayDetailSheet(date: day.id, entries: day.entries)
+            CalDayDetailSheet(date: day.id, entries: day.entries,
+                              people: appState.groupData?.people ?? [])
         }
         .sheet(isPresented: $showLogEntry) { LogEntrySheet(toast: $toast) }
         .toast($toast)
@@ -187,8 +188,27 @@ struct HistoryView: View {
                         .strokeBorder(K.accent, lineWidth: 1.5)
                 }
             }
+            .overlay {
+                if let i = info {
+                    if i.late > 0 {
+                        ZigzagBorder().stroke(K.red, lineWidth: 2.5)
+                    } else if i.attend > 0 {
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .strokeBorder(K.green, lineWidth: 1.5)
+                    }
+                }
+            }
         }
         .buttonStyle(.plain)
+        .accessibilityLabel({
+            if let i = info {
+                if i.late > 0 { return K.L.de ? "Verspätet, \(i.late)×, \(i.mins) Min." : "Late, \(i.late) time\(i.late == 1 ? "" : "s"), \(i.mins) min" }
+                if i.attend > 0 { return K.L.de ? "Pünktlich" : "On time" }
+                if i.skip > 0 { return K.L.de ? "Übersprungen" : "Skipped" }
+            }
+            if missed { return K.L.de ? "Verpasst" : "Missed" }
+            return "\(day)"
+        }())
     }
 }
 
@@ -197,6 +217,7 @@ struct HistoryView: View {
 struct CalDayDetailSheet: View {
     let date: String
     let entries: [Entry]
+    var people: [Person] = []
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -205,13 +226,18 @@ struct CalDayDetailSheet: View {
                 LazyVStack(spacing: 8) {
                     ForEach(entries) { e in
                         HStack(spacing: 12) {
-                            Text(initials(e.person))
-                                .font(Theme.body(13, .bold))
-                                .foregroundColor(K.onAccent)
-                                .frame(width: 38, height: 38)
-                                .background(Circle().fill(LinearGradient(
-                                    colors: Theme.accentGradient,
-                                    startPoint: .topLeading, endPoint: .bottomTrailing)))
+                            if let p = people.first(where: { $0.name.lowercased() == e.person.lowercased() }) {
+                                AvatarView(emoji: p.avatarEmoji, color: p.avatarColor,
+                                           img: p.avatarImg, size: 38)
+                            } else {
+                                Text(initials(e.person))
+                                    .font(Theme.body(13, .bold))
+                                    .foregroundColor(K.onAccent)
+                                    .frame(width: 38, height: 38)
+                                    .background(Circle().fill(LinearGradient(
+                                        colors: Theme.accentGradient,
+                                        startPoint: .topLeading, endPoint: .bottomTrailing)))
+                            }
                             Text(e.person).font(Theme.body(15, .semibold))
                             Spacer()
                             EntryBadge(entry: e)

@@ -81,6 +81,45 @@ extension View {
     }
 }
 
+// MARK: - ZigzagBorder
+
+/// Closed sawtooth path that follows the four edges of its rect.
+/// Use as `.overlay { ZigzagBorder().stroke(color, lineWidth: w) }`.
+struct ZigzagBorder: Shape {
+    var amplitude: CGFloat = 3
+    var wavelength: CGFloat = 8
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let edges: [(CGPoint, CGPoint, CGPoint)] = [
+            (CGPoint(x: rect.minX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.minY), CGPoint(x: 0, y: 1)),
+            (CGPoint(x: rect.maxX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.maxY), CGPoint(x: -1, y: 0)),
+            (CGPoint(x: rect.maxX, y: rect.maxY), CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: 0, y: -1)),
+            (CGPoint(x: rect.minX, y: rect.maxY), CGPoint(x: rect.minX, y: rect.minY), CGPoint(x: 1, y: 0))
+        ]
+        var isFirst = true
+        for (start, end, normal) in edges {
+            let length = hypot(end.x - start.x, end.y - start.y)
+            let steps = max(2, Int(length / wavelength))
+            let dx = (end.x - start.x) / length
+            let dy = (end.y - start.y) / length
+            let stepLen = length / CGFloat(steps)
+            if isFirst { path.move(to: start); isFirst = false }
+            for i in 0..<steps {
+                let midT = (CGFloat(i) + 0.5) * stepLen
+                let endT = CGFloat(i + 1) * stepLen
+                let mid  = CGPoint(x: start.x + dx * midT + normal.x * amplitude,
+                                   y: start.y + dy * midT + normal.y * amplitude)
+                let next = CGPoint(x: start.x + dx * endT, y: start.y + dy * endT)
+                path.addLine(to: mid)
+                path.addLine(to: next)
+            }
+        }
+        path.closeSubpath()
+        return path
+    }
+}
+
 // MARK: - String
 
 extension String {

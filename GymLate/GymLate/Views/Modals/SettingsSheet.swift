@@ -23,6 +23,7 @@ struct SettingsSheet: View {
 
     // Fixed check-in time (beta, creator/admin)
     @State private var fixedTimeEnabled = false
+    @State private var confirmLeave = false
 
     private let dayLabels = K.L.dayNames
     private var isCreatorOrAdmin: Bool {
@@ -118,8 +119,7 @@ struct SettingsSheet: View {
                 // Leave group
                 Section {
                     Button(K.L.leaveGroup, role: .destructive) {
-                        appState.leaveCurrentGroup()
-                        dismiss()
+                        confirmLeave = true
                     }
                 }
 
@@ -137,6 +137,13 @@ struct SettingsSheet: View {
                 }
             }
             .onAppear { loadCurrentValues() }
+            .confirmationDialog(K.L.confirmLeave, isPresented: $confirmLeave, titleVisibility: .visible) {
+                Button(K.L.leaveGroup, role: .destructive) {
+                    appState.leaveCurrentGroup()
+                    dismiss()
+                }
+                Button(K.L.cancel, role: .cancel) {}
+            }
             .toast($toast)
         }
     }

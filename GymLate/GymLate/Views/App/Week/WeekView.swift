@@ -85,6 +85,7 @@ struct WeekView: View {
                     LazyVStack(spacing: 8) {
                         ForEach(weekEntries) { entry in
                             EntryRow(entry: entry,
+                                     people: appState.groupData?.people ?? [],
                                      adminMode: appState.adminMode,
                                      onEdit: { editingEntry = entry },
                                      onDelete: { Task { await deleteEntry(entry) } })
@@ -122,6 +123,10 @@ struct StreakHero: View {
     let extendedToday: Bool
     let onTap: () -> Void
 
+    @State private var scale: CGFloat = 1.0
+    @State private var glowRadius: CGFloat = 12
+    @State private var didAnimate = false
+
     var body: some View {
         Button { onTap() } label: {
             HStack(spacing: 14) {
@@ -134,7 +139,10 @@ struct StreakHero: View {
                             startPoint: .top, endPoint: .bottom))
                         : AnyShapeStyle(Color.secondary.opacity(0.45)))
                     .shadow(color: extendedToday ? Color(hex: "#fb923c").opacity(0.55) : .clear,
-                            radius: 12)
+                            radius: glowRadius)
+                    .animation(UIAccessibility.isReduceMotionEnabled
+                               ? .easeInOut(duration: 0.4) : nil, value: extendedToday)
+                    .scaleEffect(scale)
 
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text("\(streak)")
@@ -159,6 +167,21 @@ struct StreakHero: View {
             .glassCard()
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(streak) \(K.L.shDays(streak))\(extendedToday ? ", \(K.L.shHintDone)" : ", \(K.L.shHintOpen)")")
+        .onChange(of: extendedToday) { _, newValue in
+            guard newValue, !didAnimate, !UIAccessibility.isReduceMotionEnabled else { return }
+            didAnimate = true
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                scale = 1.18
+                glowRadius = 28
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                    scale = 1.0
+                    glowRadius = 12
+                }
+            }
+        }
     }
 }
 
@@ -227,6 +250,7 @@ struct CheckinTimeHero: View {
 
 struct EntryRow: View {
     let entry: Entry
+    var people: [Person] = []
     var adminMode = false
     var onEdit: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
@@ -236,12 +260,16 @@ struct EntryRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(initials(entry.person))
-                .font(Theme.body(13, .bold))
-                .foregroundColor(K.onAccent)
-                .frame(width: 40, height: 40)
-                .background(Circle().fill(LinearGradient(colors: Theme.accentGradient,
-                                                         startPoint: .topLeading, endPoint: .bottomTrailing)))
+            if let p = people.first(where: { $0.name.lowercased() == entry.person.lowercased() }) {
+                AvatarView(emoji: p.avatarEmoji, color: p.avatarColor, img: p.avatarImg, size: 40)
+            } else {
+                Text(initials(entry.person))
+                    .font(Theme.body(13, .bold))
+                    .foregroundColor(K.onAccent)
+                    .frame(width: 40, height: 40)
+                    .background(Circle().fill(LinearGradient(colors: Theme.accentGradient,
+                                                             startPoint: .topLeading, endPoint: .bottomTrailing)))
+            }
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.person)

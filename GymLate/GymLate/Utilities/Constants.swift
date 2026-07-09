@@ -14,6 +14,7 @@ enum K {
 
     // Deployed server URL (Railway)
     static let apiBaseURL  = "https://gym-late-production.up.railway.app"
+    static let cornerRadius: CGFloat = 12
 
     // Avatar options — same lists as the website
     static let avatarEmojis = ["🏋️"]
@@ -35,6 +36,7 @@ enum K {
         static var join: String { de ? "Mit Code beitreten" : "Join with a code" }
 
         // Nav + section labels
+        static var navHome: String { "Home" }
         static var navWeek: String { de ? "Woche" : "Week" }
         static var navHistory: String { de ? "Verlauf" : "History" }
         static var navRecap: String { de ? "Rückblick" : "Recap" }
@@ -53,6 +55,15 @@ enum K {
         static var skipped: String { de ? "übersprungen" : "skipped" }
         static var minsShort: String { de ? "Min." : "min" }
         static var lateKing: String { de ? "Häufigster Zuspätkommer" : "Most Often Late" }
+        static var recapTrendTitle: String { de ? "Verspätungen pro Tag" : "Late min. per day" }
+        static var recapBetterWeek: String { de ? "Besser als letzte Woche" : "Better than last week" }
+        static var recapSameWeek: String { de ? "Wie letzte Woche" : "Same as last week" }
+        static var recapWorseWeek: String { de ? "Schlechter als letzte Woche" : "Worse than last week" }
+        static var recapFirstWeek: String { de ? "Erste aufgezeichnete Woche" : "First recorded week" }
+        static var recapMostPunctual: String { de ? "Pünktlichste" : "Most Punctual" }
+        static var recapMostImproved: String { de ? "Meiste Verbesserung" : "Most Improved" }
+        static func recapOnTime(_ n: Int) -> String { de ? "\(n)× pünktlich" : "\(n)× on time" }
+        static func recapImprovedBy(_ n: Int) -> String { de ? "−\(n) Min. vs. letzte Woche" : "−\(n) min vs last week" }
         static var allSkippedTitle: String { de ? "Alles übersprungen" : "All skipped" }
         static func timesLate(_ n: Int) -> String { de ? (n == 1 ? "1× zu spät" : "\(n)× zu spät") : (n == 1 ? "1× late" : "\(n)× late") }
         static func weekRange(_ s: String, _ e: String) -> String { "\(fmtShort(s)) – \(fmtShort(e))" }

@@ -9,7 +9,6 @@ struct PeopleView: View {
     @State private var showJoin = false
     @State private var showCreate = false
     @State private var toast: String?
-    @State private var confirmLeave = false
 
     var body: some View {
         ScrollView {
@@ -96,19 +95,6 @@ struct PeopleView: View {
                 }
                 .padding(.horizontal, 16)
 
-                // Leave group (website: red button at the bottom of the tab)
-                Button { confirmLeave = true } label: {
-                    Text(K.L.leaveGroup)
-                        .font(Theme.body(14, .bold))
-                        .foregroundColor(K.red)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(K.red.opacity(0.10)))
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 16)
-
                 if appState.adminMode {
                     AdminPanelSection(toast: $toast)
                         .padding(.horizontal, 16)
@@ -121,10 +107,6 @@ struct PeopleView: View {
         .sheet(item: $adminEditPerson) { p in AdminUserEditSheet(person: p, toast: $toast) }
         .sheet(isPresented: $showJoin) { JoinGroupSheet() }
         .sheet(isPresented: $showCreate) { CreateGroupSheet() }
-        .confirmationDialog(K.L.confirmLeave, isPresented: $confirmLeave, titleVisibility: .visible) {
-            Button(K.L.leaveGroup, role: .destructive) { appState.leaveCurrentGroup() }
-            Button(K.L.cancel, role: .cancel) {}
-        }
         .toast($toast)
     }
 }
