@@ -21,20 +21,11 @@ struct AppRootView: View {
                     onSwitchGroup: { showGroupSwitcher = true }
                 )
 
-                // Tab content
-                ZStack {
-                    switch selectedTab {
-                    case .week:    WeekView(showLogEntry: $showLogEntry, toast: $toast)
-                    case .history: HistoryView()
-                    case .recap:   RecapView()
-                    case .people:  PeopleView()
-                    }
+                if #available(iOS 18.0, *) {
+                    nativeTabView
+                } else {
+                    legacyTabLayout
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-            // Floating glass bar: content scrolls underneath it.
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                BottomNav(selected: $selectedTab)
             }
 
             // Overlays
@@ -61,6 +52,49 @@ struct AppRootView: View {
             }
         }
         .toast($toast)
+    }
+
+    /// iOS 18+: native TabView. On iOS 26 this renders the floating Liquid
+    /// Glass bar — the glass pill grows on touch and tracks the finger,
+    /// exactly like Apple Music. No custom animation code needed.
+    @available(iOS 18.0, *)
+    private var nativeTabView: some View {
+        TabView(selection: $selectedTab) {
+            Tab(K.L.navWeek, systemImage: "calendar.badge.clock", value: AppTab.week) {
+                WeekView(showLogEntry: $showLogEntry, toast: $toast)
+                    .background(GymBackground().ignoresSafeArea())
+            }
+            Tab(K.L.navHistory, systemImage: "clock.arrow.circlepath", value: AppTab.history) {
+                HistoryView()
+                    .background(GymBackground().ignoresSafeArea())
+            }
+            Tab(K.L.navRecap, systemImage: "star.fill", value: AppTab.recap) {
+                RecapView()
+                    .background(GymBackground().ignoresSafeArea())
+            }
+            Tab(K.L.navPeople, systemImage: "person.3.fill", value: AppTab.people) {
+                PeopleView()
+                    .background(GymBackground().ignoresSafeArea())
+            }
+        }
+        .tint(K.accentDeep)
+    }
+
+    /// iOS 17 fallback: previous custom glass bar with the yellow sliding pill.
+    private var legacyTabLayout: some View {
+        ZStack {
+            switch selectedTab {
+            case .week:    WeekView(showLogEntry: $showLogEntry, toast: $toast)
+            case .history: HistoryView()
+            case .recap:   RecapView()
+            case .people:  PeopleView()
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // Floating glass bar: content scrolls underneath it.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            BottomNav(selected: $selectedTab)
+        }
     }
 
     private func doGeoCheckin() async {
