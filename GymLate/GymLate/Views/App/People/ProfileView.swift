@@ -129,11 +129,14 @@ struct ProfileView: View {
             .navigationTitle(person.name)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(K.L.close) { dismiss() }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
                 }
             }
-            .sheet(isPresented: $showEdit) { EditProfileSheet(person: person) }
+            .fullScreenCover(isPresented: $showEdit) { EditProfileSheet(person: person) }
             .confirmationDialog(K.L.pvKickConfirm(person.name), isPresented: $confirmKick,
                                 titleVisibility: .visible) {
                 Button(K.L.pvKickBtn, role: .destructive) { kickUser() }
@@ -262,7 +265,12 @@ struct EditProfileSheet: View {
             .navigationTitle(K.L.epTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(K.L.cancel) { dismiss() } }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(K.L.save) { Task { await save() } }.disabled(isLoading)
                 }

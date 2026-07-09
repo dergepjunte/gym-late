@@ -132,8 +132,11 @@ struct SettingsSheet: View {
             .navigationTitle(K.L.msetTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(K.L.close) { dismiss() }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
                 }
             }
             .onAppear { loadCurrentValues() }

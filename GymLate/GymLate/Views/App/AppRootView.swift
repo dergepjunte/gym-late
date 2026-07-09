@@ -53,6 +53,39 @@ struct AppRootView: View {
                 GeoPromptView { Task { await doGeoCheckin() } }
                     .zIndex(500)
             }
+            // Notification bubble (opening-sequence prompts: Wrapped / Hype / Geo)
+            // Floats above the tab bar; zIndex below ceremony overlays.
+            if let bubble = appState.pendingBubble {
+                VStack {
+                    Spacer()
+                    NotificationBubbleView(bubble: bubble) {
+                        appState.onBubbleTapped()
+                    } onDismiss: {
+                        appState.onBubbleDismissed()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 100)
+                }
+                .zIndex(480)
+                .transition(
+                    UIAccessibility.isReduceMotionEnabled
+                        ? .opacity
+                        : .move(edge: .bottom).combined(with: .opacity)
+                )
+                .id(bubble.id)
+            }
+
+            // Replay hint chip (shown after bubble dismiss)
+            if let hint = appState.replayHint {
+                VStack {
+                    Spacer()
+                    ReplayHintChip(hint: hint) { appState.replayHint = nil }
+                        .padding(.bottom, 100)
+                }
+                .zIndex(479)
+                .transition(.opacity)
+            }
+
             // Check-in ceremony (website: late-anim → streak-anim → chest)
             if let mins = appState.lateAnimMins {
                 LateAnimView(minsOff: mins) {
@@ -75,13 +108,13 @@ struct AppRootView: View {
                     .zIndex(620)
             }
         }
-        .sheet(isPresented: $showLogEntry) { LogEntrySheet(toast: $toast) }
-        .sheet(isPresented: $showSettings) { SettingsSheet() }
-        .sheet(isPresented: $showGroupSwitcher) { GroupSwitcherSheet() }
-        .sheet(isPresented: $showMyProfile) {
+        .fullScreenCover(isPresented: $showLogEntry) { LogEntrySheet(toast: $toast) }
+        .fullScreenCover(isPresented: $showSettings) { SettingsSheet() }
+        .fullScreenCover(isPresented: $showGroupSwitcher) { GroupSwitcherSheet() }
+        .fullScreenCover(isPresented: $showMyProfile) {
             if let me = myPerson { ProfileView(person: me) }
         }
-        .sheet(isPresented: $showAdminLogin) { AdminLoginSheet(toast: $toast) }
+        .fullScreenCover(isPresented: $showAdminLogin) { AdminLoginSheet(toast: $toast) }
         .onReceive(SyncEngine.shared.$syncErrorMessage) { msg in
             if let msg {
                 toast = msg

@@ -56,8 +56,8 @@ struct LandingView: View {
                 }
             }
         }
-        .sheet(isPresented: $showCreate) { CreateGroupSheet() }
-        .sheet(isPresented: $showJoin) { JoinGroupSheet() }
+        .fullScreenCover(isPresented: $showCreate) { CreateGroupSheet() }
+        .fullScreenCover(isPresented: $showJoin) { JoinGroupSheet() }
         .toast($toast)
     }
 }

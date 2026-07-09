@@ -46,15 +46,18 @@ struct CreateGroupSheet: View {
             .navigationTitle(K.L.de ? "Neue Gruppe" : "New Group")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(K.L.cancel) { dismiss() }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(K.L.de ? "Erstellen" : "Create") { Task { await create() } }
                         .disabled(isLoading || groupName.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
-            .sheet(isPresented: $showProfile) {
+            .fullScreenCover(isPresented: $showProfile) {
                 if let g = createdGroup {
                     ProfileSetupSheet(group: g, isNew: true)
                 }

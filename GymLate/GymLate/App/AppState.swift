@@ -1,6 +1,18 @@
 import Foundation
 import Combine
 import CoreLocation
+import SwiftUI
+
+/// A passive opening-sequence prompt shown as a glass pill above the nav bar.
+/// Tapping plays the full-screen animation; dismissing shows a replay hint.
+struct BubbleNotification: Equatable, Identifiable {
+    enum Kind { case wrapped, dailyHype, geo }
+    let id = UUID()
+    let kind: Kind
+    let glyph: String
+    let title: String
+    let subtitle: String
+}
 
 @MainActor
 final class AppState: ObservableObject {
@@ -16,11 +28,20 @@ final class AppState: ObservableObject {
     @Published var isOffline = false
     @Published var pendingSyncCount = 0
 
-    // Opening sequence overlays
+    // Opening sequence overlays (set when a bubble is tapped)
     @Published var showWrapped = false
     @Published var showDailyHype = false
     @Published var showGeoPrompt = false
     @Published var geoCheckinPossible = false
+
+    // Notification bubble system: passive prompts appear as a glass pill first.
+    // Tapping the bubble sets the matching showXxx flag → full-screen overlay.
+    // Dismissing advances the queue and shows a replay hint chip.
+    @Published var pendingBubble: BubbleNotification?
+    @Published var replayHint: ReplayHint?
+    private var bubbleQueue: [BubbleNotification] = []
+
+    enum ReplayHint: Equatable { case recap, checkin }
 
     // Admin mode (password lives in memory only, mirroring the website)
     @Published var adminMode = false
@@ -89,6 +110,7 @@ final class AppState: ObservableObject {
     func switchGroup(_ group: GroupInfo) async {
         stopPolling()
         showWrapped = false; showDailyHype = false; showGeoPrompt = false
+        pendingBubble = nil; bubbleQueue = []; replayHint = nil
 
         activeGroup = group
         store.activeGroup = group
@@ -251,38 +273,67 @@ final class AppState: ObservableObject {
         let todayScheduled = gymDays.count == 7 && Array(gymDays)[idx] == "1"
         let shouldShowHype = todayScheduled && !store.isDailyHypeSeen(date: today)
 
-        // 3. Geo: handled async in AppRootView after hype
+        // 3. Geo: enqueued after other bubbles advance
         _ = group // referenced to avoid unused warning
 
+        // Build bubble queue (Wrapped → Hype → Geo); each appears as a pill first.
+        bubbleQueue = []
         if shouldShowWrapped {
             store.markWrappedSeen(weekStart: weekStart)
-            showWrapped = true
-        } else if shouldShowHype {
-            store.markDailyHypeSeen(date: today)
-            showDailyHype = true
+            bubbleQueue.append(BubbleNotification(kind: .wrapped,
+                glyph: "🎉", title: K.L.bubbleWrappedTitle, subtitle: K.L.bubbleWrappedSub))
         }
-        // geo prompt triggered from AppRootView after hype dismissal
+        if shouldShowHype {
+            store.markDailyHypeSeen(date: today)
+            bubbleQueue.append(BubbleNotification(kind: .dailyHype,
+                glyph: "💪", title: K.L.bubbleHypeTitle, subtitle: K.L.bubbleHypeSub))
+        }
+        advanceBubbleQueue()
+    }
+
+    /// Show the next bubble in the queue, or trigger geo check when empty.
+    private func advanceBubbleQueue() {
+        if bubbleQueue.isEmpty {
+            Task { await checkGeoPrompt() }
+        } else {
+            withAnimation(.spring(response: 0.38, dampingFraction: 0.76)) {
+                pendingBubble = bubbleQueue.removeFirst()
+            }
+        }
+    }
+
+    /// Called when the user TAPS the bubble → play the full-screen animation.
+    func onBubbleTapped() {
+        guard let b = pendingBubble else { return }
+        withAnimation(.easeOut(duration: 0.18)) { pendingBubble = nil }
+        switch b.kind {
+        case .wrapped:  showWrapped = true
+        case .dailyHype: showDailyHype = true
+        case .geo:      showGeoPrompt = true
+        }
+    }
+
+    /// Called when the user DISMISSES the bubble → show replay hint and advance.
+    func onBubbleDismissed() {
+        guard let b = pendingBubble else { return }
+        withAnimation(.easeOut(duration: 0.18)) { pendingBubble = nil }
+        replayHint = (b.kind == .wrapped) ? .recap : .checkin
+        // Auto-clear hint after 6 seconds
+        Task {
+            try? await Task.sleep(nanoseconds: 6_000_000_000)
+            await MainActor.run { if self.replayHint != nil { self.replayHint = nil } }
+        }
+        advanceBubbleQueue()
     }
 
     func onHypeDismissed() {
         showDailyHype = false
-        Task { await checkGeoPrompt() }
+        advanceBubbleQueue()
     }
 
     func onWrappedDismissed() {
         showWrapped = false
-        let today = dateYMD(Date())
-        let cal = Calendar.iso8601UTC
-        let gymDays = groupData?.gymDays ?? ""
-        let dayOfWeek = cal.component(.weekday, from: Date())
-        let idx = dayOfWeek == 1 ? 6 : dayOfWeek - 2
-        let todayScheduled = gymDays.count == 7 && Array(gymDays)[idx] == "1"
-        if todayScheduled && !store.isDailyHypeSeen(date: today) {
-            store.markDailyHypeSeen(date: today)
-            showDailyHype = true
-        } else {
-            Task { await checkGeoPrompt() }
-        }
+        advanceBubbleQueue()
     }
 
     // MARK: - Streak info & check-in ceremony (website parity)
@@ -341,11 +392,18 @@ final class AppState: ObservableObject {
 
     // MARK: - Admin debug helpers (website: admin panel debug section)
 
-    func forceDailyHype() { showDailyHype = true }
+    func forceDailyHype() {
+        // Show as bubble first (same as production opening sequence)
+        bubbleQueue = [BubbleNotification(kind: .dailyHype,
+            glyph: "💪", title: K.L.bubbleHypeTitle, subtitle: K.L.bubbleHypeSub)]
+        advanceBubbleQueue()
+    }
 
     func forceGeoPrompt() {
         geoCheckinPossible = true
-        showGeoPrompt = true
+        bubbleQueue = [BubbleNotification(kind: .geo,
+            glyph: "📍", title: K.L.bubbleGeoTitle, subtitle: K.L.bubbleGeoSub)]
+        advanceBubbleQueue()
     }
 
     func clearTodayFlags() {
@@ -356,7 +414,10 @@ final class AppState: ObservableObject {
     func replayWrapped() {
         let weekStart = dateYMD(Calendar.iso8601UTC.startOfWeek(for: Date()))
         store.clearWrappedSeen(weekStart: weekStart)
-        showWrapped = true
+        // Show via bubble (matches the opening sequence experience)
+        bubbleQueue = [BubbleNotification(kind: .wrapped,
+            glyph: "🎉", title: K.L.bubbleWrappedTitle, subtitle: K.L.bubbleWrappedSub)]
+        advanceBubbleQueue()
     }
 
     private func checkGeoPrompt() async {

@@ -28,8 +28,11 @@ struct AdminLoginSheet: View {
             .navigationTitle(K.L.maTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(K.L.cancel) { dismiss() }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(K.L.maSubmit) { Task { await login() } }
@@ -37,7 +40,6 @@ struct AdminLoginSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium])
     }
 
     private func login() async {

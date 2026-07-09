@@ -43,21 +43,11 @@ struct GroupSwitcherSheet: View {
                 }
 
                 Section {
-                    Button {
-                        dismiss()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            showJoin = true
-                        }
-                    } label: {
+                    Button { showJoin = true } label: {
                         Label(K.L.mgsJoin, systemImage: "link")
                             .foregroundColor(K.accentDark)
                     }
-                    Button {
-                        dismiss()
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            showCreate = true
-                        }
-                    } label: {
+                    Button { showCreate = true } label: {
                         Label(K.L.mgsCreate, systemImage: "plus.circle")
                             .foregroundColor(K.accentDark)
                     }
@@ -68,12 +58,15 @@ struct GroupSwitcherSheet: View {
             .navigationTitle(K.L.mgsTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(K.L.close) { dismiss() }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
                 }
             }
         }
-        .sheet(isPresented: $showJoin) { JoinGroupSheet() }
-        .sheet(isPresented: $showCreate) { CreateGroupSheet() }
+        .fullScreenCover(isPresented: $showJoin) { JoinGroupSheet() }
+        .fullScreenCover(isPresented: $showCreate) { CreateGroupSheet() }
     }
 }

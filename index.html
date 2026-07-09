@@ -818,6 +818,77 @@
     }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
 
+    /* ── Notification Bubble ────────────────────────────────── */
+    .notif-bubble {
+      position: fixed;
+      bottom: calc(108px + env(safe-area-inset-bottom));
+      left: 50%; transform: translateX(-50%) translateY(24px);
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 14px 12px 12px; border-radius: 50px;
+      min-width: 260px; max-width: calc(100vw - 32px);
+      z-index: 480; opacity: 0; pointer-events: none;
+      transition: opacity .3s, transform .38s cubic-bezier(.34,1.56,.64,1);
+      cursor: pointer;
+    }
+    .notif-bubble.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: all; }
+    .notif-glyph {
+      width: 44px; height: 44px; flex-shrink: 0; border-radius: 50%;
+      background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-t1 { font-size: 14px; font-weight: 800; color: var(--text-1); line-height: 1.2; }
+    .notif-t2 { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+    .notif-x {
+      background: none; border: none; color: var(--text-2); cursor: pointer;
+      font-size: 18px; padding: 4px 2px; flex-shrink: 0;
+      font-family: inherit; line-height: 1; opacity: .7;
+    }
+    .replay-hint-chip {
+      position: fixed;
+      bottom: calc(108px + env(safe-area-inset-bottom));
+      left: 50%; transform: translateX(-50%) translateY(16px);
+      padding: 10px 20px; border-radius: 50px;
+      font-size: 13px; font-weight: 600; color: var(--accent-text);
+      z-index: 479; opacity: 0; pointer-events: none;
+      transition: opacity .22s, transform .22s; white-space: nowrap;
+      cursor: pointer; border: none; font-family: inherit; display: none;
+    }
+    .replay-hint-chip.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: all; }
+
+    /* ── Full-page slides ───────────────────────────────────── */
+    .fullpage {
+      position: fixed; inset: 0; z-index: 200;
+      transform: translateX(100%);
+      transition: transform .35s cubic-bezier(.25,.46,.45,.94);
+      background: var(--bg); overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .fullpage.open { transform: translateX(0); }
+    .fullpage-bar {
+      position: sticky; top: 0; z-index: 1;
+      display: flex; align-items: center; gap: 8px;
+      padding: calc(env(safe-area-inset-top) + 14px) 16px 14px;
+      background: var(--bg); border-bottom: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .fullpage-back {
+      display: flex; align-items: center; gap: 4px;
+      background: none; border: none; font-family: inherit;
+      font-size: 16px; font-weight: 700; color: var(--accent-text);
+      cursor: pointer; padding: 4px 6px 4px 0; flex-shrink: 0;
+    }
+    .fullpage-bar-title {
+      flex: 1; font-size: 17px; font-weight: 700; color: var(--text-1);
+      text-align: center; margin-right: 36px;
+    }
+    .fullpage-inner {
+      padding: 24px 20px; max-width: 520px; margin: 0 auto;
+    }
+    /* Keep chest / success / recovery overlays above fullpages */
+    #modal-chest, #modal-success, #modal-recovery-code { z-index: 300; }
+
     /* ── LOADING ─────────────────────────────────────────────── */
     .loading-screen {
       position:fixed; inset:0; z-index:200;
@@ -1447,6 +1518,18 @@
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+<!-- Notification Bubble (prompts-first) -->
+<div class="notif-bubble glass" id="notif-bubble" role="alert" aria-live="polite">
+  <div class="notif-glyph" id="notif-glyph" aria-hidden="true">🏋️</div>
+  <div class="notif-body">
+    <div class="notif-t1" id="notif-t1"></div>
+    <div class="notif-t2" id="notif-t2"></div>
+  </div>
+  <button class="notif-x" id="notif-x" aria-label="Dismiss">✕</button>
+</div>
+<!-- Replay Hint Chip -->
+<button class="replay-hint-chip glass" id="replay-hint"></button>
+
 <!-- ══════════════════════════════════════════════════════ -->
 <!--  LANDING SCREEN                                       -->
 <!-- ══════════════════════════════════════════════════════ -->
@@ -1597,6 +1680,7 @@
     <!-- ── RECAP TAB ── -->
     <div class="tab-pane" id="pane-recap">
       <div class="sec-label" id="lbl-history"></div>
+      <button class="btn btn-ghost btn-full" id="recap-replay-btn" style="margin-bottom:16px"></button>
       <div id="week-recap"></div>
     </div>
 
@@ -1672,9 +1756,12 @@
 <!-- ══════════════════════════════════════════════════════ -->
 
 <!-- Create Group -->
-<div class="overlay" id="modal-create">
-  <div class="modal glass">
-    <h2 class="modal-title" id="mc-title"></h2>
+<div class="fullpage" id="modal-create">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="mc-cancel">‹</button>
+    <div class="fullpage-bar-title" id="mc-title"></div>
+  </div>
+  <div class="fullpage-inner">
     <div class="form-grp">
       <label class="form-lbl" id="mc-lbl-name"></label>
       <input type="text" class="form-ctrl" id="mc-name" maxlength="50" autocomplete="off">
@@ -1684,10 +1771,7 @@
       <div class="day-picker" id="mc-day-picker"></div>
     </div>
     <div class="error-msg" id="mc-error"></div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost" id="mc-cancel"></button>
-      <button class="btn btn-primary" id="mc-submit"></button>
-    </div>
+    <button class="btn btn-primary btn-full btn-xl" id="mc-submit" style="margin-top:8px"></button>
   </div>
 </div>
 
@@ -1704,27 +1788,31 @@
 </div>
 
 <!-- Join Group -->
-<div class="overlay" id="modal-join">
-  <div class="modal glass">
-    <h2 class="modal-title" id="mj-title"></h2>
-    <p  class="modal-sub"   id="mj-sub"></p>
+<div class="fullpage" id="modal-join">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="mj-cancel">‹</button>
+    <div class="fullpage-bar-title" id="mj-title"></div>
+  </div>
+  <div class="fullpage-inner">
+    <p class="modal-sub" id="mj-sub"></p>
     <div class="form-grp">
       <label class="form-lbl" id="mj-lbl"></label>
       <input type="text" class="form-ctrl code-input" id="mj-code"
              maxlength="6" autocomplete="off" autocapitalize="characters" spellcheck="false" inputmode="text">
     </div>
     <div class="error-msg" id="mj-error"></div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost"   id="mj-cancel"></button>
-      <button class="btn btn-primary" id="mj-submit"></button>
-    </div>
+    <button class="btn btn-primary btn-full btn-xl" id="mj-submit" style="margin-top:8px"></button>
   </div>
 </div>
 
 <!-- Log Late / Skip -->
-<div class="overlay" id="modal-late">
-  <div class="modal glass">
-    <div class="mode-toggle">
+<div class="fullpage" id="modal-late">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="ml-cancel">‹</button>
+    <div class="fullpage-bar-title" id="ml-title"></div>
+  </div>
+  <div class="fullpage-inner">
+    <div class="mode-toggle" style="margin-bottom:18px">
       <button class="mode-btn active" id="ml-mode-attend"></button>
       <button class="mode-btn"        id="ml-mode-late"></button>
       <button class="mode-btn"        id="ml-mode-skip"></button>
@@ -1765,18 +1853,18 @@
       </div>
     </div>
     <div class="error-msg" id="ml-error"></div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost"   id="ml-cancel"></button>
-      <button class="btn btn-primary" id="ml-save"></button>
-    </div>
+    <button class="btn btn-primary btn-full btn-xl" id="ml-save" style="margin-top:8px"></button>
   </div>
 </div>
 
 <!-- Edit Entry (admin only) -->
-<div class="overlay" id="modal-edit-entry">
-  <div class="modal glass">
-    <h2 class="modal-title" id="ee-title"></h2>
-    <div class="mode-toggle">
+<div class="fullpage" id="modal-edit-entry">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="ee-cancel">‹</button>
+    <div class="fullpage-bar-title" id="ee-title"></div>
+  </div>
+  <div class="fullpage-inner">
+    <div class="mode-toggle" style="margin-bottom:18px">
       <button class="mode-btn" id="ee-mode-attend"></button>
       <button class="mode-btn" id="ee-mode-late"></button>
       <button class="mode-btn" id="ee-mode-skip"></button>
@@ -1813,32 +1901,33 @@
       </div>
     </div>
     <div class="error-msg" id="ee-error"></div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost"   id="ee-cancel"></button>
-      <button class="btn btn-primary" id="ee-save"></button>
-    </div>
+    <button class="btn btn-primary btn-full btn-xl" id="ee-save" style="margin-top:8px"></button>
   </div>
 </div>
 
 <!-- Admin Login -->
-<div class="overlay" id="modal-admin">
-  <div class="modal glass">
-    <h2 class="modal-title" id="ma-title"></h2>
+<div class="fullpage" id="modal-admin">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="ma-cancel">‹</button>
+    <div class="fullpage-bar-title" id="ma-title"></div>
+  </div>
+  <div class="fullpage-inner">
     <div class="form-grp">
       <label class="form-lbl" id="ma-lbl"></label>
       <input type="password" class="form-ctrl" id="ma-pwd" autocomplete="off">
     </div>
     <div class="error-msg" id="ma-error"></div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost"   id="ma-cancel"></button>
-      <button class="btn btn-primary" id="ma-submit"></button>
-    </div>
+    <button class="btn btn-primary btn-full btn-xl" id="ma-submit" style="margin-top:8px"></button>
   </div>
 </div>
 
 <!-- Profile Setup (new user OR login) -->
-<div class="overlay" id="modal-profile-setup">
-  <div class="modal glass">
+<div class="fullpage" id="modal-profile-setup">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="psu-cancel">‹</button>
+    <div class="fullpage-bar-title" id="psu-bar-title"></div>
+  </div>
+  <div class="fullpage-inner">
     <!-- Avatar preview -->
     <div class="avatar-preview-wrap">
       <div class="avatar-circle xl" id="psu-preview" style="display:inline-flex;background:#7c3aed">🏋️</div>
@@ -1865,10 +1954,7 @@
         <div class="color-grid" id="psu-color-grid"></div>
       </div>
       <div class="error-msg" id="psu-error"></div>
-      <div class="modal-btns">
-        <button class="btn btn-ghost" id="psu-cancel"></button>
-        <button class="btn btn-primary" id="psu-submit-new"></button>
-      </div>
+      <button class="btn btn-primary btn-full btn-xl" id="psu-submit-new" style="margin-top:8px"></button>
       <div style="text-align:center;margin-top:14px">
         <button class="toggle-link" id="psu-to-login"></button>
       </div>
@@ -1889,10 +1975,7 @@
                autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="AAAA-BBBB-CCCC">
       </div>
       <div class="error-msg" id="psu-login-error"></div>
-      <div class="modal-btns">
-        <button class="btn btn-ghost" id="psu-login-cancel"></button>
-        <button class="btn btn-primary" id="psu-submit-login"></button>
-      </div>
+      <button class="btn btn-primary btn-full btn-xl" id="psu-submit-login" style="margin-top:8px"></button>
       <div style="text-align:center;margin-top:14px">
         <button class="toggle-link" id="psu-to-new"></button>
       </div>
@@ -1913,8 +1996,12 @@
 </div>
 
 <!-- Profile View -->
-<div class="overlay" id="modal-profile-view">
-  <div class="modal glass">
+<div class="fullpage" id="modal-profile-view">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="pv-close">‹</button>
+    <div class="fullpage-bar-title" id="pv-bar-title"></div>
+  </div>
+  <div class="fullpage-inner">
     <div class="pv-avatar-wrap">
       <div class="avatar-circle xl" id="pv-avatar" style="display:inline-flex"></div>
     </div>
@@ -1952,15 +2039,16 @@
     <div id="pv-kick-section" style="display:none;margin-top:4px">
       <button class="leave-btn" id="pv-kick-btn"></button>
     </div>
-    <div class="modal-btns" style="margin-top:16px">
-      <button class="btn btn-ghost btn-full" id="pv-close"></button>
-    </div>
   </div>
 </div>
 
 <!-- Edit Profile (reuses profile setup structure, different mode) -->
-<div class="overlay" id="modal-edit-profile">
-  <div class="modal glass">
+<div class="fullpage" id="modal-edit-profile">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="ep-cancel">‹</button>
+    <div class="fullpage-bar-title" id="ep-title"></div>
+  </div>
+  <div class="fullpage-inner">
     <div class="avatar-preview-wrap">
       <div class="avatar-circle xl" id="ep-preview" style="display:inline-flex;background:#7c3aed">🏋️</div>
     </div>
@@ -1969,7 +2057,6 @@
       <button type="button" class="btn-upload-photo" id="ep-upload-btn"></button>
     </div>
     <div class="avatar-upload-msg" id="ep-upload-msg" style="display:none"></div>
-    <h2 class="modal-title" id="ep-title"></h2>
     <div class="form-grp">
       <label class="form-lbl" id="ep-name-lbl"></label>
       <input type="text" class="form-ctrl" id="ep-name" maxlength="30" autocomplete="off" autocorrect="off" spellcheck="false">
@@ -1983,17 +2070,17 @@
       <div class="color-grid" id="ep-color-grid"></div>
     </div>
     <div class="error-msg" id="ep-error"></div>
-    <div class="modal-btns">
-      <button class="btn btn-ghost" id="ep-cancel"></button>
-      <button class="btn btn-primary" id="ep-submit"></button>
-    </div>
+    <button class="btn btn-primary btn-full btn-xl" id="ep-submit" style="margin-top:8px"></button>
   </div>
 </div>
 
 <!-- Settings -->
-<div class="overlay" id="modal-settings">
-  <div class="modal glass">
-    <h2 class="modal-title" id="mset-title"></h2>
+<div class="fullpage" id="modal-settings">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="mset-close">‹</button>
+    <div class="fullpage-bar-title" id="mset-title"></div>
+  </div>
+  <div class="fullpage-inner">
     <div class="settings-section" id="mset-gymdays-section">
       <div class="settings-section-title" id="mset-gymdays-lbl"></div>
       <div class="day-picker" id="mset-gym-picker"></div>
@@ -2045,9 +2132,6 @@
       <button class="btn btn-ghost" id="mset-geo-test" style="margin-top:8px;width:100%"></button>
       <div class="mset-geo-hint" id="mset-geo-hint"></div>
     </div>
-    <div class="modal-btns" style="margin-top:8px">
-      <button class="btn btn-ghost btn-full" id="mset-close"></button>
-    </div>
   </div>
 </div>
 
@@ -2066,33 +2150,59 @@
 </div>
 
 <!-- Calendar Day Detail -->
-<div class="overlay" id="modal-cal-day">
-  <div class="modal glass">
-    <div class="modal-title" id="cal-day-title" style="margin-bottom:4px"></div>
-    <div id="cal-day-list" style="margin-top:12px"></div>
-    <div class="modal-btns" style="margin-top:16px">
-      <button class="btn btn-ghost btn-full" id="cal-day-close">OK</button>
+<div class="fullpage" id="modal-cal-day">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="cal-day-close">‹</button>
+    <div class="fullpage-bar-title" id="cal-day-title"></div>
+  </div>
+  <div class="fullpage-inner">
+    <div id="cal-day-list"></div>
+    <!-- Admin: add entry form (shown when adminMode) -->
+    <div id="cal-day-admin-add" style="display:none;margin-top:16px">
+      <div class="form-grp">
+        <label class="form-lbl" id="cal-add-person-lbl"></label>
+        <div class="select-wrap"><select class="form-ctrl" id="cal-add-person"></select></div>
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl" id="cal-add-type-lbl"></label>
+        <div class="mode-toggle" style="margin-bottom:0">
+          <button class="mode-btn active" id="cal-add-type-attend" data-type="attend">✓</button>
+          <button class="mode-btn" id="cal-add-type-late" data-type="late">Late</button>
+          <button class="mode-btn" id="cal-add-type-skip" data-type="skip">⊘ Skip</button>
+        </div>
+      </div>
+      <div class="form-grp" id="cal-add-mins-wrap" style="display:none">
+        <label class="form-lbl" id="cal-add-mins-lbl"></label>
+        <input type="number" class="form-ctrl" id="cal-add-mins" min="1" max="999" value="10">
+      </div>
+      <div class="error-msg" id="cal-add-error"></div>
+      <button class="btn btn-primary btn-full" id="cal-add-submit" style="margin-top:8px"></button>
     </div>
   </div>
 </div>
 
 <!-- Group Switcher -->
-<div class="overlay" id="modal-group-switcher">
-  <div class="modal glass">
-    <h2 class="modal-title" id="mgs-title"></h2>
+<div class="fullpage" id="modal-group-switcher">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="mgs-close-btn">‹</button>
+    <div class="fullpage-bar-title" id="mgs-title"></div>
+  </div>
+  <div class="fullpage-inner">
     <div id="mgs-list"></div>
-    <div class="group-switcher-actions">
+    <div class="group-switcher-actions" style="margin-top:16px">
       <button class="btn btn-ghost btn-full" id="mgs-join-btn"></button>
       <button class="btn btn-ghost btn-full" id="mgs-create-btn"></button>
-      <button class="btn btn-ghost btn-full" id="mgs-close-btn"></button>
     </div>
   </div>
 </div>
 
 <!-- Admin User Edit -->
-<div class="overlay" id="modal-admin-user">
-  <div class="modal glass">
-    <h2 class="modal-title" id="au-title"></h2>
+<div class="fullpage" id="modal-admin-user">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="au-cancel">‹</button>
+    <div class="fullpage-bar-title" id="au-title"></div>
+  </div>
+  <div class="fullpage-inner">
     <div class="admin-user-section-title" id="au-days-lbl"></div>
     <div class="day-picker" id="au-day-picker"></div>
     <div class="admin-user-section-title" id="au-stats-lbl"></div>
@@ -2105,10 +2215,7 @@
       <input type="number" class="admin-number-input" id="au-freezes-input" min="0" max="10">
     </div>
     <div class="error-msg" id="au-error"></div>
-    <div class="modal-btns" style="margin-top:16px">
-      <button class="btn btn-ghost" id="au-cancel"></button>
-      <button class="btn btn-primary" id="au-save"></button>
-    </div>
+    <button class="btn btn-primary btn-full" id="au-save" style="margin-top:16px"></button>
     <div style="margin-top:10px">
       <button class="leave-btn" id="au-kick-btn"></button>
     </div>
@@ -2269,6 +2376,18 @@ const TRANS = {
     shHintOpen:'Jetzt einchecken →', shHintDone:'Heute verlängert!',
     saLbl: n => n===1 ? 'Tag Streak!' : 'Tage Streak!',
     saContinue:'Weiter',
+    // Notification bubbles
+    bubbleWrappedTitle:'Wöchentlicher Rückblick 🎉', bubbleWrappedSub:'Tippen um den Rückblick zu sehen',
+    bubbleHypeTitle:'Heute ist Gym-Tag 💪', bubbleHypeSub:'Los geht\'s!',
+    bubbleGeoTitle:'Du bist in der Nähe 📍', bubbleGeoSub:'Jetzt einchecken?',
+    replayHintRecap:'Rückblick unter Recap ansehen ›',
+    replayHintCheckin:'Über den Check-in-Button einchecken ›',
+    recapReplayBtn:'▶ Wöchentlicher Rückblick',
+    // Admin calendar
+    admCalAddEntry:'+ Eintrag hinzufügen',
+    toastEntryAdded:'Eintrag hinzugefügt ✓',
+    toastEntryEdited:'Eintrag aktualisiert ✓',
+    toastEntryDeleted:'Eintrag gelöscht ✓',
   },
   en: {
     lsTagline:'The gym app for you and your crew: check-ins, streaks — and who\'s late.',
@@ -2417,6 +2536,18 @@ const TRANS = {
     shHintOpen:'Check in now →', shHintDone:'Extended today!',
     saLbl: n => n===1 ? 'day streak!' : 'day streak!',
     saContinue:'Continue',
+    // Notification bubbles
+    bubbleWrappedTitle:'Weekly Recap 🎉', bubbleWrappedSub:'Tap to watch the recap',
+    bubbleHypeTitle:'It\'s gym day 💪', bubbleHypeSub:'Let\'s go!',
+    bubbleGeoTitle:'You\'re nearby 📍', bubbleGeoSub:'Check in now?',
+    replayHintRecap:'Rewatch recap under Recap ›',
+    replayHintCheckin:'Check in via the check-in button ›',
+    recapReplayBtn:'▶ Weekly Recap',
+    // Admin calendar
+    admCalAddEntry:'+ Add entry',
+    toastEntryAdded:'Entry added ✓',
+    toastEntryEdited:'Entry updated ✓',
+    toastEntryDeleted:'Entry deleted ✓',
   }
 };
 const T = TRANS[(navigator.language||'').toLowerCase().startsWith('de') ? 'de' : 'en'];
@@ -2679,6 +2810,8 @@ function showScreen(id){
 }
 function openOv(id){ document.getElementById(id).classList.add('open'); }
 function closeOv(id){ document.getElementById(id).classList.remove('open'); }
+function openPage(id){ document.getElementById(id).classList.add('open'); }
+function closePage(id){ document.getElementById(id).classList.remove('open'); }
 
 function renderLandingAdminTools() {
   const show = adminMode && !group;
@@ -3219,32 +3352,104 @@ document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>
 // ════════════════════════════════════════════════════════
 //  CALENDAR HANDLERS
 // ════════════════════════════════════════════════════════
-document.getElementById('cal-grid').addEventListener('click', e => {
-  const cell = e.target.closest('.cal-has-entries');
-  if (!cell || !data) return;
-  const date = cell.dataset.date;
+let _calDayDate = null; // currently viewed date in cal-day panel
+let _calAddType = 'attend'; // selected type in admin add form
+
+function openCalDay(date) {
+  _calDayDate = date;
   const entries = (data.entries || []).filter(e => e.date === date);
   const titleEl = document.getElementById('cal-day-title');
   const listEl  = document.getElementById('cal-day-list');
   if (titleEl) titleEl.textContent = fmtFull(date);
-  if (listEl) listEl.innerHTML = entries.map(e => {
-    const isSkip = e.type === 'skip';
-    const isAttendCal = e.type === 'attend';
-    const badge = isSkip
-      ? `<span class="skip-badge">&#x2298; ${esc(T.reasonLabel(e.reason)||T.skipped)}</span>`
-      : isAttendCal
-        ? `<span class="attend-badge">✓</span>`
-        : `<span class="late-badge">${e.mins} ${T.minsShort}</span>`;
-    return `<div class="entry" style="margin-bottom:8px">
-      <div class="avatar">${esc(initials(e.person))}</div>
-      <div class="entry-info"><div class="entry-name">${esc(e.person)}</div></div>
-      ${badge}
-    </div>`;
-  }).join('');
-  openOv('modal-cal-day');
+  if (listEl) {
+    listEl.innerHTML = entries.map(e => {
+      const isSkip = e.type === 'skip';
+      const isAttendCal = e.type === 'attend';
+      const badge = isSkip
+        ? `<span class="skip-badge">&#x2298; ${esc(T.reasonLabel(e.reason)||T.skipped)}</span>`
+        : isAttendCal
+          ? `<span class="attend-badge">✓</span>`
+          : `<span class="late-badge">${e.mins} ${T.minsShort}</span>`;
+      const adminControls = adminMode ? `
+        <button class="admin-del-entry-btn" data-id="${esc(e.id)}" style="background:none;border:none;color:var(--red,#ef4444);cursor:pointer;padding:4px 6px;font-size:15px;" title="${esc(T.admCalAddEntry)}">✕</button>` : '';
+      return `<div class="entry" style="margin-bottom:8px">
+        <div class="avatar">${esc(initials(e.person))}</div>
+        <div class="entry-info"><div class="entry-name">${esc(e.person)}</div></div>
+        ${badge}${adminControls}
+      </div>`;
+    }).join('') || (adminMode ? '' : `<div style="color:var(--text-2);text-align:center;padding:16px 0"></div>`);
+  }
+
+  // Admin add-entry form
+  const addSection = document.getElementById('cal-day-admin-add');
+  if (addSection) {
+    addSection.style.display = adminMode ? '' : 'none';
+    if (adminMode) {
+      // Populate person select
+      const sel = document.getElementById('cal-add-person');
+      sel.innerHTML = (data.people || []).map(p => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join('');
+      // Reset add type
+      _calAddType = 'attend';
+      document.getElementById('cal-add-mins-wrap').style.display = 'none';
+      document.querySelectorAll('#cal-day-admin-add .mode-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.type === 'attend');
+      });
+      document.getElementById('cal-add-error').textContent = '';
+    }
+  }
+  openPage('modal-cal-day');
+}
+
+document.getElementById('cal-grid').addEventListener('click', e => {
+  const cell = e.target.closest('[data-date]');
+  if (!cell || !data) return;
+  const date = cell.dataset.date;
+  const hasEntries = cell.classList.contains('cal-has-entries');
+  // Allow tap if has entries OR admin mode (to add to any past day)
+  if (!hasEntries && !adminMode) return;
+  if (date >= todayStr() && !adminMode) return; // future days only editable in admin
+  openCalDay(date);
 });
-document.getElementById('cal-day-close').addEventListener('click', () => closeOv('modal-cal-day'));
-document.getElementById('modal-cal-day').addEventListener('click', e => { if(e.target===e.currentTarget) closeOv('modal-cal-day'); });
+
+// Admin delete entry from cal-day
+document.getElementById('cal-day-list').addEventListener('click', async e => {
+  const btn = e.target.closest('.admin-del-entry-btn');
+  if (!btn || !adminMode || !data) return;
+  const eid = btn.dataset.id;
+  try {
+    await api.delEntry(data.id, eid, adminPassword);
+    await refresh();
+    // Re-render the list if still open
+    if (_calDayDate) openCalDay(_calDayDate);
+    showToast(T.toastEntryDeleted);
+  } catch { showToast(T.errServer); }
+});
+
+// Admin add-entry type toggle
+document.querySelectorAll('#cal-day-admin-add .mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    _calAddType = btn.dataset.type;
+    document.querySelectorAll('#cal-day-admin-add .mode-btn').forEach(b => b.classList.toggle('active', b === btn));
+    document.getElementById('cal-add-mins-wrap').style.display = _calAddType === 'late' ? '' : 'none';
+  });
+});
+
+// Admin add-entry submit
+document.getElementById('cal-add-submit').addEventListener('click', async () => {
+  if (!_calDayDate || !adminMode || !data) return;
+  const person = document.getElementById('cal-add-person').value;
+  const mins = _calAddType === 'late' ? parseInt(document.getElementById('cal-add-mins').value) || 10 : 0;
+  const errEl = document.getElementById('cal-add-error');
+  errEl.textContent = '';
+  try {
+    await api.addEntry(data.id, { person, date: _calDayDate, type: _calAddType, mins });
+    await refresh();
+    openCalDay(_calDayDate); // re-render list
+    showToast(T.toastEntryAdded);
+  } catch { errEl.textContent = T.errServer; }
+});
+
+document.getElementById('cal-day-close').addEventListener('click', () => closePage('modal-cal-day'));
 document.getElementById('cal-prev').addEventListener('click', () => {
   calMonthIdx--; if (calMonthIdx < 0) { calMonthIdx = 11; calYear--; }
   renderCalendar();
@@ -3276,7 +3481,7 @@ document.getElementById('header-icon').addEventListener('click', () => {
 function openAdminLogin() {
   document.getElementById('ma-pwd').value = '';
   document.getElementById('ma-error').textContent = '';
-  openOv('modal-admin');
+  openPage('modal-admin');
   setTimeout(() => document.getElementById('ma-pwd').focus(), 350);
 }
 
@@ -3301,8 +3506,7 @@ function exitAdmin() {
   renderLandingAdminTools(); renderAdminPanel(); renderHistory(); renderWeek();
 }
 
-document.getElementById('ma-cancel').addEventListener('click', () => closeOv('modal-admin'));
-document.getElementById('modal-admin').addEventListener('click', e => { if(e.target===e.currentTarget) closeOv('modal-admin'); });
+document.getElementById('ma-cancel').addEventListener('click', () => closePage('modal-admin'));
 
 document.getElementById('ma-submit').addEventListener('click', async () => {
   const btn = document.getElementById('ma-submit');
@@ -3312,7 +3516,7 @@ document.getElementById('ma-submit').addEventListener('click', async () => {
   btn.disabled = true; errEl.textContent = '';
   try {
     await api.verifyAdmin(pwd);
-    closeOv('modal-admin');
+    closePage('modal-admin');
     adminPassword = pwd;
     activateAdmin();
   } catch {
@@ -3325,7 +3529,10 @@ document.getElementById('ma-pwd').addEventListener('keydown', e => { if(e.key===
 
 // Admin buttons
 document.getElementById('adm-exit-btn').addEventListener('click', exitAdmin);
-document.getElementById('adm-replay-btn').addEventListener('click', () => showWrapped(true));
+document.getElementById('adm-replay-btn').addEventListener('click', () => {
+  _bubbleQueue = [{ glyph: '🎉', t1: T.bubbleWrappedTitle, t2: T.bubbleWrappedSub, kind: 'wrapped' }];
+  _advanceBubbleQueue();
+});
 
 document.getElementById('adm-week-btn').addEventListener('click', () => {
   adminShowCurWeek = !adminShowCurWeek;
@@ -3367,12 +3574,14 @@ document.getElementById('adm-del-btn').addEventListener('click', async () => {
   showToast(T.toastCleared);
 });
 
-// Admin debug buttons
+// Admin debug buttons — enqueue bubbles so the full flow is testable
 document.getElementById('adm-force-hype-btn').addEventListener('click', () => {
-  showDailyHype(true);
+  _bubbleQueue = [{ glyph: '💪', t1: T.bubbleHypeTitle, t2: T.bubbleHypeSub, kind: 'hype' }];
+  _advanceBubbleQueue();
 });
 document.getElementById('adm-force-geo-btn').addEventListener('click', () => {
-  checkGeoAndPrompt(true);
+  _bubbleQueue = [{ glyph: '📍', t1: T.bubbleGeoTitle, t2: T.bubbleGeoSub, kind: 'geo' }];
+  _advanceBubbleQueue();
 });
 document.getElementById('adm-clear-flags-btn').addEventListener('click', () => {
   const today = todayStr();
@@ -3398,24 +3607,24 @@ function applyI18n() {
   set('s-count-lbl',T.sCountLbl); set('s-mins-lbl',T.sMinLbl);
   set('empty-week-txt',T.emptyWeek); set('empty-people-txt',T.emptyPeople); set('empty-people-sub',T.emptyPeopleSub);
   set('add-person-btn',T.addPerson); set('leave-btn',T.leaveGroup);
-  set('mc-title',T.mcTitle); set('mc-lbl-name',T.mcLblName); set('mc-lbl-days',T.mcLblDays); set('mc-cancel',T.mcCancel); set('mc-submit',T.mcSubmit);
+  set('mc-title',T.mcTitle); set('mc-lbl-name',T.mcLblName); set('mc-lbl-days',T.mcLblDays); set('mc-submit',T.mcSubmit);
   set('ms-title',T.msTitle); set('ms-sub',T.msSub); set('ms-copy',T.msCopy); set('ms-continue',T.msContinue);
-  set('mj-title',T.mjTitle); set('mj-sub',T.mjSub); set('mj-lbl',T.mjLbl); set('mj-cancel',T.mjCancel); set('mj-submit',T.mjSubmit);
-  set('ml-title',T.mlTitle); set('ml-lbl-person',T.mlLblPerson); set('ml-lbl-date',T.mlLblDate); set('ml-lbl-mins',T.mlLblMins); set('ml-cancel',T.mlCancel); set('ml-save',T.mlSave);
+  set('mj-title',T.mjTitle); set('mj-sub',T.mjSub); set('mj-lbl',T.mjLbl); set('mj-submit',T.mjSubmit);
+  set('ml-title',T.mlTitle); set('ml-lbl-person',T.mlLblPerson); set('ml-lbl-date',T.mlLblDate); set('ml-lbl-mins',T.mlLblMins); set('ml-save',T.mlSave);
   set('ml-mode-attend',T.mlModeAttend); set('ml-mode-late',T.mlModeLate); set('ml-mode-skip',T.mlModeSkip);
   set('ml-lbl-attend-date',T.mlLblAttendDate);
   set('mset-title',T.msetTitle); set('mset-gymdays-lbl',T.msetGymDaysLbl); set('mset-avail-lbl',T.msetAvailLbl);
-  set('mset-gym-save',T.msetGymSave); set('mset-avail-save',T.msetAvailSave); set('mset-close',T.msetClose);
+  set('mset-gym-save',T.msetGymSave); set('mset-avail-save',T.msetAvailSave);
   set('ml-lbl-skip-date',T.mlLblSkipDate); set('ml-lbl-reason',T.mlLblReason);
   set('ee-title',T.eeTitle); set('ee-mode-attend',T.mlModeAttend); set('ee-mode-late',T.mlModeLate); set('ee-mode-skip',T.mlModeSkip);
   set('ee-lbl-attend-date',T.mlLblAttendDate); set('ee-lbl-date',T.mlLblDate); set('ee-lbl-mins',T.mlLblMins);
-  set('ee-lbl-skip-date',T.mlLblSkipDate); set('ee-lbl-reason',T.mlLblReason); set('ee-cancel',T.mlCancel); set('ee-save',T.mlSave);
-  set('ma-title',T.maTitle); set('ma-lbl',T.maLbl); set('ma-cancel',T.maCancel); set('ma-submit',T.maSubmit);
+  set('ee-lbl-skip-date',T.mlLblSkipDate); set('ee-lbl-reason',T.mlLblReason); set('ee-save',T.mlSave);
+  set('ma-title',T.maTitle); set('ma-lbl',T.maLbl); set('ma-submit',T.maSubmit);
   set('adm-title',T.admTitle); set('adm-add-btn',T.admAdd); set('adm-del-btn',T.admDel); set('adm-exit-btn',T.admExit); set('adm-replay-btn',T.admReplay);
   set('adm-force-hype-btn',T.admForceHype); set('adm-force-geo-btn',T.admForceGeo); set('adm-clear-flags-btn',T.admClearFlags);
   set('pill-hint', T.pillHint);
   // Group switcher
-  set('mgs-title',T.mgsTitle); set('mgs-join-btn',T.mgsJoin); set('mgs-create-btn',T.mgsCreate); set('mgs-close-btn',T.mgsClose);
+  set('mgs-title',T.mgsTitle); set('mgs-join-btn',T.mgsJoin); set('mgs-create-btn',T.mgsCreate);
   set('lbl-groups',T.mgsTitle); set('pp-join-btn',T.mgsJoin); set('pp-create-btn',T.mgsCreate);
   // Overlays
   set('dh-title',T.dhTitle); set('dh-sub',T.dhSub); set('dh-close',T.dhClose);
@@ -3437,26 +3646,34 @@ function applyI18n() {
   // Admin user edit
   set('au-days-lbl',T.auDaysLbl); set('au-stats-lbl',T.auStatsLbl);
   set('au-streak-lbl',T.auStreakLbl); set('au-freezes-lbl',T.auFreezesLbl);
-  set('au-cancel',T.auCancel); set('au-save',T.auSave); set('au-kick-btn',T.auKickBtn);
+  set('au-save',T.auSave); set('au-kick-btn',T.auKickBtn);
   // Profile setup
   set('psu-title',T.psuTitle); set('psu-name-lbl',T.psuNameLbl); set('psu-emoji-lbl',T.psuEmojiLbl); set('psu-color-lbl',T.psuColorLbl);
-  set('psu-submit-new',T.psuCreate); set('psu-to-login',T.psuToLogin); set('psu-cancel',T.psuCancel);
+  set('psu-submit-new',T.psuCreate); set('psu-to-login',T.psuToLogin);
   set('psu-login-title',T.psuLoginTitle); set('psu-login-sub',T.psuLoginSub);
   set('psu-login-name-lbl',T.psuLoginNameLbl); set('psu-rc-lbl',T.psuRcLbl);
-  set('psu-submit-login',T.psuLoginBtn); set('psu-to-new',T.psuToNew); set('psu-login-cancel',T.psuCancel);
+  set('psu-submit-login',T.psuLoginBtn); set('psu-to-new',T.psuToNew);
   // Recovery code
   set('rc-title',T.rcTitle); set('rc-sub',T.rcSub); set('rc-copy',T.rcCopy); set('rc-done',T.rcDone);
   // Profile view
   set('pv-rc-lbl',T.pvRcLbl); set('pv-edit-btn',T.pvEditBtn); set('pv-kick-btn',T.pvKickBtn);
   set('pv-stat-count-lbl',T.pvStatCount); set('pv-stat-mins-lbl',T.pvStatMins);
-  set('pv-creator-badge',T.pvCreatorBadge); set('pv-close',T.pvClose);
+  set('pv-creator-badge',T.pvCreatorBadge);
   // Edit profile
   set('ep-title',T.epTitle); set('ep-name-lbl',T.epNameLbl); set('ep-emoji-lbl',T.epEmojiLbl); set('ep-color-lbl',T.epColorLbl);
-  set('ep-cancel',T.epCancel); set('ep-submit',T.epSave);
+  set('ep-submit',T.epSave);
   set('psu-upload-btn', T.uploadPhoto); set('ep-upload-btn', T.uploadPhoto);
+  // Recap replay button
+  set('recap-replay-btn', T.recapReplayBtn);
+  // Admin calendar add form
+  set('cal-add-person-lbl', T.mlLblPerson); set('cal-add-type-lbl', T.mlTitle||T.eeTitle);
+  set('cal-add-mins-lbl', T.mlLblMins); set('cal-add-submit', T.admCalAddEntry);
   // Invite
   set('invite-hint-txt',T.inviteHint); set('invite-btn',T.inviteBtn);
 }
+
+// Recap replay button — plays Wrapped (force mode, any week)
+document.getElementById('recap-replay-btn').addEventListener('click', () => showWrapped(true));
 
 // ════════════════════════════════════════════════════════
 //  DAY PICKER HELPER
@@ -3484,10 +3701,9 @@ function getDayMask(containerId) {
 document.getElementById('btn-show-create').addEventListener('click', () => {
   document.getElementById('mc-name').value=''; document.getElementById('mc-error').textContent='';
   buildDayPicker('mc-day-picker', '1111100'); // Mon-Fri default
-  openOv('modal-create'); setTimeout(()=>document.getElementById('mc-name').focus(),350);
+  openPage('modal-create'); setTimeout(()=>document.getElementById('mc-name').focus(),350);
 });
-document.getElementById('mc-cancel').addEventListener('click', ()=>closeOv('modal-create'));
-document.getElementById('modal-create').addEventListener('click',e=>{if(e.target===e.currentTarget)closeOv('modal-create');});
+document.getElementById('mc-cancel').addEventListener('click', ()=>closePage('modal-create'));
 document.getElementById('mc-submit').addEventListener('click', async () => {
   const name = document.getElementById('mc-name').value.trim();
   const gymDays = getDayMask('mc-day-picker');
@@ -3496,7 +3712,7 @@ document.getElementById('mc-submit').addEventListener('click', async () => {
   document.getElementById('mc-submit').disabled=true;
   try {
     const g = await api.createGroup(name, gymDays);
-    closeOv('modal-create');
+    closePage('modal-create');
     document.getElementById('ms-code-boxes').innerHTML = g.code.split('').map(c=>`<div class="code-char">${esc(c)}</div>`).join('');
     document.getElementById('ms-copy').onclick    = ()=>copyToClipboard(g.code);
     document.getElementById('ms-continue').onclick = ()=>{ closeOv('modal-success'); pendingGroup=g; openProfileSetup(); };
@@ -3538,16 +3754,15 @@ document.getElementById('btn-create-test-group').addEventListener('click', async
 // ════════════════════════════════════════════════════════
 document.getElementById('btn-show-join').addEventListener('click',()=>{
   document.getElementById('mj-code').value=''; document.getElementById('mj-error').textContent='';
-  openOv('modal-join'); setTimeout(()=>document.getElementById('mj-code').focus(),350);
+  openPage('modal-join'); setTimeout(()=>document.getElementById('mj-code').focus(),350);
 });
-document.getElementById('mj-cancel').addEventListener('click',()=>closeOv('modal-join'));
-document.getElementById('modal-join').addEventListener('click',e=>{if(e.target===e.currentTarget)closeOv('modal-join');});
+document.getElementById('mj-cancel').addEventListener('click',()=>closePage('modal-join'));
 document.getElementById('mj-code').addEventListener('input',e=>{ e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,''); });
 document.getElementById('mj-submit').addEventListener('click', async ()=>{
   const code=document.getElementById('mj-code').value.trim().toUpperCase();
   if(code.length<6){document.getElementById('mj-error').textContent=T.errShort;return;}
   document.getElementById('mj-submit').disabled=true;
-  try { const g=await api.joinGroup(code); closeOv('modal-join'); pendingGroup=g; openProfileSetup(); }
+  try { const g=await api.joinGroup(code); closePage('modal-join'); pendingGroup=g; openProfileSetup(); }
   catch(e){ document.getElementById('mj-error').textContent=e.status===404?T.errNotFound:T.errServer; }
   finally { document.getElementById('mj-submit').disabled=false; }
 });
@@ -3584,10 +3799,9 @@ document.getElementById('fab').addEventListener('click', () => {
     });
   });
   setMlMode('attend');
-  openOv('modal-late');
+  openPage('modal-late');
 });
-document.getElementById('ml-cancel').addEventListener('click', () => closeOv('modal-late'));
-document.getElementById('modal-late').addEventListener('click', e => { if (e.target === e.currentTarget) closeOv('modal-late'); });
+document.getElementById('ml-cancel').addEventListener('click', () => closePage('modal-late'));
 document.getElementById('ml-save').addEventListener('click', async () => {
   const person   = document.getElementById('ml-person').value;
   const errEl    = document.getElementById('ml-error');
@@ -3603,7 +3817,7 @@ document.getElementById('ml-save').addEventListener('click', async () => {
       const res = await api.addEntry(data.id, lateness?.isLate
         ? { person, date, type: 'late', mins: lateness.minsOff }
         : { person, date, type: 'attend' });
-      closeOv('modal-late');
+      closePage('modal-late');
       await refresh();
       const info = myStreakInfo();
       const finish = () => {
@@ -3627,7 +3841,7 @@ document.getElementById('ml-save').addEventListener('click', async () => {
       if (!person || !date || isNaN(mins) || mins < 1) { errEl.textContent = '⚠'; return; }
       const wasExtended = myStreakInfo()?.extendedToday;
       await api.addEntry(data.id, { person, date, mins, type: 'late' });
-      closeOv('modal-late');
+      closePage('modal-late');
       await refresh();
       const info = myStreakInfo();
       if (info && person === userProfile?.name && date === todayStr() && !wasExtended) {
@@ -3639,7 +3853,7 @@ document.getElementById('ml-save').addEventListener('click', async () => {
       const date = document.getElementById('ml-skip-date').value;
       if (!person || !date) { errEl.textContent = '⚠'; return; }
       await api.addEntry(data.id, { person, date, type: 'skip', reason: mlSelReason });
-      closeOv('modal-late');
+      closePage('modal-late');
       await refresh();
       showToast(T.toastSkipSaved);
     }
@@ -3690,11 +3904,10 @@ function openEditEntry(entryId) {
     });
   });
   setEeMode(e.type === 'attend' ? 'attend' : e.type === 'skip' ? 'skip' : 'late');
-  openOv('modal-edit-entry');
+  openPage('modal-edit-entry');
 }
 
-document.getElementById('ee-cancel').addEventListener('click', () => closeOv('modal-edit-entry'));
-document.getElementById('modal-edit-entry').addEventListener('click', e => { if (e.target === e.currentTarget) closeOv('modal-edit-entry'); });
+document.getElementById('ee-cancel').addEventListener('click', () => closePage('modal-edit-entry'));
 document.getElementById('ee-save').addEventListener('click', async () => {
   const errEl = document.getElementById('ee-error');
   errEl.textContent = '';
@@ -3717,7 +3930,7 @@ document.getElementById('ee-save').addEventListener('click', async () => {
       body = { date, type: 'skip', reason: eeSelReason };
     }
     await api.patchEntry(data.id, eeEditingId, body, adminPassword);
-    closeOv('modal-edit-entry');
+    closePage('modal-edit-entry');
     await refresh();
     showToast(T.toastSaved);
   } catch { errEl.textContent = T.errServer; }
@@ -3785,11 +3998,11 @@ function openGroupSwitcher() {
   listEl.querySelectorAll('.group-list-item').forEach(el => {
     el.addEventListener('click', () => {
       const g = all.find(x => x.id === el.dataset.gid);
-      closeOv('modal-group-switcher');
+      closePage('modal-group-switcher');
       if (g) switchToGroup(g);
     });
   });
-  openOv('modal-group-switcher');
+  openPage('modal-group-switcher');
 }
 
 // Inline groups section in the People tab
@@ -3806,32 +4019,31 @@ function renderGroupsSection() {
   });
 }
 
-document.getElementById('mgs-close-btn').addEventListener('click', () => closeOv('modal-group-switcher'));
-document.getElementById('modal-group-switcher').addEventListener('click', e => { if (e.target === e.currentTarget) closeOv('modal-group-switcher'); });
+document.getElementById('mgs-close-btn').addEventListener('click', () => closePage('modal-group-switcher'));
 
 document.getElementById('mgs-join-btn').addEventListener('click', () => {
-  closeOv('modal-group-switcher');
+  closePage('modal-group-switcher');
   stopPolling();
   showScreen('landing');
-  setTimeout(() => openOv('modal-join'), 200);
+  setTimeout(() => openPage('modal-join'), 200);
 });
 document.getElementById('mgs-create-btn').addEventListener('click', () => {
-  closeOv('modal-group-switcher');
+  closePage('modal-group-switcher');
   stopPolling();
   showScreen('landing');
-  setTimeout(() => openOv('modal-create'), 200);
+  setTimeout(() => openPage('modal-create'), 200);
 });
 
 // Inline join/create from the People tab
 document.getElementById('pp-join-btn').addEventListener('click', () => {
   stopPolling();
   showScreen('landing');
-  setTimeout(() => openOv('modal-join'), 200);
+  setTimeout(() => openPage('modal-join'), 200);
 });
 document.getElementById('pp-create-btn').addEventListener('click', () => {
   stopPolling();
   showScreen('landing');
-  setTimeout(() => openOv('modal-create'), 200);
+  setTimeout(() => openPage('modal-create'), 200);
 });
 
 document.getElementById('leave-btn').addEventListener('click',()=>{
@@ -3964,7 +4176,7 @@ function openProfileSetup() {
   });
 
   showMode('new');
-  openOv('modal-profile-setup');
+  openPage('modal-profile-setup');
   setTimeout(() => document.getElementById('psu-name').focus(), 350);
 }
 
@@ -3977,9 +4189,7 @@ function showMode(mode) {
 
 document.getElementById('psu-to-login').addEventListener('click',   () => showMode('login'));
 document.getElementById('psu-to-new').addEventListener('click',     () => showMode('new'));
-document.getElementById('psu-cancel').addEventListener('click',     () => closeOv('modal-profile-setup'));
-document.getElementById('psu-login-cancel').addEventListener('click',() => closeOv('modal-profile-setup'));
-document.getElementById('modal-profile-setup').addEventListener('click', e => { if(e.target===e.currentTarget) closeOv('modal-profile-setup'); });
+document.getElementById('psu-cancel').addEventListener('click',     () => closePage('modal-profile-setup'));
 
 // Format recovery code input as XXXX-XXXX-XXXX
 document.getElementById('psu-rc-input').addEventListener('input', e => {
@@ -3998,7 +4208,7 @@ document.getElementById('psu-submit-new').addEventListener('click', async () => 
   try {
     const r = await api.registerUser(pendingGroup.id, { name, avatarEmoji: selEmoji, avatarColor: selColor, avatarImg: selImg });
     saveUser(pendingGroup.id, { userId:r.userId, name:r.name, avatarEmoji:r.avatarEmoji, avatarColor:r.avatarColor, avatarImg:r.avatarImg||null, recoveryCode:r.recoveryCode, isCreator:r.isCreator });
-    closeOv('modal-profile-setup');
+    closePage('modal-profile-setup');
     showRecoveryCode(r.recoveryCode);
   } catch(e) {
     errEl.textContent = e.status===409 ? T.psuErrTaken : T.errServer;
@@ -4016,7 +4226,7 @@ document.getElementById('psu-submit-login').addEventListener('click', async () =
   try {
     const r = await api.loginUser(pendingGroup.id, { name, recoveryCode: code });
     saveUser(pendingGroup.id, { userId:r.userId, name:r.name, avatarEmoji:r.avatarEmoji, avatarColor:r.avatarColor, avatarImg:r.avatarImg||null, recoveryCode: code.replace(/-/g,'').toUpperCase(), isCreator:r.isCreator });
-    closeOv('modal-profile-setup');
+    closePage('modal-profile-setup');
     enterGroup(pendingGroup);
   } catch(e) {
     errEl.textContent = e.status===401 ? T.psuErrWrongCode : (e.status===404 ? T.psuErrNotFound : T.errServer);
@@ -4088,14 +4298,13 @@ function openProfileView(userId) {
     };
   }
 
-  openOv('modal-profile-view');
+  openPage('modal-profile-view');
 }
 
-document.getElementById('pv-close').addEventListener('click', () => closeOv('modal-profile-view'));
-document.getElementById('modal-profile-view').addEventListener('click', e => { if(e.target===e.currentTarget) closeOv('modal-profile-view'); });
+document.getElementById('pv-close').addEventListener('click', () => closePage('modal-profile-view'));
 
 document.getElementById('pv-edit-btn').addEventListener('click', () => {
-  closeOv('modal-profile-view');
+  closePage('modal-profile-view');
   openEditProfile();
 });
 
@@ -4108,7 +4317,7 @@ document.getElementById('pv-kick-btn').addEventListener('click', async () => {
       ? { adminPassword }
       : { actorUserId: userProfile.userId, actorRecoveryCode: userProfile.recoveryCode };
     await api.kickUser(group.id, viewingUserId, body);
-    closeOv('modal-profile-view');
+    closePage('modal-profile-view');
     await refresh();
     showToast(T.toastKicked);
   } catch { showToast(T.errServer); }
@@ -4193,12 +4402,11 @@ function openSettings() {
   // Show geo section only if gym location is set
   document.getElementById('mset-geo-section').style.display = data?.gymLat ? '' : 'none';
 
-  openOv('modal-settings');
+  openPage('modal-settings');
 }
 
 document.getElementById('settings-btn').addEventListener('click', openSettings);
-document.getElementById('mset-close').addEventListener('click', () => closeOv('modal-settings'));
-document.getElementById('modal-settings').addEventListener('click', e => { if (e.target === e.currentTarget) closeOv('modal-settings'); });
+document.getElementById('mset-close').addEventListener('click', () => closePage('modal-settings'));
 
 document.getElementById('mset-geo-toggle').addEventListener('change', e => {
   localStorage.setItem('gymGeoEnabled', e.target.checked ? '1' : '0');
@@ -4234,7 +4442,7 @@ document.getElementById('mset-geo-test').addEventListener('click', () => {
     const radius = data.gymRadius ?? 150;
     hintEl.textContent = `${Math.round(dist)}m (Radius: ${radius}m)`;
     if (dist <= radius) {
-      closeOv('modal-settings');
+      closePage('modal-settings');
       showGeoPrompt();
     }
   }, () => { hintEl.textContent = T.errLocationNotAvailable; }, { timeout: 8000 });
@@ -4252,7 +4460,7 @@ document.getElementById('mset-gym-save').addEventListener('click', async () => {
     await api.patchGroup(data.id, body);
     showToast(T.toastGymDaysSaved);
     await refresh();
-    closeOv('modal-settings');
+    closePage('modal-settings');
   } catch { document.getElementById('mset-gym-error').textContent = T.errServer; }
   finally { btn.disabled = false; }
 });
@@ -4268,7 +4476,7 @@ document.getElementById('mset-avail-save').addEventListener('click', async () =>
     });
     showToast(T.toastAvailSaved);
     await refresh();
-    closeOv('modal-settings');
+    closePage('modal-settings');
   } catch(e) {
     document.getElementById('mset-avail-error').textContent = e.status === 403 ? T.errAvailLocked : T.errServer;
   }
@@ -4291,11 +4499,10 @@ function openAdminUserEdit(userId) {
   document.getElementById('au-streak-input').value  = user.streak  ?? 0;
   document.getElementById('au-freezes-input').value = user.freezes ?? 0;
   document.getElementById('au-error').textContent = '';
-  openOv('modal-admin-user');
+  openPage('modal-admin-user');
 }
 
-document.getElementById('au-cancel').addEventListener('click', () => closeOv('modal-admin-user'));
-document.getElementById('modal-admin-user').addEventListener('click', e => { if (e.target === e.currentTarget) closeOv('modal-admin-user'); });
+document.getElementById('au-cancel').addEventListener('click', () => closePage('modal-admin-user'));
 
 document.getElementById('au-save').addEventListener('click', async () => {
   if (!editingAdminUserId) return;
@@ -4312,7 +4519,7 @@ document.getElementById('au-save').addEventListener('click', async () => {
       streak,
       freezes
     });
-    closeOv('modal-admin-user');
+    closePage('modal-admin-user');
     await refresh();
     showToast(T.toastMemberUpdated);
   } catch { document.getElementById('au-error').textContent = T.errServer; }
@@ -4324,7 +4531,7 @@ document.getElementById('au-kick-btn').addEventListener('click', async () => {
   if (!user || !confirm(T.pvKickConfirm(user.name))) return;
   try {
     await api.kickUser(data.id, editingAdminUserId, { adminPassword });
-    closeOv('modal-admin-user');
+    closePage('modal-admin-user');
     await refresh();
     showToast(T.toastKicked);
   } catch { showToast(T.errServer); }
@@ -4402,7 +4609,7 @@ document.getElementById('mset-location-save').addEventListener('click', async ()
     showToast(T.toastLocationSaved);
     await refresh();
     renderAdminPanel();
-    closeOv('modal-settings');
+    closePage('modal-settings');
   } catch { document.getElementById('mset-location-error').textContent = T.errServer; }
   finally { btn.disabled = false; }
 });
@@ -4482,12 +4689,11 @@ function openEditProfile() {
     });
   });
 
-  openOv('modal-edit-profile');
+  openPage('modal-edit-profile');
   setTimeout(() => document.getElementById('ep-name').focus(), 350);
 }
 
-document.getElementById('ep-cancel').addEventListener('click', () => closeOv('modal-edit-profile'));
-document.getElementById('modal-edit-profile').addEventListener('click', e => { if(e.target===e.currentTarget) closeOv('modal-edit-profile'); });
+document.getElementById('ep-cancel').addEventListener('click', () => closePage('modal-edit-profile'));
 
 document.getElementById('ep-submit').addEventListener('click', async () => {
   const newName = document.getElementById('ep-name').value.trim();
@@ -4503,7 +4709,7 @@ document.getElementById('ep-submit').addEventListener('click', async () => {
     });
     userProfile.name = newName; userProfile.avatarEmoji = epSelEmoji; userProfile.avatarColor = epSelColor; userProfile.avatarImg = epSelImg;
     saveUser(group.id, userProfile);
-    closeOv('modal-edit-profile');
+    closePage('modal-edit-profile');
     await refresh();
     updateMyProfileBtn();
     showToast(T.toastProfileSaved);
@@ -4780,38 +4986,86 @@ document.getElementById('gp-log-checkin').addEventListener('click', async () => 
 });
 
 // ════════════════════════════════════════════════════════
+//  NOTIFICATION BUBBLE SYSTEM
+// ════════════════════════════════════════════════════════
+let _bubbleQueue = [];
+let _pendingBubbleKind = null;
+let _replayHintTimer = null;
+
+function _showNotifBubble({ glyph, t1, t2, kind }) {
+  _pendingBubbleKind = kind;
+  document.getElementById('notif-glyph').textContent = glyph;
+  document.getElementById('notif-t1').textContent = t1;
+  document.getElementById('notif-t2').textContent = t2;
+  const el = document.getElementById('notif-bubble');
+  el.classList.add('show');
+}
+
+function _dismissNotifBubble() {
+  document.getElementById('notif-bubble').classList.remove('show');
+  _pendingBubbleKind = null;
+}
+
+function _advanceBubbleQueue() {
+  if (_bubbleQueue.length === 0) {
+    checkGeoAndPrompt();
+    return;
+  }
+  const b = _bubbleQueue.shift();
+  setTimeout(() => _showNotifBubble(b), 120);
+}
+
+function _showReplayHint(kind) {
+  const el = document.getElementById('replay-hint');
+  const isRecap = kind === 'wrapped';
+  el.textContent = isRecap ? T.replayHintRecap : T.replayHintCheckin;
+  el.style.display = '';
+  el.onclick = isRecap ? () => {
+    el.classList.remove('show');
+    setTimeout(() => { el.style.display = 'none'; }, 250);
+    switchTab('recap');
+  } : null;
+  requestAnimationFrame(() => el.classList.add('show'));
+  clearTimeout(_replayHintTimer);
+  _replayHintTimer = setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => { el.style.display = 'none'; }, 250);
+  }, 6000);
+}
+
+// Bubble tap/dismiss wiring
+document.getElementById('notif-bubble').addEventListener('click', e => {
+  if (!_pendingBubbleKind) return;
+  if (e.target.id === 'notif-x' || e.target.closest('#notif-x')) {
+    // Dismiss → show hint, advance queue
+    const kind = _pendingBubbleKind;
+    _dismissNotifBubble();
+    _showReplayHint(kind);
+    _advanceBubbleQueue();
+  } else {
+    // Tap → play full animation
+    const kind = _pendingBubbleKind;
+    _dismissNotifBubble();
+    if (kind === 'wrapped') showWrapped();
+    else if (kind === 'hype') showDailyHype();
+    else if (kind === 'geo') showGeoPrompt();
+    _advanceBubbleQueue();
+  }
+});
+
+// ════════════════════════════════════════════════════════
 //  OPENING SEQUENCE (Wrapped → Daily Hype → Geo Prompt)
 // ════════════════════════════════════════════════════════
 function runOpeningSequence() {
-  const steps = [];
-  if (shouldShowWrapped()) steps.push('wrapped');
-  if (shouldShowDailyHype()) steps.push('hype');
-  if (data?.gymLat) steps.push('geo');
-  if (!steps.length) return;
-
-  let i = 0;
-  function next() {
-    if (i >= steps.length) return;
-    const step = steps[i++];
-    if (step === 'wrapped') {
-      // wClose() reads window._seqWrappedNext and calls it when user dismisses
-      window._seqWrappedNext = next;
-      showWrapped();
-    } else if (step === 'hype') {
-      showDailyHype();
-      // Override close button for this session to advance sequence
-      document.getElementById('dh-close').onclick = () => {
-        document.getElementById('daily-hype').classList.add('hidden');
-        document.getElementById('dh-close').onclick = null;
-        next();
-      };
-    } else if (step === 'geo') {
-      // Geo is async — runs independently; sequence terminates here
-      checkGeoAndPrompt();
-    }
+  _bubbleQueue = [];
+  if (shouldShowWrapped()) {
+    _bubbleQueue.push({ glyph: '🎉', t1: T.bubbleWrappedTitle, t2: T.bubbleWrappedSub, kind: 'wrapped' });
   }
-
-  setTimeout(next, 500);
+  if (shouldShowDailyHype()) {
+    _bubbleQueue.push({ glyph: '💪', t1: T.bubbleHypeTitle, t2: T.bubbleHypeSub, kind: 'hype' });
+  }
+  if (!_bubbleQueue.length) { checkGeoAndPrompt(); return; }
+  setTimeout(_advanceBubbleQueue, 600);
 }
 
 // ════════════════════════════════════════════════════════

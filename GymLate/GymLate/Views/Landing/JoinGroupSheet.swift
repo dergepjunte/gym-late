@@ -31,15 +31,18 @@ struct JoinGroupSheet: View {
             .navigationTitle(K.L.de ? "Gruppe beitreten" : "Join Group")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(K.L.cancel) { dismiss() }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(K.L.de ? "Beitreten" : "Join") { Task { await join() } }
                         .disabled(isLoading || code.count < 6)
                 }
             }
-            .sheet(isPresented: $showProfile) {
+            .fullScreenCover(isPresented: $showProfile) {
                 if let g = foundGroup {
                     ProfileSetupSheet(group: g, isNew: false)
                 }

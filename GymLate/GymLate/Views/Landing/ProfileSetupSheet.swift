@@ -38,8 +38,11 @@ struct ProfileSetupSheet: View {
             .navigationTitle(mode == .create ? (K.L.de ? "Profil erstellen" : "Create your profile") : (K.L.de ? "Willkommen zurück!" : "Welcome back!"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(K.L.cancel) { dismiss() }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button(mode == .create ? (K.L.de ? "Erstellen" : "Create") : (K.L.de ? "Einloggen" : "Log in")) {
@@ -48,7 +51,7 @@ struct ProfileSetupSheet: View {
                     .disabled(isLoading || name.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
-            .sheet(isPresented: $showRecoveryCode) {
+            .fullScreenCover(isPresented: $showRecoveryCode) {
                 RecoveryCodeSheet(code: createdRecoveryCode) {
                     showRecoveryCode = false
                     dismiss()

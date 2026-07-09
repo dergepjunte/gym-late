@@ -207,6 +207,29 @@ enum K {
         static func auTitle(_ n: String) -> String { de ? "\(n) bearbeiten" : "Edit \(n)" }
         static var eeTitle: String { de ? "Eintrag bearbeiten" : "Edit Entry" }
 
+        // Notification bubbles (opening-sequence prompts)
+        static var bubbleWrappedTitle: String { de ? "Wöchentlicher Rückblick 🎉" : "Weekly Recap 🎉" }
+        static var bubbleWrappedSub: String { de ? "Tippe um den Rückblick zu sehen" : "Tap to watch the recap" }
+        static var bubbleHypeTitle: String { de ? "Heute ist Gym-Tag 💪" : "It's gym day 💪" }
+        static var bubbleHypeSub: String { de ? "Los geht's!" : "Let's go!" }
+        static var bubbleGeoTitle: String { de ? "Du bist in der Nähe 📍" : "You're nearby 📍" }
+        static var bubbleGeoSub: String { de ? "Jetzt einchecken?" : "Check in now?" }
+
+        // Replay hints (shown after bubble dismiss)
+        static var replayHintRecap: String { de ? "Rückblick unter Recap ansehen ›" : "Rewatch recap under Recap ›" }
+        static var replayHintCheckin: String { de ? "Über den Check-in-Button einchecken ›" : "Check in via the check-in button ›" }
+
+        // Recap replay button
+        static var recapReplayBtn: String { de ? "▶ Wöchentlicher Rückblick" : "▶ Weekly Recap" }
+
+        // Admin calendar editing
+        static var admCalAddEntry: String { de ? "+ Eintrag hinzufügen" : "+ Add entry" }
+        static var admCalEditEntry: String { de ? "Eintrag bearbeiten" : "Edit entry" }
+        static var admCalDeleteEntry: String { de ? "Löschen" : "Delete" }
+        static var toastEntryAdded: String { de ? "Eintrag hinzugefügt ✓" : "Entry added ✓" }
+        static var toastEntryEdited: String { de ? "Eintrag aktualisiert ✓" : "Entry updated ✓" }
+        static var toastEntryDeleted: String { de ? "Eintrag gelöscht ✓" : "Entry deleted ✓" }
+
         // Misc
         static var dayNames: [String] { de ? ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] : ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"] }
         static var reasons: [(id: String, label: String)] {

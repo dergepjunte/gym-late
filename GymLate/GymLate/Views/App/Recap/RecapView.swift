@@ -85,6 +85,22 @@ struct RecapView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: 24) {
+                    // Replay Wrapped button — always visible, matches bubble dismiss hint
+                    Button {
+                        appState.replayWrapped()
+                    } label: {
+                        Label(K.L.recapReplayBtn, systemImage: "play.fill")
+                            .font(Theme.body(13, .semibold))
+                            .foregroundColor(K.accentDark)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 9)
+                            .frame(maxWidth: .infinity)
+                            .glassCard(radius: 22)
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 16)
+                    .padding(.top, 4)
+
                     ForEach(Array(blocks.enumerated()), id: \.element.id) { i, block in
                         weekBlockView(block, previousBlock: i + 1 < blocks.count ? blocks[i + 1] : nil)
                     }
