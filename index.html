@@ -204,14 +204,15 @@
     /* ── HEADER ──────────────────────────────────────────────── */
     .header {
       padding: calc(env(safe-area-inset-top) + 14px) 0 10px;
-      display: flex; align-items: center; gap: 8px;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     .header-title {
-      font-size: 12px; font-weight: 600; letter-spacing: .7px;
-      text-transform: uppercase; color: var(--text-3);
+      font-size: 30px; font-weight: 900; letter-spacing: 2px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
       margin: 0; cursor: pointer; user-select: none;
-      -webkit-text-fill-color: var(--text-3);
-      background: none;
     }
 
     /* ── NOTIF PRIMER ────────────────────────────────────────── */
@@ -631,7 +632,7 @@
         backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
         text-align: left; flex-direction: row;
       }
-      .header-title { font-size: 12px; flex: 1; }
+      .header-title { flex: 1; }
       .admin-badge { margin: 0; }
       .my-profile-btn { position: static; transform: none; }
 
@@ -3485,13 +3486,7 @@ function renderAll() {
 }
 
 function renderPill() {
-  if (!data) return;
-  document.getElementById('pill-name').textContent = data.name;
-  document.getElementById('pill-code').textContent = data.code;
-  document.getElementById('pill-hint').textContent = T.pillHint;
-  // Show group switcher button only when multiple groups saved
-  const switchBtn = document.getElementById('pill-switch-btn');
-  if (switchBtn) switchBtn.classList.toggle('hidden', loadAllGroups().length < 2);
+  // pill removed from header — group info lives in People tab
 }
 
 // ════════════════════════════════════════════════════════
@@ -4196,8 +4191,7 @@ document.getElementById('ee-save').addEventListener('click', async () => {
 // ════════════════════════════════════════════════════════
 //  PILL, LEAVE, ADD PERSON, DELETE
 // ════════════════════════════════════════════════════════
-document.getElementById('pill-code').addEventListener('click',()=>{ if(data?.code) copyToClipboard(data.code); });
-document.getElementById('pill-switch-btn')?.addEventListener('click', openGroupSwitcher);
+// pill removed — code copy moved to People tab invite card
 
 // ════════════════════════════════════════════════════════
 //  GROUP SWITCHER

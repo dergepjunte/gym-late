@@ -217,12 +217,14 @@ struct AppHeader: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            // "GYMLATE" sec-label — 5× tap unlocks admin (same as the website's header icon)
+            // "GYMLATE" wordmark — 5× tap unlocks admin
             Text("GYMLATE")
-                .font(.system(size: 12, weight: .semibold))
-                .tracking(0.7)
+                .font(.system(size: 28, weight: .black))
+                .tracking(2)
                 .textCase(.uppercase)
-                .foregroundColor(.secondary)
+                .foregroundStyle(LinearGradient(
+                    colors: Theme.accentGradient,
+                    startPoint: .topLeading, endPoint: .bottomTrailing))
                 .onTapGesture { registerLogoTap() }
 
             if appState.adminMode {
