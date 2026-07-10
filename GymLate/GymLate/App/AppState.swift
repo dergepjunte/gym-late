@@ -28,6 +28,9 @@ final class AppState: ObservableObject {
     @Published var isOffline = false
     @Published var pendingSyncCount = 0
 
+    // Notification priming overlay (one-time, shown on first group entry)
+    @Published var showNotifPrimer = false
+
     // Opening sequence overlays (set when a bubble is tapped)
     @Published var showWrapped = false
     @Published var showDailyHype = false
@@ -78,6 +81,8 @@ final class AppState: ObservableObject {
                 isLoading = false
                 startPolling()
                 runOpeningSequence()
+                if !store.notifPrimerSeen { showNotifPrimer = true }
+                else { await NotificationManager.shared.requestPermission() }
             }
         }
 
@@ -105,7 +110,8 @@ final class AppState: ObservableObject {
 
         startPolling()
         runOpeningSequence()
-        Task { await NotificationManager.shared.requestPermission() }
+        if !store.notifPrimerSeen { showNotifPrimer = true }
+        else { Task { await NotificationManager.shared.requestPermission() } }
     }
 
     func switchGroup(_ group: GroupInfo) async {

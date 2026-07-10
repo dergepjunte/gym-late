@@ -14,6 +14,7 @@
 		1E49A49979659330E73A842A /* RecapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B216B28325FF5FA1DAECAD /* RecapView.swift */; };
 		27D75D5035001235F091D608 /* AdminLoginSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5EDBF2159AD236E683034B /* AdminLoginSheet.swift */; };
 		A3F9C2D1E5B60001ADMPNLPG /* AdminPanelPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F9C2D2E5B60002ADMPNLPG /* AdminPanelPage.swift */; };
+		B3C4D5E6F7A80001NTFPRMR /* NotifPrimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3C4D5E6F7A80002NTFPRMR /* NotifPrimerView.swift */; };
 		3B6F849833829D73E80F50E5 /* CreateGroupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62A605AC15BC1A6378E6500C /* CreateGroupSheet.swift */; };
 		3C80B776CBD349BBBAEA90C5 /* NotificationBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65BD9A4DA8074C3BA0EEEAD7 /* NotificationBubbleView.swift */; };
 		3DE0F25C19D1AD85B423C9B7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FECB3AE1CA87DCC5861FD909 /* Assets.xcassets */; };
@@ -58,6 +59,7 @@
 		48B216B28325FF5FA1DAECAD /* RecapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecapView.swift; sourceTree = "<group>"; };
 		592ACFBCF976F16F9D870740 /* AdminPanelSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminPanelSection.swift; sourceTree = "<group>"; };
 		A3F9C2D2E5B60002ADMPNLPG /* AdminPanelPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminPanelPage.swift; sourceTree = "<group>"; };
+		B3C4D5E6F7A80002NTFPRMR /* NotifPrimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifPrimerView.swift; sourceTree = "<group>"; };
 		59E8E8A9C353B25C44D9B99E /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		5E67BB4EE2F3E40D35140A2E /* GeoPromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoPromptView.swift; sourceTree = "<group>"; };
 		62A605AC15BC1A6378E6500C /* CreateGroupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateGroupSheet.swift; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 				7D9BF3A30DA09DAA0E38A040 /* CeremonyOverlays.swift */,
 				D01AFED4646FE1CAD7A9EDAC /* DailyHypeView.swift */,
 				5E67BB4EE2F3E40D35140A2E /* GeoPromptView.swift */,
+				B3C4D5E6F7A80002NTFPRMR /* NotifPrimerView.swift */,
 				0536D8A2882B1F60D374DDF8 /* WrappedView.swift */,
 			);
 			path = Overlays;
@@ -363,6 +366,7 @@
 				7D090D6288D2D3D6B8FB14A1 /* LocalStore.swift in Sources */,
 				53EB9E39CE7FAA18B4E4A7DC /* LocationManager.swift in Sources */,
 				A1B2C3D4E5F60001NOTIFMGR /* NotificationManager.swift in Sources */,
+				B3C4D5E6F7A80001NTFPRMR /* NotifPrimerView.swift in Sources */,
 				DBA6D3C02B165C2D4B853743 /* LogEntrySheet.swift in Sources */,
 				0DAC8D57ABADEE63C7F9CD4E /* Models.swift in Sources */,
 				5B009AA3D968528105FF43F0 /* OutboxStore.swift in Sources */,

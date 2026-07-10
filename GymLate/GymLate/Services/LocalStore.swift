@@ -119,6 +119,13 @@ final class LocalStore {
         set { encode(newValue, forKey: "gymNotifMembers") }
     }
 
+    // MARK: - Notification primer (one-time onboarding screen)
+
+    var notifPrimerSeen: Bool {
+        get { defaults.bool(forKey: "gymNotifPrimerSeen") }
+        set { defaults.set(newValue, forKey: "gymNotifPrimerSeen") }
+    }
+
     // MARK: - Admin (in-memory only — never persisted)
 
     var adminPassword: String? = nil

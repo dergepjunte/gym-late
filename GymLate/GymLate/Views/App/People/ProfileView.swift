@@ -8,6 +8,7 @@ struct ProfileView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.pageDismiss) var dismiss
     @State private var showEdit = false
+    @State private var showSettings = false
     @State private var toast: String?
     @State private var revealRC = false
     @State private var confirmKick = false
@@ -135,8 +136,18 @@ struct ProfileView: View {
                             .font(.system(size: 16, weight: .semibold))
                     }
                 }
+                if isMe {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button { showSettings = true } label: {
+                            Image(systemName: "gearshape.fill")
+                                .font(.system(size: 16))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
             }
             .fullScreenCover(isPresented: $showEdit) { EditProfileSheet(person: person) }
+            .fullScreenCover(isPresented: $showSettings) { SettingsSheet() }
             .confirmationDialog(K.L.pvKickConfirm(person.name), isPresented: $confirmKick,
                                 titleVisibility: .visible) {
                 Button(K.L.pvKickBtn, role: .destructive) { kickUser() }

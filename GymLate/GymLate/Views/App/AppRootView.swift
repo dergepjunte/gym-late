@@ -14,8 +14,6 @@ struct AppRootView: View {
         }
     }()
     @State private var showLogEntry = false
-    @State private var showSettings = false
-    @State private var showGroupSwitcher = false
     @State private var showMyProfile = false
     @State private var showAdminLogin = false
     @State private var showAdminPanel = false
@@ -27,11 +25,9 @@ struct AppRootView: View {
 
             VStack(spacing: 0) {
                 AppHeader(
-                    onSettings: { showSettings = true },
                     onMyProfile: { showMyProfile = true },
                     onAdminUnlock: { showAdminLogin = true },
                     onAdminOpen: { showAdminPanel = true },
-                    onSwitchGroup: { showGroupSwitcher = true },
                     toast: $toast
                 )
 
@@ -88,6 +84,12 @@ struct AppRootView: View {
                 .transition(.opacity)
             }
 
+            // Notification priming (one-time, cannot be dismissed by backdrop)
+            if appState.showNotifPrimer {
+                NotifPrimerView()
+                    .zIndex(510)
+            }
+
             // Check-in ceremony (website: late-anim → streak-anim → chest)
             if let mins = appState.lateAnimMins {
                 LateAnimView(minsOff: mins) {
@@ -111,8 +113,6 @@ struct AppRootView: View {
             }
         }
         .fullPageCover(isPresented: $showLogEntry) { LogEntrySheet(toast: $toast) }
-        .fullPageCover(isPresented: $showSettings) { SettingsSheet() }
-        .fullPageCover(isPresented: $showGroupSwitcher) { GroupSwitcherSheet() }
         .fullPageCover(isPresented: $showMyProfile) {
             if let me = myPerson { ProfileView(person: me) }
         }
@@ -203,113 +203,69 @@ struct AppRootView: View {
     }
 }
 
-// MARK: - Header (website: 🏋️ GymLate · gear · avatar, group pill below)
+// MARK: - Header (minimal: GYMLATE label + avatar, no pill)
 
 struct AppHeader: View {
     @EnvironmentObject var appState: AppState
-    let onSettings: () -> Void
     let onMyProfile: () -> Void
     let onAdminUnlock: () -> Void
     let onAdminOpen: () -> Void
-    let onSwitchGroup: () -> Void
     @Binding var toast: String?
 
     @State private var logoTaps = 0
     @State private var lastTap = Date.distantPast
 
     var body: some View {
-        VStack(spacing: 8) {
-            // Title row
-            ZStack {
-                HStack(spacing: 8) {
-                    // 5× tap on the logo unlocks admin, like the website
-                    Text("🏋️")
-                        .font(.system(size: 24))
-                        .onTapGesture { registerLogoTap() }
-                    Text(K.L.appName)
-                        .font(Theme.heading(20))
-                    if appState.adminMode {
-                        Button { onAdminOpen() } label: {
-                            Text("ADMIN")
-                                .font(.system(size: 9, weight: .black))
-                                .foregroundColor(K.onAccent)
-                                .padding(.horizontal, 6).padding(.vertical, 2)
-                                .background(Capsule().fill(K.accent))
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
+        HStack(spacing: 8) {
+            // "GYMLATE" sec-label — 5× tap unlocks admin (same as the website's header icon)
+            Text("GYMLATE")
+                .font(.system(size: 12, weight: .semibold))
+                .tracking(0.7)
+                .textCase(.uppercase)
+                .foregroundColor(.secondary)
+                .onTapGesture { registerLogoTap() }
 
-                HStack(spacing: 8) {
-                    Spacer()
-                    if appState.pendingSyncCount > 0 {
-                        HStack(spacing: 2) {
-                            Image(systemName: "arrow.triangle.2.circlepath")
-                            Text("\(appState.pendingSyncCount)")
-                        }
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(K.accentDeep)
-                    } else if appState.isOffline {
-                        Image(systemName: "wifi.slash")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                    }
-                    Button { onSettings() } label: {
-                        Image(systemName: "gearshape.fill")
-                            .foregroundColor(.secondary)
-                            .font(.system(size: 16))
-                            .frame(width: 34, height: 34)
-                            .glassCard(radius: 17)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(K.L.de ? "Einstellungen" : "Settings")
-                    Button { onMyProfile() } label: {
-                        AvatarView(emoji: appState.userProfile?.avatarEmoji ?? "🏋️",
-                                   color: appState.userProfile?.avatarColor ?? "#7c3aed",
-                                   img: appState.userProfile?.avatarImg,
-                                   size: 34)
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel(K.L.de ? "Mein Profil" : "My profile")
-                }
-            }
-            .padding(.horizontal, 16)
-
-            // Group pill: [switch] name · CODE (tap to copy)
-            HStack(spacing: 8) {
-                if LocalStore.shared.allGroups.count > 1 {
-                    Button { onSwitchGroup() } label: {
-                        Image(systemName: "arrow.triangle.2.circlepath")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(K.amberText)
-                    }
-                    .buttonStyle(.plain)
-                }
-                Text(appState.groupData?.name ?? "")
-                    .font(Theme.body(14, .bold))
-                    .lineLimit(1)
-                Text("·").foregroundColor(.secondary)
-                Button {
-                    UIPasteboard.general.string = appState.groupData?.code ?? ""
-                    toast = K.L.toastCopied
-                    hapticSuccess()
-                } label: {
-                    Text(appState.groupData?.code ?? "")
-                        .font(.system(size: 13, weight: .bold, design: .monospaced))
-                        .kerning(2)
-                        .foregroundColor(K.amberText)
+            if appState.adminMode {
+                Button { onAdminOpen() } label: {
+                    Text("ADMIN")
+                        .font(.system(size: 9, weight: .black))
+                        .foregroundColor(K.onAccent)
+                        .padding(.horizontal, 6).padding(.vertical, 2)
+                        .background(Capsule().fill(K.accent))
                 }
                 .buttonStyle(.plain)
-                Text(K.L.pillHint)
-                    .font(Theme.body(10))
-                    .foregroundColor(Color(.tertiaryLabel))
             }
-            .padding(.horizontal, 16).padding(.vertical, 9)
-            .glassCard(radius: 22)
-            .padding(.horizontal, 16)
+
+            Spacer()
+
+            // Sync / offline indicator
+            if appState.pendingSyncCount > 0 {
+                HStack(spacing: 2) {
+                    Image(systemName: "arrow.triangle.2.circlepath")
+                    Text("\(appState.pendingSyncCount)")
+                }
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(K.accentDeep)
+            } else if appState.isOffline {
+                Image(systemName: "wifi.slash")
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+            }
+
+            // Avatar — App-Store style (larger, with a subtle ring)
+            Button { onMyProfile() } label: {
+                AvatarView(emoji: appState.userProfile?.avatarEmoji ?? "🏋️",
+                           color: appState.userProfile?.avatarColor ?? "#7c3aed",
+                           img: appState.userProfile?.avatarImg,
+                           size: 44)
+                    .overlay(Circle().strokeBorder(.secondary.opacity(0.22), lineWidth: 1.5))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(K.L.de ? "Mein Profil" : "My profile")
         }
-        .padding(.top, 8)
-        .padding(.bottom, 4)
+        .padding(.horizontal, 16)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
     }
 
     private func registerLogoTap() {

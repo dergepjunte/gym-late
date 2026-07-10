@@ -251,6 +251,12 @@ enum K {
         static var toastEntryEdited: String { de ? "Eintrag aktualisiert ✓" : "Entry updated ✓" }
         static var toastEntryDeleted: String { de ? "Eintrag gelöscht ✓" : "Entry deleted ✓" }
 
+        // Notification primer (one-time onboarding overlay)
+        static var notifPrimerTitle: String { de ? "Benachrichtigungen" : "Stay in the loop" }
+        static var notifPrimerBody: String { de ? "GymLate erinnert dich an Gym-Tage und warnt dich, wenn dein Streak in Gefahr ist." : "GymLate can remind you on gym days and alert you when your streak is at risk." }
+        static var notifPrimerEnable: String { de ? "Benachrichtigungen erlauben" : "Enable notifications" }
+        static var notifPrimerLater: String { de ? "Später" : "Not now" }
+
         // Misc
         static var dayNames: [String] { de ? ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"] : ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"] }
         static var reasons: [(id: String, label: String)] {

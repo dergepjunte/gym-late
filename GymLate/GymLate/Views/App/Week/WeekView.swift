@@ -17,6 +17,12 @@ struct WeekView: View {
     private var skipEntries: [Entry] { weekEntries.filter { $0.type == "skip" } }
     private var totalMins: Int { lateEntries.reduce(0) { $0 + $1.mins } }
 
+    /// Entries grouped by date, newest first.
+    private var weekEntriesByDay: [(date: String, entries: [Entry])] {
+        let grouped = Dictionary(grouping: weekEntries, by: { $0.date })
+        return grouped.keys.sorted().reversed().map { (date: $0, entries: grouped[$0] ?? []) }
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 14) {
@@ -71,7 +77,7 @@ struct WeekView: View {
                         .background(Capsule().fill(K.gold.opacity(0.14)))
                 }
 
-                // Entries
+                // Entries grouped by day (newest first)
                 if weekEntries.isEmpty {
                     VStack(spacing: 8) {
                         Text("🏃").font(.system(size: 48))
@@ -83,12 +89,19 @@ struct WeekView: View {
                     .padding(.vertical, 40)
                 } else {
                     LazyVStack(spacing: 8) {
-                        ForEach(weekEntries) { entry in
-                            EntryRow(entry: entry,
-                                     people: appState.groupData?.people ?? [],
-                                     adminMode: appState.adminMode,
-                                     onEdit: { editingEntry = entry },
-                                     onDelete: { Task { await deleteEntry(entry) } })
+                        ForEach(weekEntriesByDay, id: \.date) { group in
+                            Text(fmtFull(group.date))
+                                .eyebrow()
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.horizontal, 4)
+                                .padding(.top, 8)
+                            ForEach(group.entries) { entry in
+                                EntryRow(entry: entry,
+                                         people: appState.groupData?.people ?? [],
+                                         adminMode: appState.adminMode,
+                                         onEdit: { editingEntry = entry },
+                                         onDelete: { Task { await deleteEntry(entry) } })
+                            }
                         }
                     }
                     .padding(.horizontal, 16)
