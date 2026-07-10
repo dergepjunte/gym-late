@@ -2,7 +2,7 @@ import SwiftUI
 
 struct JoinGroupSheet: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.pageDismiss) var dismiss
     @State private var code = ""
     @State private var isLoading = false
     @State private var error = ""
@@ -42,7 +42,7 @@ struct JoinGroupSheet: View {
                         .disabled(isLoading || code.count < 6)
                 }
             }
-            .fullScreenCover(isPresented: $showProfile) {
+            .fullPageCover(isPresented: $showProfile) {
                 if let g = foundGroup {
                     ProfileSetupSheet(group: g, isNew: false)
                 }

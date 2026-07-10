@@ -328,8 +328,18 @@
       font-size:12px; color:var(--text-2); margin-top:4px;
       padding:7px 10px; background:rgba(255,255,255,.08); border-radius:8px;
     }
-    .settings-section { margin-bottom:20px; }
-    .settings-section-title { font-size:13px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:.4px; margin-bottom:8px; }
+    .settings-section {
+      margin-bottom:16px;
+      background: linear-gradient(155deg, var(--glass-sheen) 0%, rgba(255,255,255,0) 45%), var(--glass-bg);
+      backdrop-filter: blur(var(--blur)) saturate(2.2);
+      -webkit-backdrop-filter: blur(var(--blur)) saturate(2.2);
+      border: 1px solid var(--glass-border);
+      border-top-color: var(--glass-top);
+      box-shadow: 0 4px 20px var(--glass-shadow);
+      border-radius: 18px;
+      padding: 16px;
+    }
+    .settings-section-title { font-size:12px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; }
     /* Chest modal */
     .chest-reveal { text-align:center; padding:8px 0; }
     .chest-icon { font-size:64px; display:block; margin-bottom:12px; animation:w-pop .5s cubic-bezier(.34,1.56,.64,1) both; }
@@ -2131,6 +2141,10 @@
       </div>
       <button class="btn btn-ghost" id="mset-geo-test" style="margin-top:8px;width:100%"></button>
       <div class="mset-geo-hint" id="mset-geo-hint"></div>
+    </div>
+    <!-- Leave group -->
+    <div class="settings-section" style="border-color:rgba(239,68,68,.35);">
+      <button class="leave-btn" id="mset-leave-btn" style="width:100%"></button>
     </div>
   </div>
 </div>
@@ -4368,7 +4382,7 @@ function openSettings() {
   mapSection.classList.toggle('hidden', !canEditGroup);
   if (canEditGroup) {
     // Initialize Leaflet map lazily after modal is visible
-    setTimeout(() => initLeafletMap(), 350);
+    setTimeout(() => { initLeafletMap(); setTimeout(() => _leafletMap && _leafletMap.invalidateSize(), 80); }, 400);
   }
 
   // Avail days (current user, within gym days mask)
@@ -4401,12 +4415,18 @@ function openSettings() {
   document.getElementById('mset-geo-hint').textContent = '';
   // Show geo section only if gym location is set
   document.getElementById('mset-geo-section').style.display = data?.gymLat ? '' : 'none';
+  document.getElementById('mset-leave-btn').textContent = T.leaveGroup;
 
   openPage('modal-settings');
 }
 
 document.getElementById('settings-btn').addEventListener('click', openSettings);
 document.getElementById('mset-close').addEventListener('click', () => closePage('modal-settings'));
+document.getElementById('mset-leave-btn').addEventListener('click', () => {
+  if (!confirm(T.confirmLeave())) return;
+  closePage('modal-settings');
+  document.getElementById('leave-btn').click();
+});
 
 document.getElementById('mset-geo-toggle').addEventListener('change', e => {
   localStorage.setItem('gymGeoEnabled', e.target.checked ? '1' : '0');

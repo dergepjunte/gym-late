@@ -108,13 +108,13 @@ struct AppRootView: View {
                     .zIndex(620)
             }
         }
-        .fullScreenCover(isPresented: $showLogEntry) { LogEntrySheet(toast: $toast) }
-        .fullScreenCover(isPresented: $showSettings) { SettingsSheet() }
-        .fullScreenCover(isPresented: $showGroupSwitcher) { GroupSwitcherSheet() }
-        .fullScreenCover(isPresented: $showMyProfile) {
+        .fullPageCover(isPresented: $showLogEntry) { LogEntrySheet(toast: $toast) }
+        .fullPageCover(isPresented: $showSettings) { SettingsSheet() }
+        .fullPageCover(isPresented: $showGroupSwitcher) { GroupSwitcherSheet() }
+        .fullPageCover(isPresented: $showMyProfile) {
             if let me = myPerson { ProfileView(person: me) }
         }
-        .fullScreenCover(isPresented: $showAdminLogin) { AdminLoginSheet(toast: $toast) }
+        .fullPageCover(isPresented: $showAdminLogin) { AdminLoginSheet(toast: $toast) }
         .onReceive(SyncEngine.shared.$syncErrorMessage) { msg in
             if let msg {
                 toast = msg

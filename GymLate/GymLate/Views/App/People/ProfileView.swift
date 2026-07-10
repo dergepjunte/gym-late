@@ -6,7 +6,7 @@ import PhotosUI
 struct ProfileView: View {
     let person: Person
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.pageDismiss) var dismiss
     @State private var showEdit = false
     @State private var toast: String?
     @State private var revealRC = false
@@ -193,7 +193,7 @@ struct StatBadge: View {
 struct EditProfileSheet: View {
     let person: Person
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.pageDismiss) var dismiss
     @State private var name: String
     @State private var emoji: String
     @State private var color: String

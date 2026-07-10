@@ -6,7 +6,7 @@ import CoreLocation
 /// gym location map, my available days, geo check-in toggle, leave group.
 struct SettingsSheet: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.pageDismiss) var dismiss
     @State private var gymDays = Array(repeating: true, count: 7)
     @State private var availDays: [Bool]? = nil
     @State private var isLoading = false

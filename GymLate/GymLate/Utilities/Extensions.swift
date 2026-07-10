@@ -79,6 +79,68 @@ extension View {
     func glassButton(radius: CGFloat = 16) -> some View {
         modifier(GlassSurface(radius: radius, interactive: true))
     }
+
+    /// Right-to-left push page cover (replaces .fullScreenCover).
+    func fullPageCover<C: View>(isPresented: Binding<Bool>,
+                                @ViewBuilder content: @escaping () -> C) -> some View {
+        modifier(FullPageModifier(isPresented: isPresented, pageContent: content))
+    }
+
+    /// Item-based variant of fullPageCover.
+    func fullPageCover<Item: Identifiable, C: View>(
+        item: Binding<Item?>,
+        @ViewBuilder content: @escaping (Item) -> C
+    ) -> some View {
+        fullPageCover(isPresented: Binding(
+            get: { item.wrappedValue != nil },
+            set: { if !$0 { item.wrappedValue = nil } }
+        )) {
+            if let i = item.wrappedValue { content(i) }
+        }
+    }
+}
+
+// MARK: - Full-page dismiss environment key
+
+private struct PageDismissKey: EnvironmentKey {
+    static let defaultValue: () -> Void = {}
+}
+
+extension EnvironmentValues {
+    /// Dismiss action injected by fullPageCover; call like dismiss().
+    var pageDismiss: () -> Void {
+        get { self[PageDismissKey.self] }
+        set { self[PageDismissKey.self] = newValue }
+    }
+}
+
+private struct FullPageModifier<PageContent: View>: ViewModifier {
+    @Binding var isPresented: Bool
+    let pageContent: () -> PageContent
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content.overlay {
+            Group {
+                if isPresented {
+                    pageContent()
+                        .environment(\.pageDismiss) {
+                            let anim: Animation = reduceMotion
+                                ? .easeOut(duration: 0.2)
+                                : .spring(response: 0.38, dampingFraction: 0.82)
+                            withAnimation(anim) { isPresented = false }
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .ignoresSafeArea()
+                        .transition(reduceMotion ? .opacity : .move(edge: .trailing))
+                }
+            }
+            .animation(
+                reduceMotion ? .easeOut(duration: 0.2) : .spring(response: 0.38, dampingFraction: 0.82),
+                value: isPresented
+            )
+        }
+    }
 }
 
 // MARK: - ZigzagBorder

@@ -4,7 +4,7 @@ import SwiftUI
 /// via POST /api/admin/verify and kept in memory only, never persisted.
 struct AdminLoginSheet: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.pageDismiss) private var dismiss
     @Binding var toast: String?
 
     @State private var password = ""

@@ -2,7 +2,7 @@ import SwiftUI
 
 struct LogEntrySheet: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.pageDismiss) var dismiss
     @Binding var toast: String?
 
     @State private var mode: EntryMode = .attend

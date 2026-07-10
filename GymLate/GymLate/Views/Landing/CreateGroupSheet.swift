@@ -2,7 +2,7 @@ import SwiftUI
 
 struct CreateGroupSheet: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.pageDismiss) var dismiss
     @State private var groupName = ""
     @State private var gymDays = Array(repeating: true, count: 7)
     @State private var isLoading = false
@@ -57,7 +57,7 @@ struct CreateGroupSheet: View {
                         .disabled(isLoading || groupName.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
-            .fullScreenCover(isPresented: $showProfile) {
+            .fullPageCover(isPresented: $showProfile) {
                 if let g = createdGroup {
                     ProfileSetupSheet(group: g, isNew: true)
                 }

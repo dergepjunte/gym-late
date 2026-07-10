@@ -9,7 +9,8 @@ enum Theme {
     static let slideMinutes: [Color] = [Color(hex: "#059669"), Color(hex: "#0891b2")]
     static let slideKing:    [Color] = [Color(hex: "#ca8a04"), Color(hex: "#dc2626")]
     static let slideCTA:     [Color] = [Color(hex: "#78350f"), Color(hex: "#b45309")]
-    static let slides: [[Color]] = [slideTitle, slideLate, slideMinutes, slideKing]
+    static let slideRanking: [Color] = [Color(hex: "#b45309"), Color(hex: "#78350f")]
+    static let slides: [[Color]] = [slideTitle, slideLate, slideMinutes, slideKing, slideRanking]
 
     static let hype: [Color] = [Color(hex: "#f59e0b"), Color(hex: "#ea580c")]
     static let accentGradient: [Color] = [K.accent, K.accentDeep]

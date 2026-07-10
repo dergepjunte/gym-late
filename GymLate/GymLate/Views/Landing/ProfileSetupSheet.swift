@@ -5,7 +5,7 @@ struct ProfileSetupSheet: View {
     let isNew: Bool  // false = joining existing group, show login option
 
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.pageDismiss) var dismiss
     @State private var mode: Mode = .create
     @State private var name = ""
     @State private var emoji = "🏋️"

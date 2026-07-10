@@ -65,13 +65,13 @@ struct HistoryView: View {
             .padding(.trailing, 20)
             .padding(.bottom, 16)
         }
-        .fullScreenCover(item: $selectedDay) { day in
+        .fullPageCover(item: $selectedDay) { day in
             CalDayDetailSheet(date: day.id, entries: day.entries,
                               people: appState.groupData?.people ?? [],
                               adminMode: appState.adminMode,
                               toast: $adminToast)
         }
-        .fullScreenCover(isPresented: $showLogEntry) { LogEntrySheet(toast: $toast) }
+        .fullPageCover(isPresented: $showLogEntry) { LogEntrySheet(toast: $toast) }
         .onChange(of: adminToast) { _, v in if v != nil { toast = v; adminToast = nil } }
         .toast($toast)
     }
@@ -230,7 +230,7 @@ struct CalDayDetailSheet: View {
     @Binding var toast: String?
 
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.pageDismiss) private var dismiss
 
     // Admin: add entry form
     @State private var showAddForm = false

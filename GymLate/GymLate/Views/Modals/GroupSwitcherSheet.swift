@@ -2,7 +2,7 @@ import SwiftUI
 
 struct GroupSwitcherSheet: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.pageDismiss) var dismiss
     @State private var showJoin = false
     @State private var showCreate = false
 
@@ -66,7 +66,7 @@ struct GroupSwitcherSheet: View {
                 }
             }
         }
-        .fullScreenCover(isPresented: $showJoin) { JoinGroupSheet() }
-        .fullScreenCover(isPresented: $showCreate) { CreateGroupSheet() }
+        .fullPageCover(isPresented: $showJoin) { JoinGroupSheet() }
+        .fullPageCover(isPresented: $showCreate) { CreateGroupSheet() }
     }
 }
