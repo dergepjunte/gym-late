@@ -92,6 +92,37 @@ final class NotificationManager: NSObject {
         UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [id])
     }
 
+    // MARK: - Test notifications (admin only)
+
+    /// Fires a test notification after a 10-second delay, bypassing the user's
+    /// notifReminders/notifStreak guards so it always delivers.
+    func sendTestNotification(type: String) async {
+        await requestPermission()
+        let pairs: [(String, String, String)]
+        switch type {
+        case "reminder":
+            pairs = [("💪 Gym day!", "Don't forget to check in today", "reminder")]
+        case "streak":
+            pairs = [("🔥 Streak at risk!", "Check in today to keep your streak alive", "streak")]
+        case "activity":
+            pairs = [("GymLate", "Someone just checked in 💪", "activity")]
+        default: // "all"
+            pairs = [
+                ("💪 Gym day!", "Don't forget to check in today", "reminder"),
+                ("🔥 Streak at risk!", "Check in today to keep your streak alive", "streak"),
+                ("GymLate", "Someone just checked in 💪", "activity"),
+            ]
+        }
+        for (title, body, tag) in pairs {
+            let content = UNMutableNotificationContent()
+            content.title = title; content.body = body; content.sound = .default
+            let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 10, repeats: false)
+            let id = "gymlate.test.\(tag).\(UUID().uuidString)"
+            let req = UNNotificationRequest(identifier: id, content: content, trigger: trigger)
+            try? await UNUserNotificationCenter.current().add(req)
+        }
+    }
+
     // MARK: - Helpers
 
     private func effectiveDayMask(gymDays: String, availDays: String?) -> String {

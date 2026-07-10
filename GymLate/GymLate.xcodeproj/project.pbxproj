@@ -13,12 +13,13 @@
 		1CE2AE244236D880AD9F89F8 /* AppState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F8EF8E4E8D90346B6023078 /* AppState.swift */; };
 		1E49A49979659330E73A842A /* RecapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B216B28325FF5FA1DAECAD /* RecapView.swift */; };
 		27D75D5035001235F091D608 /* AdminLoginSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5EDBF2159AD236E683034B /* AdminLoginSheet.swift */; };
+		A3F9C2D1E5B60001ADMPNLPG /* AdminPanelPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F9C2D2E5B60002ADMPNLPG /* AdminPanelPage.swift */; };
 		3B6F849833829D73E80F50E5 /* CreateGroupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62A605AC15BC1A6378E6500C /* CreateGroupSheet.swift */; };
+		3C80B776CBD349BBBAEA90C5 /* NotificationBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65BD9A4DA8074C3BA0EEEAD7 /* NotificationBubbleView.swift */; };
 		3DE0F25C19D1AD85B423C9B7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FECB3AE1CA87DCC5861FD909 /* Assets.xcassets */; };
 		3FCDFFB50C057C3A9DA1EA66 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 224F7A11AA3B7A6E63CB6393 /* APIClient.swift */; };
 		50FD4E3325DDE7FEBBD4D4E2 /* WeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B2D3BFE353BD37044649C2 /* WeekView.swift */; };
 		53EB9E39CE7FAA18B4E4A7DC /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D79E2CEF4BB639D3ED33EB14 /* LocationManager.swift */; };
-		A1B2C3D4E5F60001NOTIFMGR /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60002NOTIFMGR /* NotificationManager.swift */; };
 		5A2168551B37CB9C40596BCC /* DailyHypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01AFED4646FE1CAD7A9EDAC /* DailyHypeView.swift */; };
 		5B009AA3D968528105FF43F0 /* OutboxStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00D2D338B31254CC2F60789B /* OutboxStore.swift */; };
 		6F273BF954259F3377C5F858 /* PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F1B81D3104891A556E1C638 /* PeopleView.swift */; };
@@ -26,6 +27,7 @@
 		7D090D6288D2D3D6B8FB14A1 /* LocalStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91F0E498E71A4FC28C5CAC9F /* LocalStore.swift */; };
 		8690D4FEA1D763F344E5AF48 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7FFAF71DD68D804387F4780F /* ProfileView.swift */; };
 		9515C89B38E15239712A53CF /* ConnectivityMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4DA024707F51F4EDA7F3FFD /* ConnectivityMonitor.swift */; };
+		A1B2C3D4E5F60001NOTIFMGR /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60002NOTIFMGR /* NotificationManager.swift */; };
 		AC0734326D397049FEE08B2E /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E8E8A9C353B25C44D9B99E /* Extensions.swift */; };
 		AE086CC31115AA2ED9CEBF86 /* EditEntrySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA66841CA55817955D576DA /* EditEntrySheet.swift */; };
 		AF295ABA810F833BF8887900 /* SettingsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05B044394281AAD61209FB8 /* SettingsSheet.swift */; };
@@ -37,7 +39,6 @@
 		C82D3B2F9AFBE25C8138D614 /* AdminPanelSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592ACFBCF976F16F9D870740 /* AdminPanelSection.swift */; };
 		D2B6DF9AE4376F88227B3226 /* GymLateApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 921C638398077365E459B898 /* GymLateApp.swift */; };
 		D2FDF01D12B40A3FE24B7922 /* AvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E74360B16FE641EF822A100 /* AvatarView.swift */; };
-		3C80B776CBD349BBBAEA90C5 /* NotificationBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65BD9A4DA8074C3BA0EEEAD7 /* NotificationBubbleView.swift */; };
 		DBA6D3C02B165C2D4B853743 /* LogEntrySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C412DA5DF8A622C52585435 /* LogEntrySheet.swift */; };
 		EA4B2C4E9A2995B35F43A374 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751C7F62AE124835E71E5345 /* Theme.swift */; };
 		F17261E82805307C4019845E /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7953922313C309DBD0A3DEA /* HistoryView.swift */; };
@@ -56,14 +57,15 @@
 		3CD7DB6E4687AB95C8ED4F04 /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
 		48B216B28325FF5FA1DAECAD /* RecapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecapView.swift; sourceTree = "<group>"; };
 		592ACFBCF976F16F9D870740 /* AdminPanelSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminPanelSection.swift; sourceTree = "<group>"; };
+		A3F9C2D2E5B60002ADMPNLPG /* AdminPanelPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminPanelPage.swift; sourceTree = "<group>"; };
 		59E8E8A9C353B25C44D9B99E /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		5E67BB4EE2F3E40D35140A2E /* GeoPromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoPromptView.swift; sourceTree = "<group>"; };
 		62A605AC15BC1A6378E6500C /* CreateGroupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateGroupSheet.swift; sourceTree = "<group>"; };
+		65BD9A4DA8074C3BA0EEEAD7 /* NotificationBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBubbleView.swift; sourceTree = "<group>"; };
 		751C7F62AE124835E71E5345 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		7A1B62C54ABD7E9815004463 /* ProfileSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSetupSheet.swift; sourceTree = "<group>"; };
 		7D9BF3A30DA09DAA0E38A040 /* CeremonyOverlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CeremonyOverlays.swift; sourceTree = "<group>"; };
 		7E74360B16FE641EF822A100 /* AvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarView.swift; sourceTree = "<group>"; };
-		65BD9A4DA8074C3BA0EEEAD7 /* NotificationBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBubbleView.swift; sourceTree = "<group>"; };
 		7FFAF71DD68D804387F4780F /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
 		8C412DA5DF8A622C52585435 /* LogEntrySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogEntrySheet.swift; sourceTree = "<group>"; };
 		8F1B81D3104891A556E1C638 /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleView.swift; sourceTree = "<group>"; };
@@ -72,6 +74,7 @@
 		921C638398077365E459B898 /* GymLateApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymLateApp.swift; sourceTree = "<group>"; };
 		9B48185768C8FB5417100D3E /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
 		A05B044394281AAD61209FB8 /* SettingsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSheet.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60002NOTIFMGR /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		A99CBE77B0965BDD09535BAC /* GymLate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GymLate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA5EDBF2159AD236E683034B /* AdminLoginSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminLoginSheet.swift; sourceTree = "<group>"; };
 		B7953922313C309DBD0A3DEA /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
@@ -81,7 +84,6 @@
 		D01AFED4646FE1CAD7A9EDAC /* DailyHypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyHypeView.swift; sourceTree = "<group>"; };
 		D1B2D3BFE353BD37044649C2 /* WeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekView.swift; sourceTree = "<group>"; };
 		D79E2CEF4BB639D3ED33EB14 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
-		A1B2C3D4E5F60002NOTIFMGR /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		E0E050A845C35982874A330B /* LandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandingView.swift; sourceTree = "<group>"; };
 		E4DA024707F51F4EDA7F3FFD /* ConnectivityMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityMonitor.swift; sourceTree = "<group>"; };
 		F6C20A37581CA4B349C59A57 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 			isa = PBXGroup;
 			children = (
 				AA5EDBF2159AD236E683034B /* AdminLoginSheet.swift */,
+				A3F9C2D2E5B60002ADMPNLPG /* AdminPanelPage.swift */,
 				592ACFBCF976F16F9D870740 /* AdminPanelSection.swift */,
 				1BA66841CA55817955D576DA /* EditEntrySheet.swift */,
 			);
@@ -298,7 +301,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1430;
+				LastUpgradeCheck = 2700;
 			};
 			buildConfigurationList = 58428EE515A6D4FBBF90A54D /* Build configuration list for PBXProject "GymLate" */;
 			developmentRegion = en;
@@ -337,6 +340,7 @@
 			files = (
 				3FCDFFB50C057C3A9DA1EA66 /* APIClient.swift in Sources */,
 				27D75D5035001235F091D608 /* AdminLoginSheet.swift in Sources */,
+				A3F9C2D1E5B60001ADMPNLPG /* AdminPanelPage.swift in Sources */,
 				C82D3B2F9AFBE25C8138D614 /* AdminPanelSection.swift in Sources */,
 				BE3959344C3313993FCE34E5 /* AppRootView.swift in Sources */,
 				1CE2AE244236D880AD9F89F8 /* AppState.swift in Sources */,
@@ -382,7 +386,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = 885S8T9D2F;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GymLate/Info.plist;
@@ -407,7 +410,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = 885S8T9D2F;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GymLate/Info.plist;
@@ -431,6 +433,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -463,9 +466,10 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 885S8T9D2F;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -487,6 +491,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.9;
@@ -497,6 +502,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -529,9 +535,10 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 885S8T9D2F;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -546,6 +553,7 @@
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;

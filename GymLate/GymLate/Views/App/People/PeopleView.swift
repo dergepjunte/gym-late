@@ -95,11 +95,6 @@ struct PeopleView: View {
                 }
                 .padding(.horizontal, 16)
 
-                if appState.adminMode {
-                    AdminPanelSection(toast: $toast)
-                        .padding(.horizontal, 16)
-                }
-
                 Spacer(minLength: 20)
             }
         }

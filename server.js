@@ -912,6 +912,27 @@ app.patch('/api/groups/:id/users/:uid/notif', ah(async (req, res) => {
   res.json({ ok: true });
 }));
 
+// Admin: send test push notification with 10-second delay
+app.post('/api/admin/test-push', ah(async (req, res) => {
+  if (!isAdmin(req)) return res.status(401).json({ error: 'unauthorized' });
+  const { userId, groupId, type } = req.body || {};
+  if (!userId || !groupId || !type) return res.status(400).json({ error: 'invalid' });
+
+  const payloads = {
+    reminder: { title: '💪 Gym day!',      body: "Don't forget to check in today",     tag: 'test-reminder' },
+    streak:   { title: '🔥 Streak at risk!', body: 'Check in today to keep your streak alive', tag: 'test-streak' },
+    activity: { title: 'GymLate',           body: 'Someone just checked in 💪',          tag: 'test-activity' },
+  };
+
+  const toSend = type === 'all' ? Object.values(payloads) : [payloads[type]];
+  if (!toSend[0]) return res.status(400).json({ error: 'unknown_type' });
+
+  for (const payload of toSend) {
+    setTimeout(() => { sendPushToUser(userId, groupId, payload).catch(() => {}); }, 10000);
+  }
+  res.json({ ok: true, delay: 10, count: toSend.length });
+}));
+
 app.post('/api/groups', ah(async (req, res) => {
   const name = String(req.body?.name ?? '').trim().slice(0, 50);
   const gymDays = String(req.body?.gym_days ?? '').trim();

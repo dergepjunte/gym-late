@@ -205,6 +205,7 @@ enum K {
         static var maError: String { de ? "Falsches Passwort" : "Wrong password" }
         static var admTitle: String { de ? "Admin-Modus" : "Admin Mode" }
         static var admAdd: String { de ? "Testdaten letzte Woche" : "Create last week's test data" }
+        static var admDel: String { de ? "Testdaten löschen" : "Delete test data" }
         static var admWeekOn: String { de ? "Aktuelle Woche zeigen" : "Show current week" }
         static var admWeekOff: String { de ? "Aktuelle Woche ausblenden" : "Hide current week" }
         static var admReplay: String { de ? "Wrapped nochmal" : "Replay Wrapped" }
@@ -212,6 +213,14 @@ enum K {
         static var admForceHype: String { de ? "Hype-Animation testen" : "Test hype animation" }
         static var admForceGeo: String { de ? "Geo-Prompt testen" : "Test geo prompt" }
         static var admClearFlags: String { de ? "Tagesflags zurücksetzen" : "Clear today's flags" }
+        static var admSectionData: String { de ? "Testdaten" : "Test data" }
+        static var admSectionCeremonies: String { de ? "Animationen" : "Ceremonies" }
+        static var admSectionNotif: String { de ? "Benachrichtigungen (10s)" : "Notifications (10s delay)" }
+        static var admTestReminder: String { de ? "Erinnerung" : "Reminder" }
+        static var admTestStreak: String { de ? "Streak-Risiko" : "Streak risk" }
+        static var admTestActivity: String { de ? "Aktivität" : "Activity" }
+        static var admTestAll: String { de ? "Alle senden" : "Send all" }
+        static var toastTestScheduled: String { de ? "Wird in 10s gesendet…" : "Sending in 10s…" }
         static var toastAdmIn: String { de ? "Admin-Modus aktiviert" : "Admin mode activated" }
         static var toastAdmOut: String { de ? "Admin-Modus beendet" : "Admin mode exited" }
         static var toastAdded: String { de ? "Testdaten erstellt ✓" : "Test data created ✓" }

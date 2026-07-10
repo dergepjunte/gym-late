@@ -18,6 +18,7 @@ struct AppRootView: View {
     @State private var showGroupSwitcher = false
     @State private var showMyProfile = false
     @State private var showAdminLogin = false
+    @State private var showAdminPanel = false
     @State private var toast: String?
 
     var body: some View {
@@ -29,6 +30,7 @@ struct AppRootView: View {
                     onSettings: { showSettings = true },
                     onMyProfile: { showMyProfile = true },
                     onAdminUnlock: { showAdminLogin = true },
+                    onAdminOpen: { showAdminPanel = true },
                     onSwitchGroup: { showGroupSwitcher = true },
                     toast: $toast
                 )
@@ -115,6 +117,11 @@ struct AppRootView: View {
             if let me = myPerson { ProfileView(person: me) }
         }
         .fullPageCover(isPresented: $showAdminLogin) { AdminLoginSheet(toast: $toast) }
+            // Open the admin panel page automatically after login succeeds
+            .onChange(of: appState.adminMode) { _, isAdmin in
+                if isAdmin { showAdminPanel = true }
+            }
+        .fullPageCover(isPresented: $showAdminPanel) { AdminPanelPage() }
         .onReceive(SyncEngine.shared.$syncErrorMessage) { msg in
             if let msg {
                 toast = msg
@@ -203,6 +210,7 @@ struct AppHeader: View {
     let onSettings: () -> Void
     let onMyProfile: () -> Void
     let onAdminUnlock: () -> Void
+    let onAdminOpen: () -> Void
     let onSwitchGroup: () -> Void
     @Binding var toast: String?
 
@@ -221,11 +229,14 @@ struct AppHeader: View {
                     Text(K.L.appName)
                         .font(Theme.heading(20))
                     if appState.adminMode {
-                        Text("ADMIN")
-                            .font(.system(size: 9, weight: .black))
-                            .foregroundColor(K.onAccent)
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(Capsule().fill(K.accent))
+                        Button { onAdminOpen() } label: {
+                            Text("ADMIN")
+                                .font(.system(size: 9, weight: .black))
+                                .foregroundColor(K.onAccent)
+                                .padding(.horizontal, 6).padding(.vertical, 2)
+                                .background(Capsule().fill(K.accent))
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
 

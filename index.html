@@ -706,29 +706,40 @@
     }
     .leave-btn:active { transform:scale(.96); opacity:.8; }
 
-    /* ── ADMIN PANEL ─────────────────────────────────────────── */
-    .admin-panel {
-      border-radius: var(--r-xl); padding: 16px 18px; margin-top: 12px;
-      border-color: rgba(239,68,68,0.28) !important;
-      border-top-color: rgba(239,68,68,0.35) !important;
+    /* ── ADMIN PANEL (Shortcuts-style page) ─────────────────── */
+    .admin-grid {
+      display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 4px;
     }
-    .admin-panel-title {
-      font-size: 12px; font-weight: 700; letter-spacing: .6px;
-      text-transform: uppercase; color: var(--red); margin-bottom: 12px;
+    .admin-tile {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 8px; padding: 16px 12px 14px; border-radius: 16px;
+      cursor: pointer; font-family: inherit;
+      background: var(--glass-inner); border: 1px solid var(--glass-border);
+      transition: transform .15s, opacity .15s; width: 100%;
     }
-    .admin-btn {
-      width: 100%; padding: 13px; border-radius: var(--r-md); border: none;
-      font-family: inherit; font-size: 14px; font-weight: 600;
-      cursor: pointer; text-align: center; margin-bottom: 8px;
-      transition: transform .15s, opacity .15s;
+    .admin-tile:active { transform: scale(.94); opacity: .8; }
+    .admin-tile-glyph {
+      width: 44px; height: 44px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .admin-btn:last-child { margin-bottom: 0; }
-    .admin-btn:active { transform: scale(.96); opacity: .8; }
-    .admin-btn-add  { background: var(--accent-light); color: var(--accent-text); border: 1.5px solid var(--accent-2); }
-    .admin-btn-week { background: rgba(251,191,36,.12); color: var(--gold);  border: 1.5px solid rgba(251,191,36,.4); }
-    .admin-btn-week.active { background: rgba(251,191,36,.25); }
-    .admin-btn-del  { background: var(--red-light);    color: var(--red);    border: 1.5px solid rgba(239,68,68,.3); }
-    .admin-btn-exit { background: var(--glass-inner);  color: var(--text-2); border: 1px solid var(--glass-border); }
+    .admin-tile-glyph svg { width: 22px; height: 22px; }
+    .admin-tile-title {
+      font-size: 12px; font-weight: 700; color: var(--text-1);
+      text-align: center; line-height: 1.3;
+    }
+    .admin-eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: .7px;
+      text-transform: uppercase; color: var(--text-3); margin: 20px 0 10px;
+    }
+    .admin-exit-tile {
+      width: 100%; padding: 14px; border-radius: 14px; border: none;
+      font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+      background: var(--red-light); color: var(--red);
+      border: 1.5px solid rgba(239,68,68,.3);
+      transition: transform .15s, opacity .15s; margin-top: 8px;
+    }
+    .admin-exit-tile:active { transform: scale(.96); opacity: .8; }
+    .admin-coords { font-size: 11px; color: var(--text-3); margin-top: 12px; word-break: break-all; }
 
     /* ── MODALS ──────────────────────────────────────────────── */
     .overlay {
@@ -1443,8 +1454,6 @@
                           font-size: 16px; font-weight: 700; text-align: center; }
 
     /* ── Admin debug panel extras ── */
-    .admin-section-divider { height: 1px; background: rgba(239,68,68,.15); margin: 10px 0; }
-    .admin-coords-info { font-size: 11px; color: var(--text-3); margin-top: 6px; word-break: break-all; }
   </style>
 </head>
 <body>
@@ -1604,7 +1613,7 @@
     <div class="header" style="position:relative">
       <div class="header-icon" id="header-icon">🏋️</div>
       <h1 class="header-title">GymLate</h1>
-      <div class="admin-badge hidden" id="admin-badge">ADMIN</div>
+      <button class="admin-badge hidden" id="admin-badge" style="cursor:pointer">ADMIN</button>
       <button class="my-profile-btn" id="settings-btn" title="Einstellungen" style="right:44px">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
@@ -1731,21 +1740,6 @@
 
       <div class="leave-section"><button class="leave-btn" id="leave-btn"></button></div>
 
-      <!-- Admin Panel (hidden by default) -->
-      <div class="admin-panel glass hidden" id="admin-panel">
-        <div class="admin-panel-title" id="adm-title"></div>
-        <button class="admin-btn admin-btn-add"  id="adm-add-btn"></button>
-        <button class="admin-btn admin-btn-week" id="adm-week-btn"></button>
-        <button class="admin-btn admin-btn-del"  id="adm-del-btn"></button>
-        <button class="admin-btn" style="background:var(--accent-light);color:var(--accent-text);border:1.5px solid var(--accent-2)" id="adm-replay-btn"></button>
-        <div class="admin-section-divider"></div>
-        <button class="admin-btn" style="background:rgba(34,197,94,.1);color:#22c55e;border:1.5px solid rgba(34,197,94,.3)" id="adm-force-hype-btn"></button>
-        <button class="admin-btn" style="background:rgba(8,145,178,.1);color:#0891b2;border:1.5px solid rgba(8,145,178,.3)" id="adm-force-geo-btn"></button>
-        <button class="admin-btn" style="background:rgba(251,191,36,.1);color:var(--gold);border:1.5px solid rgba(251,191,36,.3)" id="adm-clear-flags-btn"></button>
-        <div class="admin-coords-info" id="adm-coords-info"></div>
-        <div class="admin-section-divider"></div>
-        <button class="admin-btn admin-btn-exit" id="adm-exit-btn"></button>
-      </div>
     </div>
 
   </div>
@@ -1938,6 +1932,99 @@
     </div>
     <div class="error-msg" id="ma-error"></div>
     <button class="btn btn-primary btn-full btn-xl" id="ma-submit" style="margin-top:8px"></button>
+  </div>
+</div>
+
+<!-- Admin Panel (Shortcuts-style page) -->
+<div class="fullpage" id="modal-admin-panel">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="adm-page-back">‹</button>
+    <div class="fullpage-bar-title" id="adm-page-title"></div>
+  </div>
+  <div class="fullpage-inner">
+    <!-- Test Data -->
+    <div class="admin-eyebrow" id="adm-section-data"></div>
+    <div class="admin-grid">
+      <button class="admin-tile" id="adm-add-btn">
+        <div class="admin-tile-glyph" style="background:rgba(245,158,11,.15)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </div>
+        <span class="admin-tile-title" id="adm-add-lbl"></span>
+      </button>
+      <button class="admin-tile" id="adm-del-btn">
+        <div class="admin-tile-glyph" style="background:rgba(239,68,68,.12)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        </div>
+        <span class="admin-tile-title" id="adm-del-lbl"></span>
+      </button>
+    </div>
+
+    <!-- Ceremonies -->
+    <div class="admin-eyebrow" id="adm-section-ceremonies"></div>
+    <div class="admin-grid">
+      <button class="admin-tile" id="adm-replay-btn">
+        <div class="admin-tile-glyph" style="background:var(--accent-light)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        </div>
+        <span class="admin-tile-title" id="adm-replay-lbl"></span>
+      </button>
+      <button class="admin-tile" id="adm-force-hype-btn">
+        <div class="admin-tile-glyph" style="background:rgba(34,197,94,.12)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/></svg>
+        </div>
+        <span class="admin-tile-title" id="adm-force-hype-lbl"></span>
+      </button>
+      <button class="admin-tile" id="adm-force-geo-btn">
+        <div class="admin-tile-glyph" style="background:rgba(8,145,178,.12)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <span class="admin-tile-title" id="adm-force-geo-lbl"></span>
+      </button>
+      <button class="admin-tile" id="adm-week-btn">
+        <div class="admin-tile-glyph" style="background:rgba(251,191,36,.12)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <span class="admin-tile-title" id="adm-week-lbl"></span>
+      </button>
+      <button class="admin-tile" id="adm-clear-flags-btn">
+        <div class="admin-tile-glyph" style="background:rgba(251,191,36,.08)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        </div>
+        <span class="admin-tile-title" id="adm-clear-flags-lbl"></span>
+      </button>
+    </div>
+
+    <!-- Notifications -->
+    <div class="admin-eyebrow" id="adm-section-notif"></div>
+    <div class="admin-grid">
+      <button class="admin-tile" id="adm-test-reminder">
+        <div class="admin-tile-glyph" style="background:rgba(99,102,241,.12)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <span class="admin-tile-title" id="adm-test-reminder-lbl"></span>
+      </button>
+      <button class="admin-tile" id="adm-test-streak">
+        <div class="admin-tile-glyph" style="background:rgba(249,115,22,.12)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+        </div>
+        <span class="admin-tile-title" id="adm-test-streak-lbl"></span>
+      </button>
+      <button class="admin-tile" id="adm-test-activity">
+        <div class="admin-tile-glyph" style="background:rgba(20,184,166,.12)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <span class="admin-tile-title" id="adm-test-activity-lbl"></span>
+      </button>
+      <button class="admin-tile" id="adm-test-all">
+        <div class="admin-tile-glyph" style="background:rgba(139,92,246,.12)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/><circle cx="19" cy="3" r="3" fill="#8b5cf6" stroke="none"/></svg>
+        </div>
+        <span class="admin-tile-title" id="adm-test-all-lbl"></span>
+      </button>
+    </div>
+
+    <div class="admin-coords" id="adm-coords-info"></div>
+    <button class="admin-exit-tile" id="adm-exit-btn"></button>
   </div>
 </div>
 
@@ -2397,6 +2484,9 @@ const TRANS = {
     // Admin debug
     admForceHype:'Hype-Animation testen', admForceGeo:'Geo-Prompt testen',
     admClearFlags:'Tagesflags zurücksetzen',
+    admSectionData:'Testdaten', admSectionCeremonies:'Animationen', admSectionNotif:'Benachrichtigungen (10s)',
+    admTestReminder:'Erinnerung', admTestStreak:'Streak-Risiko', admTestActivity:'Aktivität', admTestAll:'Alle senden',
+    toastTestScheduled:'Wird in 10s gesendet…',
     // Settings fixed strings
     errAtLeastOneDay:'Mindestens 1 Tag wählen.',
     toastGymDaysSaved:'Gym-Tage gespeichert ✓',
@@ -2567,6 +2657,9 @@ const TRANS = {
     // Admin debug
     admForceHype:'Test hype animation', admForceGeo:'Test geo prompt',
     admClearFlags:'Clear today\'s flags',
+    admSectionData:'Test data', admSectionCeremonies:'Ceremonies', admSectionNotif:'Notifications (10s delay)',
+    admTestReminder:'Reminder', admTestStreak:'Streak risk', admTestActivity:'Activity', admTestAll:'Send all',
+    toastTestScheduled:'Sending in 10s…',
     // Settings fixed strings
     errAtLeastOneDay:'Select at least 1 day.',
     toastGymDaysSaved:'Gym days saved ✓',
@@ -2679,6 +2772,7 @@ const api = {
   loginUser:     (g,d)    => api.req('POST',   `/groups/${g}/users/login`, d),
   updateUser:    (g,u,d)  => api.req('PATCH',  `/groups/${g}/users/${u}`, d),
   kickUser:      (g,u,d)  => api.req('DELETE', `/groups/${g}/users/${u}`, d),
+  testPush:      (type)   => api.req('POST', '/admin/test-push', { userId: userProfile?.userId, groupId: group?.id, adminPassword, type }),
   setCheckinTime:(g,d)    => api.req('POST',   `/groups/${g}/checkin-time`, d),
 };
 
@@ -3322,17 +3416,18 @@ function renderPeople() {
 //  RENDER: ADMIN PANEL
 // ════════════════════════════════════════════════════════
 function renderAdminPanel() {
-  const panel = document.getElementById('admin-panel');
-  panel.classList.toggle('hidden', !adminMode);
   if (!adminMode) return;
-  document.getElementById('adm-week-btn').textContent = adminShowCurWeek ? T.admWeekOff : T.admWeekOn;
-  document.getElementById('adm-week-btn').classList.toggle('active', adminShowCurWeek);
+  // Update week toggle label
+  const weekLbl = document.getElementById('adm-week-lbl');
+  if (weekLbl) weekLbl.textContent = adminShowCurWeek ? T.admWeekOff : T.admWeekOn;
+  const weekBtn = document.getElementById('adm-week-btn');
+  if (weekBtn) weekBtn.style.opacity = adminShowCurWeek ? '1' : '.7';
   // Show gym coords info
   const coordsEl = document.getElementById('adm-coords-info');
-  if (data?.gymLat != null) {
-    coordsEl.textContent = `Gym: ${data.gymLat.toFixed(5)}, ${data.gymLng.toFixed(5)} — Radius: ${data.gymRadius}m`;
-  } else {
-    coordsEl.textContent = 'Kein Gym-Standort gesetzt';
+  if (coordsEl) {
+    coordsEl.textContent = data?.gymLat != null
+      ? `Gym: ${data.gymLat.toFixed(5)}, ${data.gymLng.toFixed(5)} — Radius: ${data.gymRadius}m`
+      : '';
   }
 }
 
@@ -3572,9 +3667,9 @@ function activateAdmin({ silent = false } = {}) {
   if (!silent) showToast(T.toastAdmIn);
   renderLandingAdminTools();
   if (group) {
-    switchTab('people');
     renderAdminPanel();
     renderWeek();
+    openPage('modal-admin-panel');
   }
 }
 
@@ -3583,8 +3678,9 @@ function exitAdmin() {
   adminShowCurWeek = false;
   adminPassword = '';
   document.getElementById('admin-badge').classList.add('hidden');
+  closePage('modal-admin-panel');
   showToast(T.toastAdmOut);
-  renderLandingAdminTools(); renderAdminPanel(); renderHistory(); renderWeek();
+  renderLandingAdminTools(); renderHistory(); renderWeek();
 }
 
 document.getElementById('ma-cancel').addEventListener('click', () => closePage('modal-admin'));
@@ -3607,6 +3703,10 @@ document.getElementById('ma-submit').addEventListener('click', async () => {
   }
 });
 document.getElementById('ma-pwd').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('ma-submit').click(); });
+
+// Admin panel page navigation
+document.getElementById('adm-page-back').addEventListener('click', () => closePage('modal-admin-panel'));
+document.getElementById('admin-badge').addEventListener('click', () => { if (adminMode) openPage('modal-admin-panel'); });
 
 // Admin buttons
 document.getElementById('adm-exit-btn').addEventListener('click', exitAdmin);
@@ -3671,6 +3771,20 @@ document.getElementById('adm-clear-flags-btn').addEventListener('click', () => {
   showToast(T.toastCleared);
 });
 
+// Test push notifications (10s delay)
+async function sendTestPush(type) {
+  try {
+    await api.testPush(type);
+    showToast(T.toastTestScheduled);
+  } catch {
+    showToast('Push not configured');
+  }
+}
+document.getElementById('adm-test-reminder').addEventListener('click', () => sendTestPush('reminder'));
+document.getElementById('adm-test-streak').addEventListener('click', () => sendTestPush('streak'));
+document.getElementById('adm-test-activity').addEventListener('click', () => sendTestPush('activity'));
+document.getElementById('adm-test-all').addEventListener('click', () => sendTestPush('all'));
+
 // ════════════════════════════════════════════════════════
 //  APPLY I18N
 // ════════════════════════════════════════════════════════
@@ -3701,8 +3815,14 @@ function applyI18n() {
   set('ee-lbl-attend-date',T.mlLblAttendDate); set('ee-lbl-date',T.mlLblDate); set('ee-lbl-mins',T.mlLblMins);
   set('ee-lbl-skip-date',T.mlLblSkipDate); set('ee-lbl-reason',T.mlLblReason); set('ee-save',T.mlSave);
   set('ma-title',T.maTitle); set('ma-lbl',T.maLbl); set('ma-submit',T.maSubmit);
-  set('adm-title',T.admTitle); set('adm-add-btn',T.admAdd); set('adm-del-btn',T.admDel); set('adm-exit-btn',T.admExit); set('adm-replay-btn',T.admReplay);
-  set('adm-force-hype-btn',T.admForceHype); set('adm-force-geo-btn',T.admForceGeo); set('adm-clear-flags-btn',T.admClearFlags);
+  set('adm-page-title',T.admTitle); set('adm-exit-btn',T.admExit);
+  set('adm-section-data',T.admSectionData); set('adm-add-lbl',T.admAdd); set('adm-del-lbl',T.admDel);
+  set('adm-section-ceremonies',T.admSectionCeremonies); set('adm-replay-lbl',T.admReplay);
+  set('adm-force-hype-lbl',T.admForceHype); set('adm-force-geo-lbl',T.admForceGeo);
+  set('adm-clear-flags-lbl',T.admClearFlags); set('adm-week-lbl',T.admWeekOn);
+  set('adm-section-notif',T.admSectionNotif);
+  set('adm-test-reminder-lbl',T.admTestReminder); set('adm-test-streak-lbl',T.admTestStreak);
+  set('adm-test-activity-lbl',T.admTestActivity); set('adm-test-all-lbl',T.admTestAll);
   set('pill-hint', T.pillHint);
   // Group switcher
   set('mgs-title',T.mgsTitle); set('mgs-join-btn',T.mgsJoin); set('mgs-create-btn',T.mgsCreate);
