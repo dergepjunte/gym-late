@@ -342,6 +342,14 @@
       padding: 16px;
     }
     .settings-section-title { font-size:12px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; }
+    .notif-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; }
+    .notif-time-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0 0; }
+    .notif-quiet-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+    .notif-row-label { font-size:14px; color:var(--text-1); }
+    .notif-time-input { font-size:14px; font-weight:600; padding:5px 10px; border-radius:10px; border:1.5px solid var(--glass-border); background:var(--glass-inner); color:var(--text-1); font-family:inherit; }
+    .notif-member-row { display:flex; align-items:center; gap:10px; padding:6px 0; cursor:pointer; }
+    .notif-member-row input[type=checkbox] { width:18px; height:18px; accent-color:var(--accent); cursor:pointer; }
+    .notif-member-name { font-size:14px; color:var(--text-1); }
     /* Chest modal */
     .chest-reveal { text-align:center; padding:8px 0; }
     .chest-icon { font-size:64px; display:block; margin-bottom:12px; animation:w-pop .5s cubic-bezier(.34,1.56,.64,1) both; }
@@ -2144,6 +2152,42 @@
       <button class="btn btn-ghost" id="mset-geo-test" style="margin-top:8px;width:100%"></button>
       <div class="mset-geo-hint" id="mset-geo-hint"></div>
     </div>
+    <!-- Notifications -->
+    <div class="settings-section" id="mset-notif-section">
+      <div class="settings-section-title" id="mset-notif-lbl"></div>
+      <div class="notif-row">
+        <span class="notif-row-label" id="mset-notif-reminders-lbl"></span>
+        <label class="toggle-switch"><input type="checkbox" id="mset-notif-reminders"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="notif-time-row" id="mset-reminder-time-row">
+        <span class="notif-row-label" id="mset-reminder-time-lbl"></span>
+        <input type="time" id="mset-reminder-time" class="notif-time-input">
+      </div>
+      <div class="notif-row" style="margin-top:12px">
+        <span class="notif-row-label" id="mset-notif-streak-lbl"></span>
+        <label class="toggle-switch"><input type="checkbox" id="mset-notif-streak"><span class="toggle-slider"></span></label>
+      </div>
+      <div class="notif-row" style="margin-top:12px">
+        <span class="notif-row-label" id="mset-notif-activity-lbl"></span>
+        <label class="toggle-switch"><input type="checkbox" id="mset-notif-activity"><span class="toggle-slider"></span></label>
+      </div>
+      <!-- Quiet hours -->
+      <div class="notif-quiet-row" style="margin-top:14px">
+        <span class="notif-row-label" id="mset-quiet-lbl"></span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="time" id="mset-quiet-start" class="notif-time-input">
+          <span style="color:var(--text-2);font-size:13px">–</span>
+          <input type="time" id="mset-quiet-end" class="notif-time-input">
+        </div>
+      </div>
+      <!-- Activity filter: who to get notified for -->
+      <div id="mset-notif-members-section" style="margin-top:14px">
+        <div class="notif-row-label" id="mset-notif-members-lbl" style="margin-bottom:8px"></div>
+        <div id="mset-notif-members-list"></div>
+      </div>
+      <button class="btn btn-primary" id="mset-notif-save" style="margin-top:16px;width:100%"></button>
+    </div>
+
     <!-- Leave group -->
     <div class="settings-section" style="border-color:rgba(239,68,68,.35);">
       <button class="leave-btn" id="mset-leave-btn" style="width:100%"></button>
@@ -2373,6 +2417,16 @@ const TRANS = {
     msetFixedtimeToggleLbl:'Feste Uhrzeit aktiviert',
     toastFixedCheckinOn:'Feste Check-in-Zeit aktiviert',
     toastFixedCheckinOff:'Feste Check-in-Zeit deaktiviert',
+    // Notifications
+    msetNotifLbl:'Benachrichtigungen',
+    msetNotifRemindersLbl:'Gym-Erinnerung',
+    msetReminderTimeLbl:'Erinnerungszeit',
+    msetNotifStreakLbl:'Streak in Gefahr',
+    msetNotifActivityLbl:'Gruppen-Aktivität',
+    msetQuietLbl:'Ruhezeiten',
+    msetNotifMembersLbl:'Benachrichtigen bei',
+    msetNotifSave:'Speichern',
+    toastNotifSaved:'Benachrichtigungen gespeichert ✓',
     dhSetTimeLbl:'Uhrzeit für heute festlegen',
     dhSetTimeBtn:'Uhrzeit speichern',
     dhTimeSetLbl:'Heutige Uhrzeit',
@@ -2533,6 +2587,16 @@ const TRANS = {
     msetFixedtimeToggleLbl:'Fixed time enabled',
     toastFixedCheckinOn:'Fixed check-in time enabled',
     toastFixedCheckinOff:'Fixed check-in time disabled',
+    // Notifications
+    msetNotifLbl:'Notifications',
+    msetNotifRemindersLbl:'Gym day reminder',
+    msetReminderTimeLbl:'Reminder time',
+    msetNotifStreakLbl:'Streak at risk',
+    msetNotifActivityLbl:'Group activity',
+    msetQuietLbl:'Quiet hours',
+    msetNotifMembersLbl:'Notify me when',
+    msetNotifSave:'Save',
+    toastNotifSaved:'Notifications saved ✓',
     dhSetTimeLbl:'Set time for today',
     dhSetTimeBtn:'Save time',
     dhTimeSetLbl:"Today's time",
@@ -3329,6 +3393,7 @@ async function enterGroup(g) {
   updateMyProfileBtn();
   applyI18n(); renderAll(); startPolling(); showScreen('app');
   runOpeningSequence();
+  initPush().catch(() => {});
 }
 
 function updateMyProfileBtn() {
@@ -3657,6 +3722,11 @@ function applyI18n() {
   set('mset-geo-test',T.msetGeoTestBtn);
   // Settings fixed check-in time (beta)
   set('mset-fixedtime-lbl',T.msetFixedtimeLbl); set('mset-fixedtime-toggle-lbl',T.msetFixedtimeToggleLbl);
+  // Settings notifications
+  set('mset-notif-lbl',T.msetNotifLbl); set('mset-notif-reminders-lbl',T.msetNotifRemindersLbl);
+  set('mset-reminder-time-lbl',T.msetReminderTimeLbl); set('mset-notif-streak-lbl',T.msetNotifStreakLbl);
+  set('mset-notif-activity-lbl',T.msetNotifActivityLbl); set('mset-quiet-lbl',T.msetQuietLbl);
+  set('mset-notif-members-lbl',T.msetNotifMembersLbl); set('mset-notif-save',T.msetNotifSave);
   // Profile view gym days
   set('pv-gym-days-lbl',T.pvGymDaysLbl);
   // Admin user edit
@@ -4419,6 +4489,38 @@ function openSettings() {
   document.getElementById('mset-geo-section').style.display = data?.gymLat ? '' : 'none';
   document.getElementById('mset-leave-btn').textContent = T.leaveGroup;
 
+  // Notification preferences
+  const prefs = loadNotifPrefs();
+  document.getElementById('mset-notif-reminders').checked = prefs.notifReminders !== false;
+  document.getElementById('mset-reminder-time').value = prefs.reminderTime || '09:00';
+  document.getElementById('mset-notif-streak').checked = prefs.notifStreak !== false;
+  document.getElementById('mset-notif-activity').checked = prefs.notifActivity !== false;
+  document.getElementById('mset-quiet-start').value = prefs.quietStart || '22:00';
+  document.getElementById('mset-quiet-end').value = prefs.quietEnd || '08:00';
+  // Member filter list
+  const membersList = document.getElementById('mset-notif-members-list');
+  membersList.innerHTML = '';
+  const notifMembers = prefs.notifMembers || null; // null = everyone
+  if (data?.people) {
+    for (const p of data.people) {
+      if (userProfile && p.id === userProfile.userId) continue;
+      const row = document.createElement('label');
+      row.className = 'notif-member-row';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.value = p.id;
+      cb.checked = !notifMembers || notifMembers.includes(p.id);
+      const name = document.createElement('span');
+      name.className = 'notif-member-name';
+      name.textContent = p.name;
+      row.appendChild(cb); row.appendChild(name);
+      membersList.appendChild(row);
+    }
+  }
+  // Show/hide notif section based on push support
+  document.getElementById('mset-notif-section').style.display =
+    ('Notification' in window) ? '' : 'none';
+
   openPage('modal-settings');
 }
 
@@ -4432,6 +4534,29 @@ document.getElementById('mset-leave-btn').addEventListener('click', () => {
 
 document.getElementById('mset-geo-toggle').addEventListener('change', e => {
   localStorage.setItem('gymGeoEnabled', e.target.checked ? '1' : '0');
+});
+
+document.getElementById('mset-notif-save').addEventListener('click', async () => {
+  const checkedMembers = [...document.querySelectorAll('#mset-notif-members-list input[type=checkbox]')]
+    .filter(cb => cb.checked).map(cb => cb.value);
+  const totalMembers = document.querySelectorAll('#mset-notif-members-list input[type=checkbox]').length;
+  const notifMembers = checkedMembers.length === totalMembers ? null : checkedMembers;
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const prefs = {
+    notifReminders: document.getElementById('mset-notif-reminders').checked,
+    reminderTime: document.getElementById('mset-reminder-time').value || '09:00',
+    notifStreak: document.getElementById('mset-notif-streak').checked,
+    notifActivity: document.getElementById('mset-notif-activity').checked,
+    quietStart: document.getElementById('mset-quiet-start').value || '22:00',
+    quietEnd: document.getElementById('mset-quiet-end').value || '08:00',
+    notifMembers,
+    timezone,
+  };
+  saveNotifPrefs(prefs);
+  try {
+    await saveNotifPrefsToServer(prefs);
+    showToast(T.toastNotifSaved);
+  } catch { showToast(T.errServer); }
 });
 
 document.getElementById('mset-fixedtime-toggle').addEventListener('change', async e => {
@@ -5336,6 +5461,68 @@ document.addEventListener('keydown', e => {
 //  INIT
 // ════════════════════════════════════════════════════════
 applyI18n();
+// ── Push notification (web) ──────────────────────────────────────────────────
+
+async function initPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  if (!userProfile || !group) return;
+  const reg = await navigator.serviceWorker.register('/sw.js');
+  await navigator.serviceWorker.ready;
+
+  let keyRes;
+  try { keyRes = await fetch('/api/push/vapid-public-key'); } catch { return; }
+  if (!keyRes.ok) return;
+  const { key } = await keyRes.json();
+
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') return;
+
+  const existing = await reg.pushManager.getSubscription();
+  const sub = existing || await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(key),
+  });
+
+  await fetch('/api/push/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId: userProfile.userId,
+      groupId: group.id,
+      recoveryCode: userProfile.recoveryCode,
+      subscription: sub.toJSON(),
+    }),
+  });
+
+  // Sync stored notification preferences to server
+  const prefs = loadNotifPrefs();
+  await saveNotifPrefsToServer(prefs).catch(() => {});
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from(raw, c => c.charCodeAt(0));
+}
+
+function loadNotifPrefs() {
+  try { return JSON.parse(localStorage.getItem('gymNotifPrefs') || '{}'); } catch { return {}; }
+}
+
+function saveNotifPrefs(prefs) {
+  localStorage.setItem('gymNotifPrefs', JSON.stringify(prefs));
+}
+
+async function saveNotifPrefsToServer(prefs) {
+  if (!userProfile || !group) return;
+  await fetch(`/api/groups/${group.id}/users/${userProfile.userId}/notif`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recoveryCode: userProfile.recoveryCode, ...prefs }),
+  });
+}
+
 async function init() {
   showLoading(true); loadGroup();
   if (group) {
@@ -5366,6 +5553,7 @@ async function init() {
     updateMyProfileBtn();
     applyI18n(); renderAll(); startPolling(); showLoading(false); showScreen('app');
     runOpeningSequence();
+    initPush().catch(() => {});
     return;
   }
   showLoading(false); showScreen('landing');

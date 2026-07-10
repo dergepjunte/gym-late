@@ -5,6 +5,41 @@ const crypto  = require('crypto');
 const path    = require('path');
 const zlib    = require('zlib');
 
+// ── Push Notification providers (optional — graceful no-op if env vars absent) ─
+let webpush = null;
+let apnProvider = null;
+
+try {
+  webpush = require('web-push');
+  const vPub = process.env.VAPID_PUBLIC_KEY;
+  const vPri = process.env.VAPID_PRIVATE_KEY;
+  const vMail = process.env.VAPID_EMAIL || 'mailto:admin@gymlate.app';
+  if (vPub && vPri) {
+    webpush.setVapidDetails(vMail, vPub, vPri);
+    console.log('🔔 Web Push (VAPID) ready');
+  } else {
+    console.log('ℹ️  Web Push disabled — set VAPID_PUBLIC_KEY + VAPID_PRIVATE_KEY to enable');
+    webpush = null;
+  }
+} catch { webpush = null; }
+
+try {
+  const apnLib = require('apn');
+  const p8 = process.env.APNS_KEY_P8;
+  const keyId = process.env.APNS_KEY_ID;
+  const teamId = process.env.APNS_TEAM_ID;
+  if (p8 && keyId && teamId) {
+    apnProvider = new apnLib.Provider({
+      token: { key: p8, keyId, teamId },
+      production: process.env.NODE_ENV === 'production',
+    });
+    apnProvider._Notification = apnLib.Notification;
+    console.log('🍎 APNs ready (' + (process.env.NODE_ENV === 'production' ? 'prod' : 'sandbox') + ')');
+  } else {
+    console.log('ℹ️  APNs disabled — set APNS_KEY_P8 + APNS_KEY_ID + APNS_TEAM_ID to enable');
+  }
+} catch { apnProvider = null; }
+
 // ── PWA Icon Generator (pure Node.js, no dependencies) ──────────────────────
 function generateIconPNG(size) {
   function crc32(buf) {
@@ -282,6 +317,57 @@ async function initSchema() {
     try { await database.run('ALTER TABLE entries ADD COLUMN reason VARCHAR(20) NULL'); } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
+    // Push notification tables
+    await database.run(`
+      CREATE TABLE IF NOT EXISTS push_subscriptions (
+        id VARCHAR(36) PRIMARY KEY,
+        user_id VARCHAR(36) NOT NULL,
+        group_id VARCHAR(36) NOT NULL,
+        endpoint TEXT NOT NULL,
+        p256dh TEXT NOT NULL,
+        auth TEXT NOT NULL,
+        created_at BIGINT NOT NULL,
+        UNIQUE KEY uniq_push_sub (user_id, group_id),
+        INDEX idx_push_sub_user (user_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    await database.run(`
+      CREATE TABLE IF NOT EXISTS apns_tokens (
+        id VARCHAR(36) PRIMARY KEY,
+        user_id VARCHAR(36) NOT NULL,
+        group_id VARCHAR(36) NOT NULL,
+        token VARCHAR(200) NOT NULL,
+        created_at BIGINT NOT NULL,
+        UNIQUE KEY uniq_apns (user_id, group_id),
+        INDEX idx_apns_user (user_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    await database.run(`
+      CREATE TABLE IF NOT EXISTS push_log (
+        id VARCHAR(36) PRIMARY KEY,
+        user_id VARCHAR(36) NOT NULL,
+        group_id VARCHAR(36) NOT NULL,
+        type VARCHAR(80) NOT NULL,
+        sent_date CHAR(10) NOT NULL,
+        INDEX idx_push_log (user_id, group_id, type, sent_date)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    // Notification preference columns on users
+    const notifCols = [
+      ["notif_reminders", "TINYINT NOT NULL DEFAULT 1"],
+      ["notif_streak",    "TINYINT NOT NULL DEFAULT 1"],
+      ["notif_activity",  "TINYINT NOT NULL DEFAULT 1"],
+      ["reminder_time",   "CHAR(5) NOT NULL DEFAULT '09:00'"],
+      ["quiet_start",     "CHAR(5) NOT NULL DEFAULT '22:00'"],
+      ["quiet_end",       "CHAR(5) NOT NULL DEFAULT '08:00'"],
+      ["timezone",        "VARCHAR(50) NOT NULL DEFAULT 'UTC'"],
+      ["notif_members",   "TEXT NULL"],
+    ];
+    for (const [col, def] of notifCols) {
+      try { await database.run(`ALTER TABLE users ADD COLUMN ${col} ${def}`); } catch (e) {
+        if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+      }
+    }
     return;
   }
 
@@ -355,6 +441,156 @@ async function initSchema() {
   try { database.exec('ALTER TABLE users ADD COLUMN last_freeze_grant INTEGER'); } catch {}
   try { database.exec("ALTER TABLE entries ADD COLUMN type TEXT NOT NULL DEFAULT 'late'"); } catch {}
   try { database.exec('ALTER TABLE entries ADD COLUMN reason TEXT'); } catch {}
+
+  // Push notification tables
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      group_id TEXT NOT NULL,
+      endpoint TEXT NOT NULL,
+      p256dh TEXT NOT NULL,
+      auth TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      UNIQUE(user_id, group_id)
+    );
+    CREATE TABLE IF NOT EXISTS apns_tokens (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      group_id TEXT NOT NULL,
+      token TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      UNIQUE(user_id, group_id)
+    );
+    CREATE TABLE IF NOT EXISTS push_log (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      group_id TEXT NOT NULL,
+      type TEXT NOT NULL,
+      sent_date TEXT NOT NULL
+    );
+  `);
+  try { database.exec("CREATE INDEX IF NOT EXISTS idx_push_log ON push_log(user_id, group_id, type, sent_date)"); } catch {}
+  try { database.exec("ALTER TABLE users ADD COLUMN notif_reminders INTEGER NOT NULL DEFAULT 1"); } catch {}
+  try { database.exec("ALTER TABLE users ADD COLUMN notif_streak INTEGER NOT NULL DEFAULT 1"); } catch {}
+  try { database.exec("ALTER TABLE users ADD COLUMN notif_activity INTEGER NOT NULL DEFAULT 1"); } catch {}
+  try { database.exec("ALTER TABLE users ADD COLUMN reminder_time TEXT NOT NULL DEFAULT '09:00'"); } catch {}
+  try { database.exec("ALTER TABLE users ADD COLUMN quiet_start TEXT NOT NULL DEFAULT '22:00'"); } catch {}
+  try { database.exec("ALTER TABLE users ADD COLUMN quiet_end TEXT NOT NULL DEFAULT '08:00'"); } catch {}
+  try { database.exec("ALTER TABLE users ADD COLUMN timezone TEXT NOT NULL DEFAULT 'UTC'"); } catch {}
+  try { database.exec("ALTER TABLE users ADD COLUMN notif_members TEXT NULL"); } catch {}
+}
+
+// ── Push notification helpers ────────────────────────────────────────────────
+
+function localHHMM(timezone) {
+  try {
+    return new Date().toLocaleTimeString('en-US', {
+      timeZone: timezone || 'UTC', hour12: false, hour: '2-digit', minute: '2-digit',
+    }).replace(/^24:/, '00:');
+  } catch { return new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }).replace(/^24:/, '00:'); }
+}
+
+function isInQuietHours(user) {
+  const qs = user.quiet_start || '22:00';
+  const qe = user.quiet_end   || '08:00';
+  const cur = localHHMM(user.timezone);
+  const [qsh, qsm] = qs.split(':').map(Number);
+  const [qeh, qem] = qe.split(':').map(Number);
+  const [ch,  cm]  = cur.split(':').map(Number);
+  const qsn = qsh * 60 + qsm, qen = qeh * 60 + qem, cn = ch * 60 + cm;
+  return qsn <= qen ? (cn >= qsn && cn < qen) : (cn >= qsn || cn < qen);
+}
+
+function isTimeNow(hhmm, timezone) {
+  return localHHMM(timezone) === hhmm;
+}
+
+function subtractOneHour(hhmm) {
+  const [h, m] = hhmm.split(':').map(Number);
+  return `${String((h - 1 + 24) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+async function sendPushToUser(userId, groupId, payload) {
+  const tag = JSON.stringify(payload);
+
+  if (webpush) {
+    const subs = await database.all(
+      'SELECT id, endpoint, p256dh, auth FROM push_subscriptions WHERE user_id = ? AND group_id = ?',
+      [userId, groupId]
+    );
+    for (const sub of subs) {
+      try {
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
+          JSON.stringify({ title: payload.title, body: payload.body, icon: '/icon-192.png', tag: payload.tag || payload.title })
+        );
+      } catch (e) {
+        if (e.statusCode === 410 || e.statusCode === 404) {
+          await database.run('DELETE FROM push_subscriptions WHERE id = ?', [sub.id]);
+        }
+      }
+    }
+  }
+
+  if (apnProvider) {
+    const tokens = await database.all(
+      'SELECT id, token FROM apns_tokens WHERE user_id = ? AND group_id = ?',
+      [userId, groupId]
+    );
+    for (const row of tokens) {
+      const note = new apnProvider._Notification();
+      note.expiry = Math.floor(Date.now() / 1000) + 3600;
+      note.badge = 1;
+      note.sound = 'default';
+      note.alert = { title: payload.title, body: payload.body };
+      note.topic = process.env.APNS_BUNDLE_ID || 'com.gymlate.app';
+      note.payload = { tag: payload.tag || '' };
+      const result = await apnProvider.send(note, row.token);
+      if (result.failed.length) {
+        const reason = result.failed[0]?.response?.reason;
+        if (reason === 'BadDeviceToken' || reason === 'Unregistered') {
+          await database.run('DELETE FROM apns_tokens WHERE id = ?', [row.id]);
+        }
+      }
+    }
+  }
+}
+
+async function sendActivityPush(groupId, actorUserId, actorName, entryType) {
+  if (!webpush && !apnProvider) return;
+  const today = dateYMD(new Date());
+  const emoji = entryType === 'late' ? '⏰' : '💪';
+  const body = entryType === 'late' ? `checked in (a bit late) 🏋️` : `just checked in 🏋️`;
+  try {
+    const others = await database.all(
+      `SELECT id, notif_members, quiet_start, quiet_end, timezone
+       FROM users WHERE group_id = ? AND id != ? AND notif_activity = 1`,
+      [groupId, actorUserId]
+    );
+    for (const u of others) {
+      if (u.notif_members) {
+        try {
+          const allowed = JSON.parse(u.notif_members);
+          if (Array.isArray(allowed) && !allowed.includes(actorUserId)) continue;
+        } catch {}
+      }
+      if (isInQuietHours(u)) continue;
+      const logType = `activity:${actorUserId}`;
+      const already = await database.one(
+        'SELECT 1 AS x FROM push_log WHERE user_id = ? AND group_id = ? AND type = ? AND sent_date = ?',
+        [u.id, groupId, logType, today]
+      );
+      if (already) continue;
+      await sendPushToUser(u.id, groupId, {
+        title: `${emoji} ${actorName}`, body, tag: `activity-${actorUserId}-${today}`,
+      });
+      await database.run(
+        'INSERT INTO push_log (id, user_id, group_id, type, sent_date) VALUES (?, ?, ?, ?, ?)',
+        [crypto.randomUUID(), u.id, groupId, logType, today]
+      );
+    }
+  } catch (e) { console.error('sendActivityPush error:', e); }
 }
 
 // ── Code generators ──────────────────────────────────────────────────────────
@@ -576,6 +812,103 @@ function parseGeoCoords(body) {
 
 app.post('/api/admin/verify', ah(async (req, res) => {
   if (!isAdmin(req)) return res.status(401).json({ error: 'unauthorized' });
+  res.json({ ok: true });
+}));
+
+// ── Push Notification routes ─────────────────────────────────────────────────
+
+app.get('/api/push/vapid-public-key', (req, res) => {
+  const key = process.env.VAPID_PUBLIC_KEY;
+  if (!key) return res.status(503).json({ error: 'push_not_configured' });
+  res.json({ key });
+});
+
+// Web Push subscription (browser → server)
+app.post('/api/push/subscribe', ah(async (req, res) => {
+  const { userId, groupId, recoveryCode, subscription } = req.body || {};
+  if (!userId || !groupId || !subscription?.endpoint) return res.status(400).json({ error: 'invalid' });
+  const user = await database.one('SELECT id, recovery_code FROM users WHERE id = ? AND group_id = ?', [userId, groupId]);
+  if (!user) return res.status(404).json({ error: 'not_found' });
+  if (user.recovery_code.replace(/-/g, '') !== String(recoveryCode || '').replace(/-/g, '').toUpperCase()) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  await database.run(
+    `INSERT INTO push_subscriptions (id, user_id, group_id, endpoint, p256dh, auth, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE endpoint = VALUES(endpoint), p256dh = VALUES(p256dh), auth = VALUES(auth)`,
+    [crypto.randomUUID(), userId, groupId, subscription.endpoint, subscription.keys.p256dh, subscription.keys.auth, Date.now()]
+  ).catch(async () => {
+    // SQLite: upsert via delete+insert
+    await database.run('DELETE FROM push_subscriptions WHERE user_id = ? AND group_id = ?', [userId, groupId]);
+    await database.run(
+      'INSERT INTO push_subscriptions (id, user_id, group_id, endpoint, p256dh, auth, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [crypto.randomUUID(), userId, groupId, subscription.endpoint, subscription.keys.p256dh, subscription.keys.auth, Date.now()]
+    );
+  });
+  res.json({ ok: true });
+}));
+
+app.delete('/api/push/subscribe', ah(async (req, res) => {
+  const { userId, groupId } = req.body || {};
+  if (userId && groupId) await database.run('DELETE FROM push_subscriptions WHERE user_id = ? AND group_id = ?', [userId, groupId]);
+  res.json({ ok: true });
+}));
+
+// APNs device token (iOS → server)
+app.post('/api/push/apns-token', ah(async (req, res) => {
+  const { userId, groupId, recoveryCode, token } = req.body || {};
+  if (!userId || !groupId || !token) return res.status(400).json({ error: 'invalid' });
+  const user = await database.one('SELECT id, recovery_code FROM users WHERE id = ? AND group_id = ?', [userId, groupId]);
+  if (!user) return res.status(404).json({ error: 'not_found' });
+  if (user.recovery_code.replace(/-/g, '') !== String(recoveryCode || '').replace(/-/g, '').toUpperCase()) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  await database.run(
+    `INSERT INTO apns_tokens (id, user_id, group_id, token, created_at)
+     VALUES (?, ?, ?, ?, ?)
+     ON DUPLICATE KEY UPDATE token = VALUES(token)`,
+    [crypto.randomUUID(), userId, groupId, token, Date.now()]
+  ).catch(async () => {
+    await database.run('DELETE FROM apns_tokens WHERE user_id = ? AND group_id = ?', [userId, groupId]);
+    await database.run('INSERT INTO apns_tokens (id, user_id, group_id, token, created_at) VALUES (?, ?, ?, ?, ?)',
+      [crypto.randomUUID(), userId, groupId, token, Date.now()]);
+  });
+  res.json({ ok: true });
+}));
+
+// Save notification preferences
+app.patch('/api/groups/:id/users/:uid/notif', ah(async (req, res) => {
+  const { id, uid } = req.params;
+  const user = await database.one('SELECT id, recovery_code FROM users WHERE id = ? AND group_id = ?', [uid, id]);
+  if (!user) return res.status(404).json({ error: 'not_found' });
+  const rc = String(req.body?.recoveryCode || '').replace(/-/g, '').toUpperCase();
+  if (!isAdmin(req) && user.recovery_code.replace(/-/g, '') !== rc) return res.status(401).json({ error: 'unauthorized' });
+
+  const sets = []; const params = [];
+  const boolField = (key, col) => {
+    if (req.body?.[key] !== undefined) { sets.push(`${col} = ?`); params.push(req.body[key] ? 1 : 0); }
+  };
+  const strField = (key, col, validator) => {
+    if (req.body?.[key] !== undefined) {
+      const v = String(req.body[key]).trim();
+      if (validator && !validator(v)) return;
+      sets.push(`${col} = ?`); params.push(v);
+    }
+  };
+  boolField('notifReminders', 'notif_reminders');
+  boolField('notifStreak',    'notif_streak');
+  boolField('notifActivity',  'notif_activity');
+  strField('reminderTime', 'reminder_time', isValidTimeHHMM);
+  strField('quietStart',   'quiet_start',   isValidTimeHHMM);
+  strField('quietEnd',     'quiet_end',     isValidTimeHHMM);
+  strField('timezone',     'timezone',      v => v.length <= 50);
+  if (req.body?.notifMembers !== undefined) {
+    sets.push('notif_members = ?');
+    params.push(req.body.notifMembers === null ? null : JSON.stringify(req.body.notifMembers));
+  }
+  if (!sets.length) return res.json({ ok: true });
+  params.push(uid, id);
+  await database.run(`UPDATE users SET ${sets.join(', ')} WHERE id = ? AND group_id = ?`, params);
   res.json({ ok: true });
 }));
 
@@ -1011,6 +1344,14 @@ app.post('/api/groups/:id/entries', ah(async (req, res) => {
     }
   }
 
+  // Fire activity push after response (non-blocking)
+  if (type === 'attend' || type === 'late') {
+    const actorId = (await database.one(
+      'SELECT id FROM users WHERE group_id = ? AND LOWER(name) = LOWER(?)', [id, person]
+    ))?.id || null;
+    setImmediate(() => sendActivityPush(id, actorId, person, type).catch(() => {}));
+  }
+
   res.json({ ok: true, id: eid, chest });
 }));
 
@@ -1082,6 +1423,61 @@ app.delete('/api/groups/:id/entries/:eid', ah(async (req, res) => {
 
   res.json({ ok: true });
 }));
+
+// ── Push scheduler (time-based: reminder + streak-at-risk) ──────────────────
+setInterval(async () => {
+  if (!webpush && !apnProvider) return;
+  try {
+    const today = dateYMD(new Date());
+    const usersWithSubs = await database.all(`
+      SELECT DISTINCT u.id, u.group_id, u.name, u.avail_days,
+             u.notif_reminders, u.notif_streak, u.reminder_time,
+             u.quiet_start, u.quiet_end, u.timezone
+      FROM users u
+      WHERE u.id IN (SELECT user_id FROM push_subscriptions UNION SELECT user_id FROM apns_tokens)
+    `);
+    for (const u of usersWithSubs) {
+      if (isInQuietHours(u)) continue;
+      const g = await database.one('SELECT gym_days FROM `groups` WHERE id = ?', [u.group_id]);
+      if (!g) continue;
+      const mask = effectiveMask(g.gym_days, u.avail_days);
+      if (!isDayScheduled(today, mask)) continue;
+
+      // Gym day reminder
+      if (Number(u.notif_reminders) && isTimeNow(u.reminder_time || '09:00', u.timezone)) {
+        const already = await database.one(
+          'SELECT 1 AS x FROM push_log WHERE user_id = ? AND group_id = ? AND type = ? AND sent_date = ?',
+          [u.id, u.group_id, 'reminder', today]
+        );
+        if (!already) {
+          await sendPushToUser(u.id, u.group_id, { title: '💪 Gym day!', body: "Don't forget to check in today", tag: `reminder-${today}` });
+          await database.run('INSERT INTO push_log (id,user_id,group_id,type,sent_date) VALUES (?,?,?,?,?)',
+            [crypto.randomUUID(), u.id, u.group_id, 'reminder', today]);
+        }
+      }
+
+      // Streak at risk (1h before quiet start, or 21:00)
+      const riskTime = u.quiet_start ? subtractOneHour(u.quiet_start) : '21:00';
+      if (Number(u.notif_streak) && isTimeNow(riskTime, u.timezone)) {
+        const already = await database.one(
+          'SELECT 1 AS x FROM push_log WHERE user_id = ? AND group_id = ? AND type = ? AND sent_date = ?',
+          [u.id, u.group_id, 'streak_risk', today]
+        );
+        if (!already) {
+          const checkedIn = await database.one(
+            `SELECT 1 AS x FROM entries WHERE group_id = ? AND LOWER(person) = LOWER(?) AND date = ? AND type IN ('attend','late')`,
+            [u.group_id, u.name, today]
+          );
+          if (!checkedIn) {
+            await sendPushToUser(u.id, u.group_id, { title: '🔥 Streak at risk!', body: 'Check in today to keep your streak alive', tag: `streak-${today}` });
+            await database.run('INSERT INTO push_log (id,user_id,group_id,type,sent_date) VALUES (?,?,?,?,?)',
+              [crypto.randomUUID(), u.id, u.group_id, 'streak_risk', today]);
+          }
+        }
+      }
+    }
+  } catch (e) { console.error('push scheduler:', e); }
+}, 60000);
 
 app.use(express.static(__dirname));
 

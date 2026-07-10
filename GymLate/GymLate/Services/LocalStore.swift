@@ -88,6 +88,37 @@ final class LocalStore {
         defaults.removeObject(forKey: wrappedSeenKey(for: weekStart))
     }
 
+    // MARK: - Notification preferences
+
+    var notifReminders: Bool {
+        get { defaults.object(forKey: "gymNotifReminders") as? Bool ?? true }
+        set { defaults.set(newValue, forKey: "gymNotifReminders") }
+    }
+    var notifStreak: Bool {
+        get { defaults.object(forKey: "gymNotifStreak") as? Bool ?? true }
+        set { defaults.set(newValue, forKey: "gymNotifStreak") }
+    }
+    var notifActivity: Bool {
+        get { defaults.object(forKey: "gymNotifActivity") as? Bool ?? true }
+        set { defaults.set(newValue, forKey: "gymNotifActivity") }
+    }
+    var reminderTime: String {
+        get { defaults.string(forKey: "gymReminderTime") ?? "09:00" }
+        set { defaults.set(newValue, forKey: "gymReminderTime") }
+    }
+    var quietStart: String {
+        get { defaults.string(forKey: "gymQuietStart") ?? "22:00" }
+        set { defaults.set(newValue, forKey: "gymQuietStart") }
+    }
+    var quietEnd: String {
+        get { defaults.string(forKey: "gymQuietEnd") ?? "08:00" }
+        set { defaults.set(newValue, forKey: "gymQuietEnd") }
+    }
+    var notifMembers: [String]? {
+        get { decode([String].self, forKey: "gymNotifMembers") }
+        set { encode(newValue, forKey: "gymNotifMembers") }
+    }
+
     // MARK: - Admin (in-memory only — never persisted)
 
     var adminPassword: String? = nil

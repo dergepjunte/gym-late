@@ -220,4 +220,30 @@ final class APIClient {
             return false
         }
     }
+
+    // MARK: - Push notifications
+
+    func registerAPNsToken(token: String, groupId: String, userId: String, recoveryCode: String) async throws {
+        struct Body: Encodable { let userId: String; let groupId: String; let recoveryCode: String; let token: String }
+        let _: OkResponse = try await request("POST", path: "/api/push/apns-token",
+                                               body: Body(userId: userId, groupId: groupId, recoveryCode: recoveryCode, token: token))
+    }
+
+    func saveNotifPrefs(groupId: String, userId: String, recoveryCode: String,
+                        notifReminders: Bool, notifStreak: Bool, notifActivity: Bool,
+                        reminderTime: String, quietStart: String, quietEnd: String,
+                        timezone: String, notifMembers: [String]?) async throws {
+        struct Body: Encodable {
+            let recoveryCode: String
+            let notifReminders: Bool; let notifStreak: Bool; let notifActivity: Bool
+            let reminderTime: String; let quietStart: String; let quietEnd: String
+            let timezone: String; let notifMembers: [String]?
+        }
+        let _: OkResponse = try await request("PATCH",
+            path: "/api/groups/\(groupId)/users/\(userId)/notif",
+            body: Body(recoveryCode: recoveryCode, notifReminders: notifReminders,
+                       notifStreak: notifStreak, notifActivity: notifActivity,
+                       reminderTime: reminderTime, quietStart: quietStart, quietEnd: quietEnd,
+                       timezone: timezone, notifMembers: notifMembers))
+    }
 }

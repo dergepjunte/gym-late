@@ -172,6 +172,18 @@ enum K {
         static var toastFixedCheckinOn: String { de ? "Feste Check-in-Zeit aktiviert" : "Fixed check-in time enabled" }
         static var toastFixedCheckinOff: String { de ? "Feste Check-in-Zeit deaktiviert" : "Fixed check-in time disabled" }
 
+        // Notifications
+        static var msetNotifLbl: String { de ? "Benachrichtigungen" : "Notifications" }
+        static var msetNotifRemindersLbl: String { de ? "Gym-Erinnerung" : "Gym day reminder" }
+        static var msetReminderTimeLbl: String { de ? "Erinnerungszeit" : "Reminder time" }
+        static var msetNotifStreakLbl: String { de ? "Streak in Gefahr" : "Streak at risk" }
+        static var msetNotifActivityLbl: String { de ? "Gruppen-Aktivität" : "Group activity" }
+        static var msetQuietLbl: String { de ? "Ruhezeiten" : "Quiet hours" }
+        static var msetQuietStartLbl: String { de ? "Von" : "From" }
+        static var msetQuietEndLbl: String { de ? "Bis" : "Until" }
+        static var msetNotifMembersLbl: String { de ? "Benachrichtigen bei" : "Notify me when" }
+        static var toastNotifSaved: String { de ? "Benachrichtigungen gespeichert ✓" : "Notifications saved ✓" }
+
         // Fixed check-in time hero
         static var checkinTimeChipLbl: String { de ? "Check-in um" : "Check in at" }
         static var checkinTimeChangeBtn: String { de ? "Ändern" : "Change" }

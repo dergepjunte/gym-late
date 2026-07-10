@@ -105,6 +105,7 @@ final class AppState: ObservableObject {
 
         startPolling()
         runOpeningSequence()
+        Task { await NotificationManager.shared.requestPermission() }
     }
 
     func switchGroup(_ group: GroupInfo) async {
@@ -222,6 +223,7 @@ final class AppState: ObservableObject {
         switch result {
         case .synced:
             await refreshData()
+            NotificationManager.shared.cancelStreakRiskToday()
         case .queued:
             if var data = groupData {
                 data = sync.applyPending(to: data)

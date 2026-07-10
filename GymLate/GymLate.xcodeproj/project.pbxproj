@@ -18,6 +18,7 @@
 		3FCDFFB50C057C3A9DA1EA66 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 224F7A11AA3B7A6E63CB6393 /* APIClient.swift */; };
 		50FD4E3325DDE7FEBBD4D4E2 /* WeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B2D3BFE353BD37044649C2 /* WeekView.swift */; };
 		53EB9E39CE7FAA18B4E4A7DC /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D79E2CEF4BB639D3ED33EB14 /* LocationManager.swift */; };
+		A1B2C3D4E5F60001NOTIFMGR /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60002NOTIFMGR /* NotificationManager.swift */; };
 		5A2168551B37CB9C40596BCC /* DailyHypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01AFED4646FE1CAD7A9EDAC /* DailyHypeView.swift */; };
 		5B009AA3D968528105FF43F0 /* OutboxStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00D2D338B31254CC2F60789B /* OutboxStore.swift */; };
 		6F273BF954259F3377C5F858 /* PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F1B81D3104891A556E1C638 /* PeopleView.swift */; };
@@ -80,6 +81,7 @@
 		D01AFED4646FE1CAD7A9EDAC /* DailyHypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyHypeView.swift; sourceTree = "<group>"; };
 		D1B2D3BFE353BD37044649C2 /* WeekView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekView.swift; sourceTree = "<group>"; };
 		D79E2CEF4BB639D3ED33EB14 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60002NOTIFMGR /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		E0E050A845C35982874A330B /* LandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LandingView.swift; sourceTree = "<group>"; };
 		E4DA024707F51F4EDA7F3FFD /* ConnectivityMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectivityMonitor.swift; sourceTree = "<group>"; };
 		F6C20A37581CA4B349C59A57 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -199,6 +201,7 @@
 				33BF69529961C204F27967EE /* GroupDataCache.swift */,
 				91F0E498E71A4FC28C5CAC9F /* LocalStore.swift */,
 				D79E2CEF4BB639D3ED33EB14 /* LocationManager.swift */,
+				A1B2C3D4E5F60002NOTIFMGR /* NotificationManager.swift */,
 				00D2D338B31254CC2F60789B /* OutboxStore.swift */,
 				9B48185768C8FB5417100D3E /* SyncEngine.swift */,
 			);
@@ -355,6 +358,7 @@
 				0DCD4C14EDAF09C71BA0BAC3 /* LandingView.swift in Sources */,
 				7D090D6288D2D3D6B8FB14A1 /* LocalStore.swift in Sources */,
 				53EB9E39CE7FAA18B4E4A7DC /* LocationManager.swift in Sources */,
+				A1B2C3D4E5F60001NOTIFMGR /* NotificationManager.swift in Sources */,
 				DBA6D3C02B165C2D4B853743 /* LogEntrySheet.swift in Sources */,
 				0DAC8D57ABADEE63C7F9CD4E /* Models.swift in Sources */,
 				5B009AA3D968528105FF43F0 /* OutboxStore.swift in Sources */,

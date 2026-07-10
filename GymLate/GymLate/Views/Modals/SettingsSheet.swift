@@ -25,6 +25,15 @@ struct SettingsSheet: View {
     @State private var fixedTimeEnabled = false
     @State private var confirmLeave = false
 
+    // Notification preferences
+    @State private var notifReminders = LocalStore.shared.notifReminders
+    @State private var notifStreak    = LocalStore.shared.notifStreak
+    @State private var notifActivity  = LocalStore.shared.notifActivity
+    @State private var reminderTime   = hhmmToDate(LocalStore.shared.reminderTime)
+    @State private var quietStart     = hhmmToDate(LocalStore.shared.quietStart)
+    @State private var quietEnd       = hhmmToDate(LocalStore.shared.quietEnd)
+    @State private var notifMembers: [String]? = LocalStore.shared.notifMembers
+
     private let dayLabels = K.L.dayNames
     private var isCreatorOrAdmin: Bool {
         appState.userProfile?.isCreator == true || appState.adminMode
@@ -115,6 +124,49 @@ struct SettingsSheet: View {
                     Button(K.L.msetGeoTestBtn) { Task { await testLocation() } }
                         .foregroundColor(K.accentDark)
                 } header: { Text(K.L.msetGeoLbl) }
+
+                // Notifications
+                Section {
+                    Toggle(K.L.msetNotifRemindersLbl, isOn: $notifReminders)
+                        .tint(K.accentDeep)
+                    if notifReminders {
+                        DatePicker(K.L.msetReminderTimeLbl, selection: $reminderTime, displayedComponents: .hourAndMinute)
+                            .tint(K.accentDeep)
+                    }
+                    Toggle(K.L.msetNotifStreakLbl, isOn: $notifStreak)
+                        .tint(K.accentDeep)
+                    Toggle(K.L.msetNotifActivityLbl, isOn: $notifActivity)
+                        .tint(K.accentDeep)
+                } header: { Text(K.L.msetNotifLbl) }
+
+                Section {
+                    DatePicker(K.L.msetQuietStartLbl, selection: $quietStart, displayedComponents: .hourAndMinute)
+                        .tint(K.accentDeep)
+                    DatePicker(K.L.msetQuietEndLbl, selection: $quietEnd, displayedComponents: .hourAndMinute)
+                        .tint(K.accentDeep)
+                } header: { Text(K.L.msetQuietLbl) }
+
+                if notifActivity, let people = appState.groupData?.people.filter({ $0.id != appState.userProfile?.userId }) {
+                    Section {
+                        ForEach(people, id: \.id) { person in
+                            let isOn = Binding<Bool>(
+                                get: { notifMembers == nil || notifMembers!.contains(person.id) },
+                                set: { on in
+                                    var members = notifMembers ?? people.map(\.id)
+                                    if on { if !members.contains(person.id) { members.append(person.id) } }
+                                    else { members.removeAll { $0 == person.id } }
+                                    notifMembers = members.count == people.count ? nil : members
+                                }
+                            )
+                            Toggle(person.name, isOn: isOn).tint(K.accentDeep)
+                        }
+                    } header: { Text(K.L.msetNotifMembersLbl) }
+                }
+
+                Section {
+                    Button(K.L.save) { Task { await saveNotifPrefs() } }
+                        .foregroundColor(K.accentDark)
+                }
 
                 // Leave group
                 Section {
@@ -278,4 +330,54 @@ struct SettingsSheet: View {
             toast = K.L.errLocationNotAvailable
         }
     }
+
+    private func saveNotifPrefs() async {
+        let store = LocalStore.shared
+        store.notifReminders = notifReminders
+        store.notifStreak    = notifStreak
+        store.notifActivity  = notifActivity
+        store.reminderTime   = dateToHHMM(reminderTime)
+        store.quietStart     = dateToHHMM(quietStart)
+        store.quietEnd       = dateToHHMM(quietEnd)
+        store.notifMembers   = notifMembers
+
+        // Reschedule local notifications
+        if let data = appState.groupData {
+            let me = data.people.first { $0.id == appState.userProfile?.userId }
+            NotificationManager.shared.scheduleReminders(
+                gymDays: data.gymDays,
+                availDays: me?.availDays,
+                reminderTime: store.reminderTime)
+            if notifStreak { NotificationManager.shared.scheduleStreakRisk(quietStart: store.quietStart) }
+        }
+
+        // Sync to server
+        guard let g = appState.activeGroup, let p = appState.userProfile else { return }
+        let tz = TimeZone.current.identifier
+        do {
+            try await APIClient.shared.saveNotifPrefs(
+                groupId: g.id, userId: p.userId, recoveryCode: p.recoveryCode,
+                notifReminders: notifReminders, notifStreak: notifStreak, notifActivity: notifActivity,
+                reminderTime: store.reminderTime, quietStart: store.quietStart, quietEnd: store.quietEnd,
+                timezone: tz, notifMembers: notifMembers)
+            toast = K.L.toastNotifSaved
+        } catch {
+            self.error = error.localizedDescription
+        }
+    }
+}
+
+// MARK: - HH:MM ↔ Date helpers (for DatePicker with .hourAndMinute)
+
+private func hhmmToDate(_ hhmm: String) -> Date {
+    let parts = hhmm.split(separator: ":").compactMap { Int($0) }
+    guard parts.count == 2 else { return Date() }
+    var c = Calendar.current.dateComponents([.year, .month, .day], from: Date())
+    c.hour = parts[0]; c.minute = parts[1]
+    return Calendar.current.date(from: c) ?? Date()
+}
+
+private func dateToHHMM(_ date: Date) -> String {
+    let c = Calendar.current.dateComponents([.hour, .minute], from: date)
+    return String(format: "%02d:%02d", c.hour ?? 9, c.minute ?? 0)
 }

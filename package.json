@@ -8,8 +8,10 @@
     "dev": "node --watch server.js"
   },
   "dependencies": {
+    "apn": "^2.2.0",
     "express": "^4.19.2",
-    "mysql2": "^3.11.5"
+    "mysql2": "^3.11.5",
+    "web-push": "^3.6.7"
   },
   "optionalDependencies": {
     "better-sqlite3": "^12.11.1"

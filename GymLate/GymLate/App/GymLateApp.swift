@@ -1,7 +1,9 @@
 import SwiftUI
+import UIKit
 
 @main
 struct GymLateApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState.shared
 
     var body: some Scene {
@@ -10,6 +12,22 @@ struct GymLateApp: App {
                 .environmentObject(appState)
         }
     }
+}
+
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        guard let profile = AppState.shared.userProfile,
+              let group = AppState.shared.activeGroup else { return }
+        Task { @MainActor in
+            NotificationManager.shared.registerAPNsToken(
+                deviceToken, groupId: group.id,
+                userId: profile.userId, recoveryCode: profile.recoveryCode)
+        }
+    }
+
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {}
 }
 
 struct RootView: View {
