@@ -82,7 +82,22 @@ struct ProfileView: View {
                             HStack {
                                 Text(revealRC ? rc : "XXXX-XXXX-XXXX")
                                     .font(.system(.body, design: .monospaced))
+                                    .onTapGesture {
+                                        guard revealRC else { return }
+                                        UIPasteboard.general.string = rc
+                                        toast = K.L.pvRcCopied
+                                    }
                                 Spacer()
+                                if revealRC {
+                                    Button {
+                                        UIPasteboard.general.string = rc
+                                        toast = K.L.pvRcCopied
+                                    } label: {
+                                        Image(systemName: "doc.on.doc")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(K.accentDark)
+                                    }
+                                }
                                 Button(revealRC ? K.L.pvHide : K.L.pvReveal) {
                                     revealRC.toggle()
                                 }

@@ -138,17 +138,23 @@ struct HistoryView: View {
             ForEach(0..<firstIdx, id: \.self) { _ in Color.clear.frame(height: 52) }
             ForEach(1...daysInMonth, id: \.self) { day in
                 let dateStr = dateYMD(cal.date(byAdding: .day, value: day - 1, to: monthAnchor)!)
+                let hasEntry = info[dateStr] != nil
+                let sched = dayScheduled(dateStr, mask: mask)
                 dayCell(day: day, dateStr: dateStr, info: info[dateStr],
                         isToday: dateStr == today,
-                        missed: info[dateStr] == nil && dateStr < today && dayScheduled(dateStr, mask: mask))
+                        missed: !hasEntry && dateStr < today && sched,
+                        rest:   !hasEntry && !sched)
             }
         }
     }
 
     @ViewBuilder
-    private func dayCell(day: Int, dateStr: String, info: DayInfo?, isToday: Bool, missed: Bool) -> some View {
+    private func dayCell(day: Int, dateStr: String, info: DayInfo?, isToday: Bool, missed: Bool, rest: Bool = false) -> some View {
         // Same coloring rules as the website's renderCalendar()
+        let isPastOrToday = dateStr <= dateYMD(Date())
+        let restPast = rest && isPastOrToday
         let bg: Color? = {
+            if restPast { return Color.secondary.opacity(0.10) }
             guard let i = info else { return nil }
             if i.late > 0 {
                 let alpha = min(0.48, 0.12 + Double(i.late) * 0.09 + Double(i.mins) * 0.002)
@@ -170,7 +176,9 @@ struct HistoryView: View {
             VStack(spacing: 2) {
                 Text("\(day)")
                     .font(Theme.body(14, isToday ? .bold : .regular))
-                    .foregroundColor(isToday ? K.amberText : .primary)
+                    .foregroundColor(restPast ? .secondary : (isToday ? K.amberText : .primary))
+                    .strikethrough(restPast, color: .secondary)
+                    .opacity(restPast ? 0.6 : 1)
                 Group {
                     if let i = info {
                         if i.late > 0 {
@@ -182,6 +190,9 @@ struct HistoryView: View {
                         }
                     } else if missed {
                         Text("·").font(Theme.body(12, .bold)).foregroundColor(.secondary)
+                    } else if rest && !isPastOrToday {
+                        // Future rest day: small muted dash
+                        Text("–").font(Theme.body(10)).foregroundColor(.secondary.opacity(0.4))
                     } else {
                         Text(" ").font(Theme.body(10))
                     }

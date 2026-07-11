@@ -62,7 +62,7 @@ struct AppRootView: View {
                         appState.onBubbleDismissed()
                     }
                     .padding(.horizontal, 16)
-                    .padding(.bottom, 100)
+                    .padding(.bottom, 84)
                 }
                 .zIndex(480)
                 .transition(
@@ -78,7 +78,7 @@ struct AppRootView: View {
                 VStack {
                     Spacer()
                     ReplayHintChip(hint: hint) { appState.replayHint = nil }
-                        .padding(.bottom, 100)
+                        .padding(.bottom, 84)
                 }
                 .zIndex(479)
                 .transition(.opacity)

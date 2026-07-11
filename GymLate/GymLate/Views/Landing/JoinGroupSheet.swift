@@ -47,6 +47,16 @@ struct JoinGroupSheet: View {
                     ProfileSetupSheet(group: g, isNew: false)
                 }
             }
+            // Collapse the whole landing cover chain once login succeeds so
+            // no stale NavigationStack back-chevrons remain visible.
+            .onChange(of: appState.activeGroup?.id) { _, id in
+                guard id != nil else { return }
+                // Small delay so RecoveryCodeSheet (create-new flow) can appear
+                // before JoinGroupSheet tears down.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                    dismiss()
+                }
+            }
         }
     }
 

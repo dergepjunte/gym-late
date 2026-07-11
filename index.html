@@ -546,6 +546,9 @@
     .cal-dot-skip { color:var(--gold); }
     .cal-dot-attend { color:rgba(34,197,94,.9); font-size:11px; }
     .cal-dot-miss { color:rgba(255,255,255,.2); font-size:14px; }
+    .cal-rest-past { background:rgba(148,163,184,.10); }
+    .cal-rest-past .cal-day-num { text-decoration:line-through; opacity:.55; }
+    .cal-dot-rest { color:var(--text-3); font-size:11px; opacity:.5; }
     .attend-badge { display:inline-flex; align-items:center; font-size:13px; font-weight:700; color:#22c55e; background:rgba(34,197,94,.12); border:1px solid rgba(34,197,94,.28); padding:4px 10px; border-radius:20px; }
 
     /* Scroll-snap for weekly recap — container-based (iOS-safe) */
@@ -888,7 +891,7 @@
     /* ── Notification Bubble ────────────────────────────────── */
     .notif-bubble {
       position: fixed;
-      bottom: calc(108px + env(safe-area-inset-bottom));
+      bottom: calc(88px + env(safe-area-inset-bottom));
       left: 50%; transform: translateX(-50%) translateY(24px);
       display: flex; align-items: center; gap: 12px;
       padding: 12px 14px 12px 12px; border-radius: 50px;
@@ -914,7 +917,7 @@
     }
     .replay-hint-chip {
       position: fixed;
-      bottom: calc(108px + env(safe-area-inset-bottom));
+      bottom: calc(88px + env(safe-area-inset-bottom));
       left: 50%; transform: translateX(-50%) translateY(16px);
       padding: 10px 20px; border-radius: 50px;
       font-size: 13px; font-weight: 600; color: var(--accent-text);
@@ -2478,7 +2481,7 @@ const TRANS = {
     // Profile view
     notifPrimerTitle:'Benachrichtigungen', notifPrimerBody:'GymLate erinnert dich an Gym-Tage und warnt dich, wenn dein Streak in Gefahr ist.', notifPrimerEnable:'Benachrichtigungen erlauben', notifPrimerLater:'Jetzt nicht',
     pvSettingsBtn:'⚙ Einstellungen',
-    pvRcLbl:'Recovery Code (geheim)', pvReveal:'anzeigen', pvHide:'verbergen',
+    pvRcLbl:'Recovery Code (geheim)', pvReveal:'anzeigen', pvHide:'verbergen', pvRcCopied:'Kopiert ✓',
     pvEditBtn:'✎ Profil bearbeiten', pvKickBtn:'Aus Gruppe entfernen',
     pvKickConfirm: n => `"${n}" wirklich aus der Gruppe entfernen?`,
     pvCreatorBadge:'Gruppenersteller', pvStatCount:'Verspätungen', pvStatMins:'Min. gesamt',
@@ -2653,7 +2656,7 @@ const TRANS = {
     // Profile view
     notifPrimerTitle:'Stay in the loop', notifPrimerBody:'GymLate can remind you on gym days and alert you when your streak is at risk.', notifPrimerEnable:'Enable notifications', notifPrimerLater:'Not now',
     pvSettingsBtn:'⚙ Settings',
-    pvRcLbl:'Recovery Code (secret)', pvReveal:'reveal', pvHide:'hide',
+    pvRcLbl:'Recovery Code (secret)', pvReveal:'reveal', pvHide:'hide', pvRcCopied:'Copied ✓',
     pvEditBtn:'✎ Edit Profile', pvKickBtn:'Remove from group',
     pvKickConfirm: n => `Really remove "${n}" from the group?`,
     pvCreatorBadge:'Group Creator', pvStatCount:'Late arrivals', pvStatMins:'Total mins',
@@ -3421,6 +3424,13 @@ function renderCalendar() {
       }
     } else if (isScheduled && isPast) {
       marker = `<span class="cal-dot cal-dot-miss">&middot;</span>`;
+    } else if (!isScheduled) {
+      // Rest day (not a gym day and no entry logged)
+      if (isPast || isToday) {
+        cls += ' cal-rest-past';
+      } else {
+        marker = `<span class="cal-dot cal-dot-rest">&ndash;</span>`;
+      }
     }
     cells += `<div class="${cls}" data-date="${dateStr}"${style ? ` style="${style}"` : ''}>` +
       `<span class="cal-day-num">${d}</span>${marker}</div>`;
@@ -4543,8 +4553,13 @@ function openProfileView(userId) {
       document.getElementById('pv-rc-reveal').textContent = revealed ? T.pvHide : T.pvReveal;
     };
     rcEl.onclick = () => {
-      const revealed = rcEl.classList.toggle('revealed');
-      document.getElementById('pv-rc-reveal').textContent = revealed ? T.pvHide : T.pvReveal;
+      if (rcEl.classList.contains('revealed')) {
+        copyToClipboard(rc);
+        showToast(T.pvRcCopied);
+      } else {
+        rcEl.classList.add('revealed');
+        document.getElementById('pv-rc-reveal').textContent = T.pvHide;
+      }
     };
   }
 

@@ -131,6 +131,7 @@ enum K {
         static var pvRcLbl: String { de ? "Recovery Code (geheim)" : "Recovery Code (secret)" }
         static var pvReveal: String { de ? "anzeigen" : "reveal" }
         static var pvHide: String { de ? "verbergen" : "hide" }
+        static var pvRcCopied: String { de ? "Kopiert ✓" : "Copied ✓" }
         static var pvEditBtn: String { de ? "Profil bearbeiten" : "Edit Profile" }
         static var pvKickBtn: String { de ? "Aus Gruppe entfernen" : "Remove from group" }
         static var pvCreatorBadge: String { de ? "Gruppenersteller" : "Group Creator" }

@@ -3,7 +3,7 @@
 const express = require('express');
 const crypto  = require('crypto');
 const path    = require('path');
-const zlib    = require('zlib');
+const fs      = require('fs');
 
 // ── Push Notification providers (optional — graceful no-op if env vars absent) ─
 let webpush = null;
@@ -40,70 +40,7 @@ try {
   }
 } catch { apnProvider = null; }
 
-// ── PWA Icon Generator (pure Node.js, no dependencies) ──────────────────────
-function generateIconPNG(size) {
-  function crc32(buf) {
-    const T = (() => {
-      const t = new Uint32Array(256);
-      for (let i = 0; i < 256; i++) {
-        let c = i;
-        for (let k = 0; k < 8; k++) c = (c & 1) ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-        t[i] = c;
-      }
-      return t;
-    })();
-    let crc = 0xffffffff;
-    for (const b of buf) crc = T[(crc ^ b) & 0xff] ^ (crc >>> 8);
-    return (crc ^ 0xffffffff) >>> 0;
-  }
-  function u32(n) { const b = Buffer.alloc(4); b.writeUInt32BE(n); return b; }
-  function chunk(type, data) {
-    const t = Buffer.from(type, 'ascii');
-    const c = Buffer.concat([t, data]);
-    return Buffer.concat([u32(data.length), t, data, u32(crc32(c))]);
-  }
 
-  const cx = size / 2, cy = size / 2;
-  const plateR = size * 0.17;
-  const armLen = size * 0.23;
-  const barH   = size * 0.058;
-
-  function inDumbbell(x, y) {
-    return (
-      Math.hypot(x - (cx - armLen), y - cy) < plateR ||
-      Math.hypot(x - (cx + armLen), y - cy) < plateR ||
-      (Math.abs(y - cy) < barH && x > cx - armLen && x < cx + armLen)
-    );
-  }
-
-  const rows = [];
-  for (let y = 0; y < size; y++) {
-    const row = Buffer.alloc(1 + size * 3);
-    row[0] = 0;
-    for (let x = 0; x < size; x++) {
-      const t = (x / (size - 1) + y / (size - 1)) / 2;
-      const pr = Math.round(0x7c + (0xc0 - 0x7c) * t);
-      const pg = Math.round(0x3a + (0x84 - 0x3a) * t);
-      const pb = Math.round(0xed + (0xfc - 0xed) * t);
-      const [r, g, b] = inDumbbell(x, y) ? [255, 255, 255] : [pr, pg, pb];
-      row[1 + x * 3] = r; row[2 + x * 3] = g; row[3 + x * 3] = b;
-    }
-    rows.push(row);
-  }
-
-  const compressed = zlib.deflateSync(Buffer.concat(rows), { level: 6 });
-  const sig  = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
-  const ihdr = chunk('IHDR', Buffer.concat([u32(size), u32(size), Buffer.from([8, 2, 0, 0, 0])]));
-  const idat = chunk('IDAT', compressed);
-  const iend = chunk('IEND', Buffer.alloc(0));
-  return Buffer.concat([sig, ihdr, idat, iend]);
-}
-
-const iconCache = {};
-function getIcon(size) {
-  if (!iconCache[size]) iconCache[size] = generateIconPNG(size);
-  return iconCache[size];
-}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -787,14 +724,22 @@ const ah = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch
 app.use(express.json({ limit: '512kb' }));
 
 // ── PWA Icon routes ──────────────────────────────────────────────────────────
+// PWA icons: pre-rendered static PNGs from web-icons/
+// Regenerate with: python3 GymLate/Scripts/generate_app_icon.py
+const iconsDir = path.join(__dirname, 'web-icons');
+const iconCache = {};
+function getStaticIcon(name) {
+  if (!iconCache[name]) iconCache[name] = fs.readFileSync(path.join(iconsDir, name));
+  return iconCache[name];
+}
 const iconHeaders = (res) => {
   res.setHeader('Content-Type', 'image/png');
   res.setHeader('Cache-Control', 'public, max-age=86400');
 };
-app.get('/apple-touch-icon.png',         (_, res) => { iconHeaders(res); res.send(getIcon(180)); });
-app.get('/apple-touch-icon-180x180.png', (_, res) => { iconHeaders(res); res.send(getIcon(180)); });
-app.get('/icon-192.png',                 (_, res) => { iconHeaders(res); res.send(getIcon(192)); });
-app.get('/icon-512.png',                 (_, res) => { iconHeaders(res); res.send(getIcon(512)); });
+app.get('/apple-touch-icon.png',         (_, res) => { iconHeaders(res); res.send(getStaticIcon('apple-touch-icon-180.png')); });
+app.get('/apple-touch-icon-180x180.png', (_, res) => { iconHeaders(res); res.send(getStaticIcon('apple-touch-icon-180.png')); });
+app.get('/icon-192.png',                 (_, res) => { iconHeaders(res); res.send(getStaticIcon('icon-192.png')); });
+app.get('/icon-512.png',                 (_, res) => { iconHeaders(res); res.send(getStaticIcon('icon-512.png')); });
 
 // ── Groups ───────────────────────────────────────────────────────────────────
 
