@@ -25,7 +25,10 @@ struct WeekView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 14) {
+            VStack(spacing: 0) {
+                AppHeader(toast: $toast)
+
+                VStack(spacing: 14) {
                 // Streak hero — tap opens the check-in modal, like the website
                 if let info = appState.myStreakInfo() {
                     StreakHero(streak: info.streak, extendedToday: info.extendedToday) {
@@ -77,7 +80,7 @@ struct WeekView: View {
                         .background(Capsule().fill(K.gold.opacity(0.14)))
                 }
 
-                // Entries grouped by day (newest first)
+                // Entries grouped by day (newest first) — one glass block per day
                 if weekEntries.isEmpty {
                     VStack(spacing: 8) {
                         Text("🏃").font(.system(size: 48))
@@ -88,28 +91,37 @@ struct WeekView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 40)
                 } else {
-                    LazyVStack(spacing: 8) {
+                    LazyVStack(spacing: 10) {
                         ForEach(weekEntriesByDay, id: \.date) { group in
-                            Text(fmtFull(group.date))
-                                .eyebrow()
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.horizontal, 4)
-                                .padding(.top, 8)
-                            ForEach(group.entries) { entry in
-                                EntryRow(entry: entry,
-                                         people: appState.groupData?.people ?? [],
-                                         adminMode: appState.adminMode,
-                                         onEdit: { editingEntry = entry },
-                                         onDelete: { Task { await deleteEntry(entry) } })
+                            VStack(spacing: 0) {
+                                Text(fmtFull(group.date))
+                                    .eyebrow()
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal, 14)
+                                    .padding(.top, 10)
+                                    .padding(.bottom, 4)
+                                ForEach(Array(group.entries.enumerated()), id: \.element.id) { idx, entry in
+                                    if idx > 0 {
+                                        Divider().padding(.leading, 66)
+                                    }
+                                    EntryRow(entry: entry,
+                                             people: appState.groupData?.people ?? [],
+                                             adminMode: appState.adminMode,
+                                             onEdit: { editingEntry = entry },
+                                             onDelete: { Task { await deleteEntry(entry) } },
+                                             standalone: false)
+                                }
                             }
+                            .glassCard()
                         }
                     }
                     .padding(.horizontal, 16)
                 }
 
                 Spacer(minLength: 20)
-            }
-            .padding(.top, 12)
+                }  // end inner VStack
+                .padding(.top, 6)
+            }  // end outer VStack
         }
         .sheet(item: $editingEntry) { e in
             EditEntrySheet(entry: e, toast: $toast)
@@ -267,11 +279,21 @@ struct EntryRow: View {
     var adminMode = false
     var onEdit: (() -> Void)? = nil
     var onDelete: (() -> Void)? = nil
+    var standalone: Bool = true
 
-    /// Entry logged offline, still waiting to reach the server.
     private var isPendingSync: Bool { entry.id.hasPrefix("local-") }
 
     var body: some View {
+        Group {
+            if standalone {
+                rowContent.glassCard()
+            } else {
+                rowContent
+            }
+        }
+    }
+
+    private var rowContent: some View {
         HStack(spacing: 12) {
             if let p = people.first(where: { $0.name.lowercased() == entry.person.lowercased() }) {
                 AvatarView(emoji: p.avatarEmoji, color: p.avatarColor, img: p.avatarImg, size: 40)
@@ -320,6 +342,5 @@ struct EntryRow: View {
         }
         .padding(14)
         .opacity(isPendingSync ? 0.6 : 1)
-        .glassCard()
     }
 }

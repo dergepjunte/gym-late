@@ -13,11 +13,12 @@ struct PeopleView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
+                AppHeader(toast: $toast)
+
                 Text(K.L.lblPeople)
                     .font(Theme.heading(24))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
-                    .padding(.top, 8)
 
                 if let people = appState.groupData?.people, !people.isEmpty {
                     LazyVStack(spacing: 10) {

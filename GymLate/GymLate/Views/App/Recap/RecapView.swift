@@ -6,6 +6,7 @@ import Charts
 /// hero with the most-often-late member, rows ranked by minutes.
 struct RecapView: View {
     @EnvironmentObject var appState: AppState
+    @State private var toast: String?
 
     private struct PersonStat {
         var count = 0, mins = 0, skips = 0, attends = 0
@@ -75,41 +76,50 @@ struct RecapView: View {
 
     var body: some View {
         let blocks = self.blocks
-        if blocks.isEmpty {
-            VStack(spacing: 8) {
-                Text("📅").font(.system(size: 48))
-                Text(K.L.emptyHistory)
-                    .font(Theme.body(15)).foregroundColor(.secondary)
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        } else {
-            ScrollView {
-                LazyVStack(spacing: 24) {
-                    // Replay Wrapped button — always visible, matches bubble dismiss hint
-                    Button {
-                        appState.replayWrapped()
-                    } label: {
-                        Label(K.L.recapReplayBtn, systemImage: "play.fill")
-                            .font(Theme.body(13, .semibold))
-                            .foregroundColor(K.accentDark)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 9)
-                            .frame(maxWidth: .infinity)
-                            .glassCard(radius: 22)
+        Group {
+            if blocks.isEmpty {
+                VStack(spacing: 0) {
+                    AppHeader(toast: $toast)
+                    VStack(spacing: 8) {
+                        Text("📅").font(.system(size: 48))
+                        Text(K.L.emptyHistory)
+                            .font(Theme.body(15)).foregroundColor(.secondary)
                     }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 16)
-                    .padding(.top, 4)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+            } else {
+                ScrollView {
+                    VStack(spacing: 0) {
+                        AppHeader(toast: $toast)
+                        LazyVStack(spacing: 24) {
+                            // Replay Wrapped button — always visible, matches bubble dismiss hint
+                            Button {
+                                appState.replayWrapped()
+                            } label: {
+                                Label(K.L.recapReplayBtn, systemImage: "play.fill")
+                                    .font(Theme.body(13, .semibold))
+                                    .foregroundColor(K.accentDark)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 9)
+                                    .frame(maxWidth: .infinity)
+                                    .glassCard(radius: 22)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 4)
 
-                    ForEach(Array(blocks.enumerated()), id: \.element.id) { i, block in
-                        weekBlockView(block, previousBlock: i + 1 < blocks.count ? blocks[i + 1] : nil)
+                            ForEach(Array(blocks.enumerated()), id: \.element.id) { i, block in
+                                weekBlockView(block, previousBlock: i + 1 < blocks.count ? blocks[i + 1] : nil)
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 6)
+                        .padding(.bottom, 24)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
-                .padding(.bottom, 24)
             }
         }
+        .toast($toast)
     }
 
     @ViewBuilder

@@ -14,23 +14,13 @@ struct AppRootView: View {
         }
     }()
     @State private var showLogEntry = false
-    @State private var showMyProfile = false
-    @State private var showAdminLogin = false
-    @State private var showAdminPanel = false
     @State private var toast: String?
 
     var body: some View {
         ZStack {
             GymBackground().ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                AppHeader(
-                    onMyProfile: { showMyProfile = true },
-                    onAdminUnlock: { showAdminLogin = true },
-                    onAdminOpen: { showAdminPanel = true },
-                    toast: $toast
-                )
-
+            Group {
                 if #available(iOS 18.0, *) {
                     nativeTabView
                 } else {
@@ -113,15 +103,6 @@ struct AppRootView: View {
             }
         }
         .fullPageCover(isPresented: $showLogEntry) { LogEntrySheet(toast: $toast) }
-        .fullPageCover(isPresented: $showMyProfile) {
-            if let me = myPerson { ProfileView(person: me) }
-        }
-        .fullPageCover(isPresented: $showAdminLogin) { AdminLoginSheet(toast: $toast) }
-            // Open the admin panel page automatically after login succeeds
-            .onChange(of: appState.adminMode) { _, isAdmin in
-                if isAdmin { showAdminPanel = true }
-            }
-        .fullPageCover(isPresented: $showAdminPanel) { AdminPanelPage() }
         .onReceive(SyncEngine.shared.$syncErrorMessage) { msg in
             if let msg {
                 toast = msg
@@ -129,11 +110,6 @@ struct AppRootView: View {
             }
         }
         .toast($toast)
-    }
-
-    private var myPerson: Person? {
-        guard let profile = appState.userProfile else { return nil }
-        return appState.groupData?.people.first { $0.id == profile.userId }
     }
 
     /// iOS 18+: native TabView. On iOS 26 this renders the floating Liquid
@@ -203,71 +179,94 @@ struct AppRootView: View {
     }
 }
 
-// MARK: - Header (minimal: GYMLATE label + avatar, no pill)
+// MARK: - Header (scrolls with each tab's content; self-contained covers)
 
 struct AppHeader: View {
     @EnvironmentObject var appState: AppState
-    let onMyProfile: () -> Void
-    let onAdminUnlock: () -> Void
-    let onAdminOpen: () -> Void
     @Binding var toast: String?
 
+    @State private var showMyProfile = false
+    @State private var showAdminLogin = false
+    @State private var showAdminPanel = false
     @State private var logoTaps = 0
     @State private var lastTap = Date.distantPast
 
     var body: some View {
-        HStack(spacing: 8) {
-            // "GYMLATE" wordmark — 5× tap unlocks admin
-            Text("GYMLATE")
-                .font(.system(size: 28, weight: .black))
-                .tracking(2)
-                .textCase(.uppercase)
-                .foregroundStyle(LinearGradient(
-                    colors: Theme.accentGradient,
-                    startPoint: .topLeading, endPoint: .bottomTrailing))
-                .onTapGesture { registerLogoTap() }
+        ZStack {
+            // Center: GYMLATE wordmark + optional admin badge
+            HStack(spacing: 6) {
+                Text("GYMLATE")
+                    .font(Font.system(size: 28, weight: .black).width(.expanded))
+                    .textCase(.uppercase)
+                    .foregroundStyle(LinearGradient(
+                        colors: Theme.accentGradient,
+                        startPoint: .topLeading, endPoint: .bottomTrailing))
+                    .onTapGesture { registerLogoTap() }
 
-            if appState.adminMode {
-                Button { onAdminOpen() } label: {
-                    Text("ADMIN")
-                        .font(.system(size: 9, weight: .black))
-                        .foregroundColor(K.onAccent)
-                        .padding(.horizontal, 6).padding(.vertical, 2)
-                        .background(Capsule().fill(K.accent))
+                if appState.adminMode {
+                    Button { showAdminPanel = true } label: {
+                        Text("ADMIN")
+                            .font(.system(size: 9, weight: .black))
+                            .foregroundColor(K.onAccent)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(Capsule().fill(K.accent))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            // Right: sync/offline indicator + avatar
+            HStack(spacing: 8) {
+                Spacer()
+
+                if appState.pendingSyncCount > 0 {
+                    HStack(spacing: 2) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                        Text("\(appState.pendingSyncCount)")
+                    }
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(K.accentDeep)
+                } else if appState.isOffline {
+                    Image(systemName: "wifi.slash")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+
+                Button { showMyProfile = true } label: {
+                    AvatarView(emoji: appState.userProfile?.avatarEmoji ?? "🏋️",
+                               color: appState.userProfile?.avatarColor ?? "#7c3aed",
+                               img: appState.userProfile?.avatarImg,
+                               size: 44)
+                        .overlay(
+                            Circle().strokeBorder(
+                                LinearGradient(
+                                    colors: [.white.opacity(0.55),
+                                             Color(hex: "#fcd34d").opacity(0.40),
+                                             .white.opacity(0.15)],
+                                    startPoint: .topLeading, endPoint: .bottomTrailing),
+                                lineWidth: 3.5)
+                        )
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(K.L.de ? "Mein Profil" : "My profile")
             }
-
-            Spacer()
-
-            // Sync / offline indicator
-            if appState.pendingSyncCount > 0 {
-                HStack(spacing: 2) {
-                    Image(systemName: "arrow.triangle.2.circlepath")
-                    Text("\(appState.pendingSyncCount)")
-                }
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(K.accentDeep)
-            } else if appState.isOffline {
-                Image(systemName: "wifi.slash")
-                    .font(.system(size: 12))
-                    .foregroundColor(.secondary)
-            }
-
-            // Avatar — App-Store style (larger, with a subtle ring)
-            Button { onMyProfile() } label: {
-                AvatarView(emoji: appState.userProfile?.avatarEmoji ?? "🏋️",
-                           color: appState.userProfile?.avatarColor ?? "#7c3aed",
-                           img: appState.userProfile?.avatarImg,
-                           size: 44)
-                    .overlay(Circle().strokeBorder(.secondary.opacity(0.22), lineWidth: 1.5))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(K.L.de ? "Mein Profil" : "My profile")
         }
         .padding(.horizontal, 16)
         .padding(.top, 12)
         .padding(.bottom, 8)
+        .fullPageCover(isPresented: $showMyProfile) {
+            if let me = myPerson { ProfileView(person: me) }
+        }
+        .fullPageCover(isPresented: $showAdminLogin) { AdminLoginSheet(toast: $toast) }
+        .onChange(of: appState.adminMode) { _, isAdmin in
+            if isAdmin { showAdminPanel = true }
+        }
+        .fullPageCover(isPresented: $showAdminPanel) { AdminPanelPage() }
+    }
+
+    private var myPerson: Person? {
+        guard let profile = appState.userProfile else { return nil }
+        return appState.groupData?.people.first { $0.id == profile.userId }
     }
 
     private func registerLogoTap() {
@@ -281,7 +280,7 @@ struct AppHeader: View {
                 appState.adminPassword = nil
                 toast = K.L.toastAdmOut
             } else {
-                onAdminUnlock()
+                showAdminLogin = true
             }
             haptic(.medium)
         }

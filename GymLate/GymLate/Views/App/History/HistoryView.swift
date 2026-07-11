@@ -38,14 +38,17 @@ struct HistoryView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             ScrollView {
-                VStack(spacing: 14) {
-                    calNav
-                    weekdayHeader
-                    monthGrid
-                    Spacer(minLength: 40)
+                VStack(spacing: 0) {
+                    AppHeader(toast: $toast)
+                    VStack(spacing: 14) {
+                        calNav
+                        weekdayHeader
+                        monthGrid
+                        Spacer(minLength: 40)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 6)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, 12)
             }
 
             // FAB — the website shows it on the history tab too

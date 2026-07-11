@@ -199,7 +199,8 @@
 
     /* ── APP ─────────────────────────────────────────────────── */
     #screen-app { justify-content: flex-start; }
-    .app-inner { width: 100%; max-width: 500px; padding: 0 16px; display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
+    .app-inner { width: 100%; max-width: 500px; padding: 0 16px; display: flex; flex-direction: column; flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none; -ms-overflow-style: none; }
+    .app-inner::-webkit-scrollbar { display: none; }
 
     /* ── HEADER ──────────────────────────────────────────────── */
     .header {
@@ -207,7 +208,7 @@
       display: flex; align-items: center; justify-content: center; gap: 8px;
     }
     .header-title {
-      font-size: 30px; font-weight: 900; letter-spacing: 2px;
+      font-size: 30px; font-weight: 900; letter-spacing: 5px;
       text-transform: uppercase;
       background: linear-gradient(135deg, var(--accent), var(--accent-2));
       -webkit-background-clip: text; -webkit-text-fill-color: transparent;
@@ -322,6 +323,11 @@
 
     /* ── CARD ────────────────────────────────────────────────── */
     .card { border-radius: var(--r-xl); overflow: hidden; }
+
+    /* ── DAY GROUP (week tab) ────────────────────────────────── */
+    .day-group { border-radius: var(--r-lg); overflow: hidden; margin-top: 10px; }
+    .day-group:first-child { margin-top: 0; }
+    .day-group-label { font-size:11px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:var(--text-3); padding:10px 18px 6px; }
 
     /* ── ENTRIES ─────────────────────────────────────────────── */
     .entry { display: flex; align-items: center; gap: 12px; padding: 11px 18px; border-bottom: 1px solid var(--divider); }
@@ -458,18 +464,7 @@
 
     /* ── TAB PANE ────────────────────────────────────────────── */
     .tab-pane { display:none; padding-bottom:calc(96px + min(env(safe-area-inset-bottom), 24px)); }
-    .tab-pane.active {
-      display:block; flex:1; min-height:0;
-      overflow-y:auto; -webkit-overflow-scrolling:touch;
-      overscroll-behavior:contain;
-      /* Container is only as wide as the centered content column, so its
-         native scrollbar track would render mid-page (through cards) on
-         wider viewports instead of at the screen edge — hide it, touch/
-         trackpad scrolling still works fine without the visible track. */
-      scrollbar-width: none;
-      -ms-overflow-style: none;
-    }
-    .tab-pane.active::-webkit-scrollbar { display: none; width: 0; height: 0; }
+    .tab-pane.active { display:block; }
 
     /* ── FAB ─────────────────────────────────────────────────── */
     #fab {
@@ -1136,7 +1131,8 @@
     .my-profile-btn {
       position:absolute; right:0; top:calc(env(safe-area-inset-top) + 10px);
       width:44px; height:44px; border-radius:50%;
-      border:1.5px solid rgba(128,128,128,0.25);
+      border:3.5px solid rgba(255,255,255,0.38);
+      box-shadow: 0 0 0 1px rgba(245,158,11,0.25);
       display:none; align-items:center; justify-content:center;
       font-size:22px; cursor:pointer; transition:transform .15s;
       font-family:inherit; background:transparent; color:var(--text-1);
@@ -3124,10 +3120,17 @@ function renderWeek() {
   if (skipWeek.length) document.getElementById('skip-stat-chip').textContent = `⊘ ${skipWeek.length} ${T.skipped}`;
 
   const emEl = document.getElementById('week-empty'), lEl = document.getElementById('week-list');
-  if (!allWeek.length) { emEl.style.display = ''; lEl.innerHTML = ''; return; }
+  const weekCard = document.getElementById('week-card');
+  if (!allWeek.length) {
+    emEl.style.display = '';
+    lEl.innerHTML = '';
+    weekCard.classList.add('card', 'glass');
+    return;
+  }
   emEl.style.display = 'none';
+  weekCard.classList.remove('card', 'glass');
 
-  // Group entries by date, newest first
+  // Group entries by date, newest first — one glass block per day
   const byDate = {};
   allWeek.forEach(e => { (byDate[e.date] = byDate[e.date] || []).push(e); });
   const sortedDates = Object.keys(byDate).sort().reverse();
@@ -3153,7 +3156,7 @@ function renderWeek() {
           <button class="icon-btn del-entry-btn" data-id="${esc(e.id)}">×</button>` : ''}
         </div>`;
     }).join('');
-    return `<div class="sec-label" style="margin:16px 0 6px 2px">${fmtFull(date)}</div>${rows}`;
+    return `<div class="day-group glass"><div class="day-group-label">${fmtFull(date)}</div>${rows}</div>`;
   }).join('');
 }
 
@@ -3573,6 +3576,8 @@ function switchTab(name) {
   document.querySelectorAll(`.nav-btn[data-tab="${name}"]`).forEach(b=>b.classList.add('active'));
   document.getElementById('fab').classList.toggle('hidden', name==='people' || name==='recap');
   updateNavIndicator();
+  const inner = document.querySelector('.app-inner');
+  if (inner) inner.scrollTop = 0;
   if (name === 'history') renderCalendar();
   if (name === 'recap') renderHistory();
 }

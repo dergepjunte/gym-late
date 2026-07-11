@@ -4,14 +4,13 @@
 Layers (back → front):
   1. Gold vertical gradient background
   2. Soft radial ambient top-left highlight
-  3. Frosted glass slab behind the dumbbell (blurred white pane, low alpha)
-  4. Drop shadow under dumbbell
-  5. Dumbbell body: steel/cream gradient masked by silhouette
-  6. Inner bottom rim emboss (dark edge for depth)
-  7. Broad gloss sweep (diffuse light from above)
-  8. Crisp specular streaks on plates (glass-on-glass refraction)
-  9. Top edge-light: thin bright rim across upper edge of dumbbell
- 10. Subtle bottom refraction tint (warm reflection from below)
+  3. Drop shadow under dumbbell
+  4. Dumbbell body: steel/cream gradient masked by silhouette
+  5. Inner bottom rim emboss (dark edge for depth)
+  6. Broad gloss sweep (diffuse light from above)
+  7. Crisp specular streaks on plates (glass-on-glass refraction)
+  8. Top edge-light: thin bright rim across upper edge of dumbbell
+  9. Subtle bottom refraction tint (warm reflection from below)
 
 Renders at 2048px, downsamples to the output sizes with LANCZOS.
 
@@ -89,47 +88,7 @@ def main():
 
     sil = dumbbell_silhouette(S)
 
-    # ── Layer 3: Frosted glass pane (the "Liquid Glass" panel) ──────────────
-    # Main frosted body — visible white/cream slab
-    pane_mask = Image.new("L", (S, S), 0)
-    pd = ImageDraw.Draw(pane_mask)
-    pw, ph = S * 0.78, S * 0.58
-    px0, py0 = cx - pw / 2, cy - ph / 2
-    pd.rounded_rectangle([px0, py0, px0 + pw, py0 + ph], radius=S * 0.09, fill=255)
-    pane_blur = pane_mask.filter(ImageFilter.GaussianBlur(S * 0.014))
-    # Cream-warm fill for the frosted glass body
-    pane_color = vertical_gradient(S, [(0.0, "#fffdf5"), (0.5, "#fef3c7"), (1.0, "#fde68a")])
-    icon.paste(pane_color, (0, 0), pane_blur.point(lambda v: int(v * 0.38)))
-
-    # Glass panel edge-light: thin bright rim around the pane (Liquid Glass border)
-    pane_edge = Image.new("L", (S, S), 0)
-    ped = ImageDraw.Draw(pane_edge)
-    ped.rounded_rectangle([px0, py0, px0 + pw, py0 + ph], radius=S * 0.09, fill=255)
-    pane_inner = Image.new("L", (S, S), 0)
-    pid = ImageDraw.Draw(pane_inner)
-    pid.rounded_rectangle([px0 + S * 0.012, py0 + S * 0.012,
-                           px0 + pw - S * 0.012, py0 + ph - S * 0.012],
-                          radius=S * 0.08, fill=255)
-    pane_rim = Image.composite(pane_edge, Image.new("L", (S, S), 0), pane_edge)
-    pane_rim.paste(Image.new("L", (S, S), 0), (0, 0), pane_inner)
-    pane_rim = pane_rim.filter(ImageFilter.GaussianBlur(S * 0.004))
-    icon.paste(Image.new("RGB", (S, S), (255, 252, 235)), (0, 0),
-               pane_rim.point(lambda v: int(v * 0.92)))
-
-    # Top-half sheen: horizontal bright gradient on upper pane (classic glass look)
-    sheen = Image.new("L", (S, S), 0)
-    sheen.paste(pane_mask, (0, 0))
-    # Only upper half
-    sheen_grad = Image.new("L", (S, S), 0)
-    for row_y in range(S):
-        t = row_y / S
-        val = max(0, int(255 * (1 - t * 3.5)))  # bright at top, fades by ~28%
-        sheen_grad.paste(val, (0, row_y, S, row_y + 1))
-    sheen = Image.composite(sheen_grad, Image.new("L", (S, S), 0), sheen)
-    icon.paste(Image.new("RGB", (S, S), (255, 255, 255)), (0, 0),
-               sheen.point(lambda v: int(v * 0.28)))
-
-    # ── Layer 4: Drop shadow under dumbbell ──────────────────────────────────
+    # ── Layer 3: Drop shadow under dumbbell ──────────────────────────────────
     shadow = Image.new("L", (S, S), 0)
     shadow.paste(sil.point(lambda v: int(v * 0.45)), (0, int(S * 0.048)))
     shadow = shadow.filter(ImageFilter.GaussianBlur(S * 0.022))
