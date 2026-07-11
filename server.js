@@ -1497,7 +1497,7 @@ setInterval(async () => {
   } catch (e) { console.error('push scheduler:', e); }
 }, 60000);
 
-app.use(express.static(__dirname));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
