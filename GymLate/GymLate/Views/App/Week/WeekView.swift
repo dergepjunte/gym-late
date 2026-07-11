@@ -23,6 +23,37 @@ struct WeekView: View {
         return grouped.keys.sorted().reversed().map { (date: $0, entries: grouped[$0] ?? []) }
     }
 
+    /// All 7 days of the current ISO week, newest first (Sunday → Monday).
+    private var weekDates: [String] {
+        let cal = Calendar.iso8601UTC
+        let mon = cal.startOfWeek(for: Date())
+        return (0..<7).map { i in dateYMD(cal.date(byAdding: .day, value: i, to: mon)!) }.reversed()
+    }
+
+    /// Effective schedule: group gymDays ∩ my availDays.
+    private var myEffectiveMask: String {
+        let gymDays = appState.groupData?.gymDays ?? "0000000"
+        guard gymDays.count == 7 else { return gymDays }
+        let myAvail = appState.groupData?.people.first(where: { $0.id == appState.userProfile?.userId })?.availDays
+        guard let avail = myAvail, avail.count == 7 else { return gymDays }
+        return String(zip(gymDays, avail).map { (g, a) in g == "1" && a == "1" ? Character("1") : Character("0") })
+    }
+
+    private func isRestDay(_ dateStr: String) -> Bool {
+        let mask = myEffectiveMask
+        guard mask.count == 7, let date = parseDate(dateStr) else { return false }
+        let weekday = Calendar.iso8601UTC.component(.weekday, from: date) // 1=Sun
+        let idx = weekday == 1 ? 6 : weekday - 2  // Mon=0..Sun=6
+        guard idx >= 0 && idx < 7 else { return false }
+        return mask[mask.index(mask.startIndex, offsetBy: idx)] == "0"
+    }
+
+    /// Days to show: days with entries + rest days (bit=0 in effective mask).
+    private var visibleWeekDates: [String] {
+        let entryDates = Set(weekEntriesByDay.map { $0.date })
+        return weekDates.filter { entryDates.contains($0) || isRestDay($0) }
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 0) {
@@ -80,8 +111,8 @@ struct WeekView: View {
                         .background(Capsule().fill(K.gold.opacity(0.14)))
                 }
 
-                // Entries grouped by day (newest first) — one glass block per day
-                if weekEntries.isEmpty {
+                // Full week: entry blocks for days with entries, rest blocks for rest days.
+                if visibleWeekDates.isEmpty {
                     VStack(spacing: 8) {
                         Text("🏃").font(.system(size: 48))
                         Text(K.L.emptyWeek)
@@ -92,27 +123,47 @@ struct WeekView: View {
                     .padding(.vertical, 40)
                 } else {
                     LazyVStack(spacing: 10) {
-                        ForEach(weekEntriesByDay, id: \.date) { group in
-                            VStack(spacing: 0) {
-                                Text(fmtFull(group.date))
-                                    .eyebrow()
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(.horizontal, 14)
-                                    .padding(.top, 10)
-                                    .padding(.bottom, 4)
-                                ForEach(Array(group.entries.enumerated()), id: \.element.id) { idx, entry in
-                                    if idx > 0 {
-                                        Divider().padding(.leading, 66)
+                        ForEach(visibleWeekDates, id: \.self) { date in
+                            if let group = weekEntriesByDay.first(where: { $0.date == date }) {
+                                VStack(spacing: 0) {
+                                    Text(fmtFull(group.date))
+                                        .eyebrow()
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.horizontal, 14)
+                                        .padding(.top, 10)
+                                        .padding(.bottom, 4)
+                                    ForEach(Array(group.entries.enumerated()), id: \.element.id) { idx, entry in
+                                        if idx > 0 {
+                                            Divider().padding(.leading, 66)
+                                        }
+                                        EntryRow(entry: entry,
+                                                 people: appState.groupData?.people ?? [],
+                                                 adminMode: appState.adminMode,
+                                                 onEdit: { editingEntry = entry },
+                                                 onDelete: { Task { await deleteEntry(entry) } },
+                                                 standalone: false)
                                     }
-                                    EntryRow(entry: entry,
-                                             people: appState.groupData?.people ?? [],
-                                             adminMode: appState.adminMode,
-                                             onEdit: { editingEntry = entry },
-                                             onDelete: { Task { await deleteEntry(entry) } },
-                                             standalone: false)
                                 }
+                                .glassCard()
+                            } else {
+                                HStack(spacing: 12) {
+                                    Text("🌙").font(.system(size: 20))
+                                    VStack(alignment: .leading, spacing: 1) {
+                                        Text(fmtFull(date))
+                                            .font(Theme.body(11, .bold))
+                                            .foregroundColor(.secondary)
+                                            .textCase(.uppercase)
+                                            .tracking(0.7)
+                                        Text(K.L.restDay)
+                                            .font(Theme.body(13))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(14)
+                                .glassCard()
+                                .opacity(0.55)
                             }
-                            .glassCard()
                         }
                     }
                     .padding(.horizontal, 16)

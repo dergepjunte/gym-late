@@ -16,6 +16,11 @@ struct AppRootView: View {
     @State private var showLogEntry = false
     @State private var toast: String?
 
+    private var myPerson: Person? {
+        guard let profile = appState.userProfile else { return nil }
+        return appState.groupData?.people.first { $0.id == profile.userId }
+    }
+
     var body: some View {
         ZStack {
             GymBackground().ignoresSafeArea()
@@ -103,6 +108,12 @@ struct AppRootView: View {
             }
         }
         .fullPageCover(isPresented: $showLogEntry) { LogEntrySheet(toast: $toast) }
+        .fullPageCover(isPresented: $appState.showMyProfile) {
+            if let me = myPerson { ProfileView(person: me) }
+        }
+        .fullPageCover(isPresented: $appState.showAdminLogin) { AdminLoginSheet(toast: $toast) }
+        .onChange(of: appState.adminMode) { _, isAdmin in if isAdmin { appState.showAdminPanel = true } }
+        .fullPageCover(isPresented: $appState.showAdminPanel) { AdminPanelPage() }
         .onReceive(SyncEngine.shared.$syncErrorMessage) { msg in
             if let msg {
                 toast = msg
@@ -185,9 +196,6 @@ struct AppHeader: View {
     @EnvironmentObject var appState: AppState
     @Binding var toast: String?
 
-    @State private var showMyProfile = false
-    @State private var showAdminLogin = false
-    @State private var showAdminPanel = false
     @State private var logoTaps = 0
     @State private var lastTap = Date.distantPast
 
@@ -204,7 +212,7 @@ struct AppHeader: View {
                     .onTapGesture { registerLogoTap() }
 
                 if appState.adminMode {
-                    Button { showAdminPanel = true } label: {
+                    Button { appState.showAdminPanel = true } label: {
                         Text("ADMIN")
                             .font(.system(size: 9, weight: .black))
                             .foregroundColor(K.onAccent)
@@ -232,7 +240,7 @@ struct AppHeader: View {
                         .foregroundColor(.secondary)
                 }
 
-                Button { showMyProfile = true } label: {
+                Button { appState.showMyProfile = true } label: {
                     AvatarView(emoji: appState.userProfile?.avatarEmoji ?? "🏋️",
                                color: appState.userProfile?.avatarColor ?? "#7c3aed",
                                img: appState.userProfile?.avatarImg,
@@ -254,19 +262,6 @@ struct AppHeader: View {
         .padding(.horizontal, 16)
         .padding(.top, 12)
         .padding(.bottom, 8)
-        .fullPageCover(isPresented: $showMyProfile) {
-            if let me = myPerson { ProfileView(person: me) }
-        }
-        .fullPageCover(isPresented: $showAdminLogin) { AdminLoginSheet(toast: $toast) }
-        .onChange(of: appState.adminMode) { _, isAdmin in
-            if isAdmin { showAdminPanel = true }
-        }
-        .fullPageCover(isPresented: $showAdminPanel) { AdminPanelPage() }
-    }
-
-    private var myPerson: Person? {
-        guard let profile = appState.userProfile else { return nil }
-        return appState.groupData?.people.first { $0.id == profile.userId }
     }
 
     private func registerLogoTap() {
@@ -280,7 +275,7 @@ struct AppHeader: View {
                 appState.adminPassword = nil
                 toast = K.L.toastAdmOut
             } else {
-                showAdminLogin = true
+                appState.showAdminLogin = true
             }
             haptic(.medium)
         }

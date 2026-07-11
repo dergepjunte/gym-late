@@ -254,6 +254,9 @@ async function initSchema() {
     try { await database.run('ALTER TABLE entries ADD COLUMN reason VARCHAR(20) NULL'); } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
+    try { await database.run('ALTER TABLE entries ADD COLUMN auto TINYINT NOT NULL DEFAULT 0'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
     // Push notification tables
     await database.run(`
       CREATE TABLE IF NOT EXISTS push_subscriptions (
@@ -378,6 +381,7 @@ async function initSchema() {
   try { database.exec('ALTER TABLE users ADD COLUMN last_freeze_grant INTEGER'); } catch {}
   try { database.exec("ALTER TABLE entries ADD COLUMN type TEXT NOT NULL DEFAULT 'late'"); } catch {}
   try { database.exec('ALTER TABLE entries ADD COLUMN reason TEXT'); } catch {}
+  try { database.exec('ALTER TABLE entries ADD COLUMN auto INTEGER NOT NULL DEFAULT 0'); } catch {}
 
   // Push notification tables
   database.exec(`
@@ -595,6 +599,40 @@ function isDayScheduled(dateStr, mask) {
   return mask[idx] === '1';
 }
 
+// Insert auto=1 skip entries for any past scheduled day where a user has no entry.
+// Called on GET /api/groups/:id before recomputeStreak; mutates allEntries in-place
+// so the byPerson map and response both see the new rows without a second DB query.
+async function materializeAutoSkips(groupId, rawUsers, gymDays, allEntries) {
+  const todayD = new Date();
+  todayD.setUTCHours(12, 0, 0, 0);
+
+  const existing = new Set(allEntries.map(e => `${(e.person || '').toLowerCase()}|${e.date}`));
+  const now = Date.now();
+
+  for (const u of rawUsers) {
+    const mask = effectiveMask(gymDays, u.avail_days);
+    const joinD = u.created_at
+      ? new Date(Number(u.created_at))
+      : new Date(todayD.getTime() - MAX_LOOKBACK * 86400000);
+    joinD.setUTCHours(12, 0, 0, 0);
+    const startD = new Date(Math.max(joinD.getTime(), todayD.getTime() - MAX_LOOKBACK * 86400000));
+
+    for (let d = new Date(startD); d < todayD; d.setUTCDate(d.getUTCDate() + 1)) {
+      const dateStr = dateYMD(d);
+      if (!isDayScheduled(dateStr, mask)) continue;
+      const key = `${u.name.toLowerCase()}|${dateStr}`;
+      if (existing.has(key)) continue;
+      const eid = crypto.randomUUID();
+      await database.run(
+        'INSERT INTO entries (id,group_id,person,date,mins,ts,type,reason,auto) VALUES (?,?,?,?,?,?,?,?,?)',
+        [eid, groupId, u.name, dateStr, 0, now, 'skip', null, 1]
+      );
+      existing.add(key);
+      allEntries.push({ id: eid, person: u.name, date: dateStr, mins: 0, ts: now, type: 'skip', reason: null, auto: 1 });
+    }
+  }
+}
+
 // fullReplay: ignore the last_streak_date watermark and recompute from the
 // join date (capped to MAX_LOOKBACK). Needed when entries are backdated or
 // deleted — the watermark fast path can only ever move forward.
@@ -605,7 +643,7 @@ async function recomputeStreak(userId, gymDays, userEntries, dbUser, fullReplay 
   for (const e of userEntries) {
     if (!entryMap[e.date]) entryMap[e.date] = { attend: false, skip: false };
     if (e.type === 'attend' || e.type === 'late') entryMap[e.date].attend = true;
-    if (e.type === 'skip') entryMap[e.date].skip = true;
+    if (e.type === 'skip' && !e.auto) entryMap[e.date].skip = true; // auto-skips don't hold the streak
   }
 
   const todayD = new Date();
@@ -1041,7 +1079,11 @@ app.get('/api/groups/:id', ah(async (req, res) => {
            streak, freezes, last_streak_date, avail_days, avail_edited_at, created_at
     FROM users WHERE group_id = ? ORDER BY created_at
   `, [req.params.id]);
-  const allEntries = await database.all('SELECT id,person,date,mins,ts,type,reason FROM entries WHERE group_id = ? ORDER BY date DESC, ts DESC', [req.params.id]);
+  const allEntries = await database.all('SELECT id,person,date,mins,ts,type,reason,auto FROM entries WHERE group_id = ? ORDER BY date DESC, ts DESC', [req.params.id]);
+
+  // Insert auto-skip rows for past scheduled no-show days (idempotent).
+  // Mutates allEntries in place so byPerson and the response include them.
+  await materializeAutoSkips(req.params.id, rawUsers, g.gym_days, allEntries);
 
   // Key case-insensitively — entry person names are free text and the
   // POST /entries user lookup is LOWER()-based; a case mismatch here made
@@ -1272,6 +1314,11 @@ app.post('/api/groups/:id/entries', ah(async (req, res) => {
   const now = Date.now();
   await database.run('INSERT INTO entries (id,group_id,person,date,mins,ts,type,reason) VALUES (?,?,?,?,?,?,?,?)',
     [eid, id, person, date, mins, now, type, reason]);
+  // Remove any auto-generated skip for this person+date now that a real entry exists.
+  await database.run(
+    'DELETE FROM entries WHERE group_id = ? AND LOWER(person) = LOWER(?) AND date = ? AND auto = 1',
+    [id, person, date]
+  );
 
   let chest = null;
   if (type === 'attend' || type === 'late') {
@@ -1337,6 +1384,11 @@ app.patch('/api/groups/:id/entries/:eid', ah(async (req, res) => {
 
   await database.run('UPDATE entries SET date = ?, mins = ?, type = ?, reason = ? WHERE id = ? AND group_id = ?',
     [date, mins, type, reason, eid, id]);
+  // If the edit moved the entry to a new date, remove any auto-skip at that new date for this person.
+  await database.run(
+    'DELETE FROM entries WHERE group_id = ? AND LOWER(person) = LOWER(?) AND date = ? AND auto = 1 AND id != ?',
+    [id, old.person, date, eid]
+  );
 
   const g = await database.one('SELECT gym_days FROM `groups` WHERE id = ?', [id]);
   const dbUser = await database.one(

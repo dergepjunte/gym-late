@@ -37,6 +37,11 @@ final class AppState: ObservableObject {
     @Published var showGeoPrompt = false
     @Published var geoCheckinPossible = false
 
+    // Profile / admin covers — set by AppHeader, presented by AppRootView's top-level ZStack
+    @Published var showMyProfile = false
+    @Published var showAdminLogin = false
+    @Published var showAdminPanel = false
+
     // Notification bubble system: passive prompts appear as a glass pill first.
     // Tapping the bubble sets the matching showXxx flag → full-screen overlay.
     // Dismissing advances the queue and shows a replay hint chip.

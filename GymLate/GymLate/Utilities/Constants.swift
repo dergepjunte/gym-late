@@ -50,6 +50,8 @@ enum K {
         static var sCountLbl: String { de ? "Verspätungen" : "Late Arrivals" }
         static var sMinLbl: String { de ? "Min. gesamt" : "Total Mins" }
         static var emptyWeek: String { de ? "Noch niemand zu spät!" : "Nobody was late this week!" }
+        static var restDay: String { de ? "Ruhetag" : "Rest day" }
+        static var noShow: String { de ? "Nicht erschienen" : "No-show" }
         static var emptyHistory: String { de ? "Noch keine abgeschlossenen Wochen" : "No completed weeks yet" }
         static var emptyPeople: String { de ? "Noch keine Personen" : "No people added yet" }
         static var skipped: String { de ? "übersprungen" : "skipped" }

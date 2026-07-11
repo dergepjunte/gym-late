@@ -520,7 +520,8 @@ struct EntryBadge: View {
                 .padding(.horizontal, 10).padding(.vertical, 4)
                 .background(Capsule().fill(K.green.opacity(0.14)))
         case "skip":
-            Text("⊘ \(K.L.reasonLabel(entry.reason) ?? K.L.skipped)")
+            let skipLabel = (entry.auto == true) ? K.L.noShow : (K.L.reasonLabel(entry.reason) ?? K.L.skipped)
+            Text("⊘ \(skipLabel)")
                 .font(Theme.body(12, .bold)).foregroundColor(K.gold)
                 .padding(.horizontal, 10).padding(.vertical, 4)
                 .background(Capsule().fill(K.gold.opacity(0.14)))

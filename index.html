@@ -328,6 +328,8 @@
     .day-group { border-radius: var(--r-lg); overflow: hidden; margin-top: 10px; }
     .day-group:first-child { margin-top: 0; }
     .day-group-label { font-size:11px; font-weight:700; letter-spacing:.7px; text-transform:uppercase; color:var(--text-3); padding:10px 18px 6px; }
+    .day-group.day-rest { opacity: 0.55; }
+    .rest-day-row { color: var(--text-2); font-size: 13px; padding: 10px 18px 12px; }
 
     /* ── ENTRIES ─────────────────────────────────────────────── */
     .entry { display: flex; align-items: center; gap: 12px; padding: 11px 18px; border-bottom: 1px solid var(--divider); }
@@ -2433,6 +2435,7 @@ const TRANS = {
     mlLblAttendDate:'Datum', mlLblSkipDate:'Datum', mlLblReason:'Grund (optional)',
     mlLogSkip:'Skip speichern', mlLogAttend:'Einchecken',
     skipped:'übersprungen',
+    restDay:'Ruhetag', noShow:'Nicht erschienen',
     toastSkipSaved:'Skip gespeichert ⊘', toastAttendSaved:'Eingecheckt ✓',
     allSkippedTitle:'Alles übersprungen',
     reasons:{ rest:'Ruhetag', sick:'Krank', injured:'Verletzt', no_time:'Keine Zeit', deload:'Deload' },
@@ -2607,6 +2610,7 @@ const TRANS = {
     mlLblAttendDate:'Date', mlLblSkipDate:'Date', mlLblReason:'Reason (optional)',
     mlLogSkip:'Log Skip', mlLogAttend:'Check in',
     skipped:'skipped',
+    restDay:'Rest day', noShow:'No-show',
     toastSkipSaved:'Skip logged ⊘', toastAttendSaved:'Checked in ✓',
     allSkippedTitle:'All skipped',
     reasons:{ rest:'Rest day', sick:'Sick', injured:'Injured', no_time:'No time', deload:'Deload' },
@@ -3103,6 +3107,18 @@ function calcStreak(personName, entries) {
 // ════════════════════════════════════════════════════════
 //  RENDER: WEEK
 // ════════════════════════════════════════════════════════
+
+function getMyEffectiveMask() {
+  const gymDays = data?.gymDays || '0000000';
+  if (!userProfile || !data || gymDays.length !== 7) return gymDays;
+  const me = data.people.find(p => p.id === userProfile.userId);
+  const avail = me?.availDays;
+  if (!avail || avail.length !== 7) return gymDays;
+  let r = '';
+  for (let i = 0; i < 7; i++) r += (gymDays[i] === '1' && avail[i] === '1') ? '1' : '0';
+  return r;
+}
+
 function renderWeek() {
   if (!data) return;
   const mon = mondayOf(todayStr()), sun = sundayOf(mon);
@@ -3121,7 +3137,20 @@ function renderWeek() {
 
   const emEl = document.getElementById('week-empty'), lEl = document.getElementById('week-list');
   const weekCard = document.getElementById('week-card');
-  if (!allWeek.length) {
+
+  // Group entries by date
+  const byDate = {};
+  allWeek.forEach(e => { (byDate[e.date] = byDate[e.date] || []).push(e); });
+
+  // All 7 week dates newest-first (Sun → Mon)
+  const weekDates = [];
+  for (let i = 6; i >= 0; i--) weekDates.push(addDays(mon, i));
+
+  const mask = getMyEffectiveMask();
+  // Visible: days with entries OR rest days (bit=0 in effective mask)
+  const visibleDates = weekDates.filter(d => byDate[d] || !calDayScheduled(d, mask));
+
+  if (!visibleDates.length) {
     emEl.style.display = '';
     lEl.innerHTML = '';
     weekCard.classList.add('card', 'glass');
@@ -3130,18 +3159,19 @@ function renderWeek() {
   emEl.style.display = 'none';
   weekCard.classList.remove('card', 'glass');
 
-  // Group entries by date, newest first — one glass block per day
-  const byDate = {};
-  allWeek.forEach(e => { (byDate[e.date] = byDate[e.date] || []).push(e); });
-  const sortedDates = Object.keys(byDate).sort().reverse();
   let animIdx = 0;
-  lEl.innerHTML = sortedDates.map(date => {
+  lEl.innerHTML = visibleDates.map(date => {
     const dayEntries = byDate[date];
+    if (!dayEntries) {
+      // Rest day — no entries for anyone on this day
+      return `<div class="day-group glass day-rest"><div class="day-group-label">🌙 ${fmtFull(date)}</div><div class="rest-day-row">${T.restDay}</div></div>`;
+    }
     const rows = dayEntries.map(e => {
       const isSkip   = e.type === 'skip';
       const isAttend = e.type === 'attend';
+      const skipLabel = e.auto ? T.noShow : (T.reasonLabel(e.reason) || T.skipped);
       const badge  = isSkip
-        ? `<div class="skip-badge">⊘ ${esc(T.reasonLabel(e.reason) || T.skipped)}</div>`
+        ? `<div class="skip-badge">⊘ ${esc(skipLabel)}</div>`
         : isAttend
           ? `<div class="attend-badge">✓</div>`
           : `<div class="late-badge">${e.mins} ${T.minsShort}</div>`;

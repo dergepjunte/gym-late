@@ -44,6 +44,7 @@ struct Entry: Codable, Identifiable {
     var ts: Int
     var type: String  // "late" | "skip" | "attend"
     var reason: String?
+    var auto: Bool?   // true = server-generated no-show skip (still counts as a streak miss)
 }
 
 // MARK: - Local User Profile
