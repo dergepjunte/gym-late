@@ -313,27 +313,4 @@ function setMlMode(mode) {
     mode === 'attend' ? T.mlLogAttend : mode === 'late' ? T.mlSave : T.mlLogSkip;
 }
 
-// ════════════════════════════════════════════════════════
-//  STREAK CALCULATION
-// ════════════════════════════════════════════════════════
-// Rule: a streak is consecutive completed past weeks (Mon–Sun, not the current week)
-// where the person has ≥1 entry of any type ('late' or 'skip').
-// A completed week with zero entries breaks the streak.
-// The ongoing current week is never counted for or against.
-function calcStreak(personName, entries) {
-  const currentMon = mondayOf(todayStr());
-  const weeksWithEntry = new Set(
-    entries
-      .filter(e => e.person === personName && mondayOf(e.date) < currentMon)
-      .map(e => mondayOf(e.date))
-  );
-  if (!weeksWithEntry.size) return 0;
-  let streak = 0;
-  let weekMon = addDays(currentMon, -7);
-  while (weeksWithEntry.has(weekMon)) {
-    streak++;
-    weekMon = addDays(weekMon, -7);
-  }
-  return streak;
-}
 

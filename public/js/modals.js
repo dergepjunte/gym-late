@@ -37,8 +37,7 @@ function applyI18n() {
   set('adm-test-reminder-lbl',T.admTestReminder); set('adm-test-streak-lbl',T.admTestStreak);
   set('adm-test-activity-lbl',T.admTestActivity); set('adm-test-all-lbl',T.admTestAll);
   set('pill-hint', T.pillHint);
-  // Group switcher
-  set('mgs-title',T.mgsTitle); set('mgs-join-btn',T.mgsJoin); set('mgs-create-btn',T.mgsCreate);
+  // Groups section (People tab)
   set('lbl-groups',T.mgsTitle); set('pp-join-btn',T.mgsJoin); set('pp-create-btn',T.mgsCreate);
   // Overlays
   set('dh-title',T.dhTitle); set('dh-sub',T.dhSub); set('dh-close',T.dhClose);

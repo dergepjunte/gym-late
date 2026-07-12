@@ -419,10 +419,6 @@ function renderAdminPanel() {
 }
 
 function renderAll() {
-  renderPill(); renderStreakHero(); renderWeek(); renderHistory(); renderCalendar(); renderPeople(); renderGroupsSection(); renderAdminPanel();
-}
-
-function renderPill() {
-  // pill removed from header — group info lives in People tab
+  renderStreakHero(); renderWeek(); renderHistory(); renderCalendar(); renderPeople(); renderGroupsSection(); renderAdminPanel();
 }
 

@@ -46,20 +46,6 @@ function buildGroupListHTML(all) {
   }).join('');
 }
 
-function openGroupSwitcher() {
-  const all = loadAllGroups();
-  const listEl = document.getElementById('mgs-list');
-  listEl.innerHTML = buildGroupListHTML(all);
-  listEl.querySelectorAll('.group-list-item').forEach(el => {
-    el.addEventListener('click', () => {
-      const g = all.find(x => x.id === el.dataset.gid);
-      closePage('modal-group-switcher');
-      if (g) switchToGroup(g);
-    });
-  });
-  openPage('modal-group-switcher');
-}
-
 // Inline groups section in the People tab
 function renderGroupsSection() {
   const all = loadAllGroups();
@@ -73,21 +59,6 @@ function renderGroupsSection() {
     });
   });
 }
-
-document.getElementById('mgs-close-btn').addEventListener('click', () => closePage('modal-group-switcher'));
-
-document.getElementById('mgs-join-btn').addEventListener('click', () => {
-  closePage('modal-group-switcher');
-  stopPolling();
-  showScreen('landing');
-  setTimeout(() => openPage('modal-join'), 200);
-});
-document.getElementById('mgs-create-btn').addEventListener('click', () => {
-  closePage('modal-group-switcher');
-  stopPolling();
-  showScreen('landing');
-  setTimeout(() => openPage('modal-create'), 200);
-});
 
 // Inline join/create from the People tab
 document.getElementById('pp-join-btn').addEventListener('click', () => {

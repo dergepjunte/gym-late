@@ -94,7 +94,7 @@ const TRANS = {
     wS5title:'Das Ranking',
     wS6a:'NÄCHSTE', wS6b:'WOCHE BESSER.', wClose:'Los geht\'s',
     // Group switcher
-    mgsTitle:'Meine Gruppen', mgsJoin:'Einer anderen Gruppe beitreten', mgsCreate:'Neue Gruppe erstellen', mgsClose:'Schließen',
+    mgsTitle:'Meine Gruppen', mgsJoin:'Einer anderen Gruppe beitreten', mgsCreate:'Neue Gruppe erstellen',
     mgsActive:'Aktiv', mgsSwitch:'Wechseln',
     // Daily hype
     dhTitle:'Heute ist Gym-Tag!', dhSub:'Zeig, was du drauf hast. 💪', dhClose:'Los geht\'s!',
@@ -270,7 +270,7 @@ const TRANS = {
     wS5title:'The Ranking',
     wS6a:'DO BETTER', wS6b:'NEXT WEEK.', wClose:'Let\'s go',
     // Group switcher
-    mgsTitle:'My Groups', mgsJoin:'Join another group', mgsCreate:'Create new group', mgsClose:'Close',
+    mgsTitle:'My Groups', mgsJoin:'Join another group', mgsCreate:'Create new group',
     mgsActive:'Active', mgsSwitch:'Switch',
     // Daily hype
     dhTitle:'Today is Gym Day!', dhSub:'Show them what you\'ve got. 💪', dhClose:'Let\'s go!',

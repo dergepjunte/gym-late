@@ -4,36 +4,6 @@
 handleAvatarUpload('psu-img-input', 'psu-preview', 'psu-upload-btn', 'psu-upload-msg', img => { selImg = img; });
 handleAvatarUpload('ep-img-input',  'ep-preview',  'ep-upload-btn',  'ep-upload-msg',  img => { epSelImg = img; });
 
-function buildAvatarPicker(gridId, previewId, onChangeEmoji, onChangeColor, initEmoji, initColor) {
-  const eg = document.getElementById(gridId+'-emoji-grid') || document.getElementById(gridId);
-  if (!eg) return;
-  eg.innerHTML = AVATAR_EMOJIS.map(em =>
-    `<div class="emoji-cell${em===initEmoji?' sel':''}" data-emoji="${em}">${em}</div>`
-  ).join('');
-  eg.querySelectorAll('.emoji-cell').forEach(c => {
-    c.addEventListener('click', () => {
-      eg.querySelectorAll('.emoji-cell').forEach(x=>x.classList.remove('sel'));
-      c.classList.add('sel');
-      onChangeEmoji(c.dataset.emoji);
-    });
-  });
-}
-
-function buildColorPicker(gridId, onChangeColor, initColor) {
-  const cg = document.getElementById(gridId+'-color-grid') || document.getElementById(gridId);
-  if (!cg) return;
-  cg.innerHTML = AVATAR_COLORS.map(col =>
-    `<div class="color-dot${col===initColor?' sel':''}" data-color="${col}" style="background:${col}"></div>`
-  ).join('');
-  cg.querySelectorAll('.color-dot').forEach(c => {
-    c.addEventListener('click', () => {
-      cg.querySelectorAll('.color-dot').forEach(x=>x.classList.remove('sel'));
-      c.classList.add('sel');
-      onChangeColor(c.dataset.color);
-    });
-  });
-}
-
 function openProfileSetup() {
   selEmoji = '🏋️'; selColor = '#7c3aed'; selImg = null;
   const prev = document.getElementById('psu-preview');
