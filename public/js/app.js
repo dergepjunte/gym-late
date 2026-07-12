@@ -1,10 +1,17 @@
 // ════════════════════════════════════════════════════════
 //  POLLING
 // ════════════════════════════════════════════════════════
+let _lastRenderKey = null;
 async function refresh() {
   if (!group) return;
   try {
-    data = await api.getGroup(group.id);
+    const fresh = await api.getGroup(group.id);
+    data = fresh; // always assign — await refresh() callers read fresh data
+    // Skip the full DOM rebuild when nothing changed since the last poll.
+    // Key includes group id (group switches) and today (midnight rollover).
+    const key = group.id + '|' + todayStr() + '|' + JSON.stringify(fresh);
+    if (key === _lastRenderKey) return;
+    _lastRenderKey = key;
     renderAll();
   } catch(e) {
     if (e.status===404) { clearGroup(); stopPolling(); showScreen('landing'); }
