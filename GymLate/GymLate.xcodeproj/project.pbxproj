@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		051794B009EF265647A02073 /* CalDayDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A1859F4C1F10709CE877B0 /* CalDayDetailSheet.swift */; };
 		0912F89CC5BA563DCFE32B8B /* NotifPrimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D9CAE4D04B30288FE0267BA /* NotifPrimerView.swift */; };
 		0DAC8D57ABADEE63C7F9CD4E /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A8830F083C877C2E8466B0 /* Models.swift */; };
 		0DCD4C14EDAF09C71BA0BAC3 /* LandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E050A845C35982874A330B /* LandingView.swift */; };
@@ -16,6 +17,7 @@
 		1E49A49979659330E73A842A /* RecapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48B216B28325FF5FA1DAECAD /* RecapView.swift */; };
 		27D75D5035001235F091D608 /* AdminLoginSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA5EDBF2159AD236E683034B /* AdminLoginSheet.swift */; };
 		3B6F849833829D73E80F50E5 /* CreateGroupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62A605AC15BC1A6378E6500C /* CreateGroupSheet.swift */; };
+		3C56B694133AB78DC9B0A65C /* EntryBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9740FD099AD53EFF7992778E /* EntryBadge.swift */; };
 		3DE0F25C19D1AD85B423C9B7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FECB3AE1CA87DCC5861FD909 /* Assets.xcassets */; };
 		3FCDFFB50C057C3A9DA1EA66 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 224F7A11AA3B7A6E63CB6393 /* APIClient.swift */; };
 		50FD4E3325DDE7FEBBD4D4E2 /* WeekView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1B2D3BFE353BD37044649C2 /* WeekView.swift */; };
@@ -59,6 +61,7 @@
 		24D32873253B99B3AE9C9280 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		33BF69529961C204F27967EE /* GroupDataCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupDataCache.swift; sourceTree = "<group>"; };
 		3CD7DB6E4687AB95C8ED4F04 /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
+		44A1859F4C1F10709CE877B0 /* CalDayDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalDayDetailSheet.swift; sourceTree = "<group>"; };
 		48B216B28325FF5FA1DAECAD /* RecapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecapView.swift; sourceTree = "<group>"; };
 		592ACFBCF976F16F9D870740 /* AdminPanelSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminPanelSection.swift; sourceTree = "<group>"; };
 		59E8E8A9C353B25C44D9B99E /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
@@ -76,6 +79,7 @@
 		8F8EF8E4E8D90346B6023078 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
 		91F0E498E71A4FC28C5CAC9F /* LocalStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalStore.swift; sourceTree = "<group>"; };
 		921C638398077365E459B898 /* GymLateApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GymLateApp.swift; sourceTree = "<group>"; };
+		9740FD099AD53EFF7992778E /* EntryBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryBadge.swift; sourceTree = "<group>"; };
 		9B48185768C8FB5417100D3E /* SyncEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncEngine.swift; sourceTree = "<group>"; };
 		9D9CAE4D04B30288FE0267BA /* NotifPrimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifPrimerView.swift; sourceTree = "<group>"; };
 		A05B044394281AAD61209FB8 /* SettingsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSheet.swift; sourceTree = "<group>"; };
@@ -100,6 +104,7 @@
 		020ED0507B1C864C3CAE568B /* History */ = {
 			isa = PBXGroup;
 			children = (
+				44A1859F4C1F10709CE877B0 /* CalDayDetailSheet.swift */,
 				B7953922313C309DBD0A3DEA /* HistoryView.swift */,
 			);
 			path = History;
@@ -181,6 +186,7 @@
 			isa = PBXGroup;
 			children = (
 				7E74360B16FE641EF822A100 /* AvatarView.swift */,
+				9740FD099AD53EFF7992778E /* EntryBadge.swift */,
 				65CF269718473218A5DF0EC3 /* NotificationBubbleView.swift */,
 			);
 			path = Shared;
@@ -361,12 +367,14 @@
 				1CE2AE244236D880AD9F89F8 /* AppState.swift in Sources */,
 				D2FDF01D12B40A3FE24B7922 /* AvatarView.swift in Sources */,
 				9D2539B5BBD06F598230E1C4 /* BottomNav.swift in Sources */,
+				051794B009EF265647A02073 /* CalDayDetailSheet.swift in Sources */,
 				C4D918BFF545FAD26F2AA906 /* CeremonyOverlays.swift in Sources */,
 				9515C89B38E15239712A53CF /* ConnectivityMonitor.swift in Sources */,
 				F228AE559EA6CDB3D352B93A /* Constants.swift in Sources */,
 				3B6F849833829D73E80F50E5 /* CreateGroupSheet.swift in Sources */,
 				5A2168551B37CB9C40596BCC /* DailyHypeView.swift in Sources */,
 				AE086CC31115AA2ED9CEBF86 /* EditEntrySheet.swift in Sources */,
+				3C56B694133AB78DC9B0A65C /* EntryBadge.swift in Sources */,
 				AC0734326D397049FEE08B2E /* Extensions.swift in Sources */,
 				14F0C0BF7BA155A6B4B04F4A /* GeoPromptView.swift in Sources */,
 				73074BB36C15A50674093DF3 /* GroupDataCache.swift in Sources */,
