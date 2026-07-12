@@ -6,7 +6,7 @@ let wSlides = [], wIdx = 0, wTimer = null;
 function shouldShowWrapped() {
   const mon = mondayOf(todayStr());
   if (localStorage.getItem('gymWrappedSeen') === mon) return false;
-  return (data?.entries || []).some(e => mondayOf(e.date) === mon && (e.type || 'late') === 'late');
+  return (data?.entries || []).some(e => mondayOf(e.date) === mon && ((e.type || 'late') === 'late' || e.type === 'skip'));
 }
 
 function showWrapped(force = false) {
@@ -129,18 +129,22 @@ function buildWrappedSlides(anyWeek = false) {
   sun = sundayOf(mon);
 
   const weekEntries = allEntries.filter(e => e.date >= mon && e.date <= sun);
-  const entries = weekEntries.filter(e => (e.type || 'late') === 'late');
-  if (!entries.length) return null;
+  const lateEntries = weekEntries.filter(e => (e.type || 'late') === 'late');
+  const skipEntries = weekEntries.filter(e => e.type === 'skip');
+  if (!lateEntries.length && !skipEntries.length) return null;
 
-  const totalLate = entries.length;
-  const totalMins = entries.reduce((s,e) => s + e.mins, 0);
+  const totalLate = lateEntries.length;
+  const totalMins = lateEntries.reduce((s,e) => s + e.mins, 0);
   const hours = Math.floor(totalMins / 60), remMins = totalMins % 60;
 
   const ps = {};
-  entries.forEach(e => { ps[e.person] = ps[e.person]||{count:0,mins:0}; ps[e.person].count++; ps[e.person].mins+=e.mins; });
+  lateEntries.forEach(e => { ps[e.person] = ps[e.person]||{count:0,mins:0}; ps[e.person].count++; ps[e.person].mins+=e.mins; });
   const ranking = Object.entries(ps).sort((a,b) => b[1].mins - a[1].mins);
-  const [topName, topSt] = ranking[0];
   const medals = ['🥇','🥈','🥉'];
+
+  const sps = {};
+  skipEntries.forEach(e => { sps[e.person] = (sps[e.person]||0) + 1; });
+  const skipRanking = Object.entries(sps).sort((a,b) => b[1] - a[1]);
 
   const slides = [];
 
@@ -156,38 +160,59 @@ function buildWrappedSlides(anyWeek = false) {
     <div class="w-label w-fade" style="animation-delay:.65s">${T.weekRange(mon,sun)}</div>
   `});
 
-  /* ── Slide 2: Late count ── */
-  slides.push({ dur: 4, countId:'wn-late', countTarget: totalLate,
-    bg: 'linear-gradient(160deg,#db2777 0%,#ea580c 100%)', html: `
-    <div class="w-label w-fade">${T.wS2label}</div>
-    <div class="w-gap-xs"></div>
-    <div class="w-number w-pop" id="wn-late" style="animation-delay:.1s">0</div>
-    <div class="w-gap-xs"></div>
-    <div class="w-sub w-rise" style="animation-delay:.3s">${T.wS2sub}</div>
-    <div class="w-gap"></div>
-    <div class="w-emoji w-pop" style="animation-delay:.5s;font-size:clamp(36px,12vw,58px)">🚨</div>
-  `});
+  if (lateEntries.length) {
+    const [topName, topSt] = ranking[0];
 
-  /* ── Slide 3: Minutes ── */
-  slides.push({ dur: 4, countId:'wn-mins', countTarget: totalMins,
-    bg: 'linear-gradient(160deg,#059669 0%,#0891b2 100%)', html: `
-    <div class="w-label w-fade">${T.wS3label}</div>
-    <div class="w-gap-xs"></div>
-    <div class="w-number w-pop" id="wn-mins" style="animation-delay:.1s">0</div>
-    <div class="w-sub w-rise" style="animation-delay:.3s">${T.wS3sub}</div>
-    ${hours > 0 ? `<div class="w-gap-sm"></div><div class="w-label w-fade" style="animation-delay:.55s">${T.wS3hours(hours,remMins)}</div>` : ''}
-  `});
+    /* ── Slide 2: Late count ── */
+    slides.push({ dur: 4, countId:'wn-late', countTarget: totalLate,
+      bg: 'linear-gradient(160deg,#db2777 0%,#ea580c 100%)', html: `
+      <div class="w-label w-fade">${T.wS2label}</div>
+      <div class="w-gap-xs"></div>
+      <div class="w-number w-pop" id="wn-late" style="animation-delay:.1s">0</div>
+      <div class="w-gap-xs"></div>
+      <div class="w-sub w-rise" style="animation-delay:.3s">${T.wS2sub}</div>
+      <div class="w-gap"></div>
+      <div class="w-emoji w-pop" style="animation-delay:.5s;font-size:clamp(36px,12vw,58px)">🚨</div>
+    `});
 
-  /* ── Slide 4: Top latecomer ── */
-  slides.push({ dur: 4.5, bg: 'linear-gradient(160deg,#ca8a04 0%,#dc2626 100%)', html: `
-    <div class="w-emoji w-pop">👑</div>
-    <div class="w-gap-sm"></div>
-    <div class="w-label w-rise" style="animation-delay:.2s">${T.wS4label}</div>
-    <div class="w-gap-sm"></div>
-    <div class="w-name w-pop" style="animation-delay:.38s">${esc(topName)}</div>
-    <div class="w-gap"></div>
-    <div class="w-sub w-fade" style="animation-delay:.6s">${topSt.count}× · ${topSt.mins} ${T.minsShort}</div>
-  `});
+    /* ── Slide 3: Minutes ── */
+    slides.push({ dur: 4, countId:'wn-mins', countTarget: totalMins,
+      bg: 'linear-gradient(160deg,#059669 0%,#0891b2 100%)', html: `
+      <div class="w-label w-fade">${T.wS3label}</div>
+      <div class="w-gap-xs"></div>
+      <div class="w-number w-pop" id="wn-mins" style="animation-delay:.1s">0</div>
+      <div class="w-sub w-rise" style="animation-delay:.3s">${T.wS3sub}</div>
+      ${hours > 0 ? `<div class="w-gap-sm"></div><div class="w-label w-fade" style="animation-delay:.55s">${T.wS3hours(hours,remMins)}</div>` : ''}
+    `});
+
+    /* ── Slide 4: Top latecomer ── */
+    slides.push({ dur: 4.5, bg: 'linear-gradient(160deg,#ca8a04 0%,#dc2626 100%)', html: `
+      <div class="w-emoji w-pop">👑</div>
+      <div class="w-gap-sm"></div>
+      <div class="w-label w-rise" style="animation-delay:.2s">${T.wS4label}</div>
+      <div class="w-gap-sm"></div>
+      <div class="w-name w-pop" style="animation-delay:.38s">${esc(topName)}</div>
+      <div class="w-gap"></div>
+      <div class="w-sub w-fade" style="animation-delay:.6s">${topSt.count}× · ${topSt.mins} ${T.minsShort}</div>
+    `});
+  }
+
+  /* ── Slide: Skips ── */
+  if (skipEntries.length) {
+    const [topSkipName, topSkipCount] = skipRanking[0];
+    slides.push({ dur: 4, countId:'wn-skip', countTarget: skipEntries.length,
+      bg: 'linear-gradient(160deg,#6366f1 0%,#4338ca 100%)', html: `
+      <div class="w-label w-fade">${T.wSkipLabel}</div>
+      <div class="w-gap-xs"></div>
+      <div class="w-number w-pop" id="wn-skip" style="animation-delay:.1s">0</div>
+      <div class="w-gap-xs"></div>
+      <div class="w-sub w-rise" style="animation-delay:.3s">${T.wSkipSub}</div>
+      <div class="w-gap"></div>
+      <div class="w-emoji w-pop" style="animation-delay:.5s;font-size:clamp(36px,12vw,58px)">⊘</div>
+      <div class="w-gap-sm"></div>
+      <div class="w-sub w-fade" style="animation-delay:.65s">${esc(T.wSkipTop(topSkipName, topSkipCount))}</div>
+    `});
+  }
 
   /* ── Slide 5: Ranking (only if >1 person) ── */
   if (ranking.length > 1) {

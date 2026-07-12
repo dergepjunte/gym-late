@@ -24,6 +24,7 @@ struct SettingsSheet: View {
     // Fixed check-in time (beta, creator/admin)
     @State private var fixedTimeEnabled = false
     @State private var confirmLeave = false
+    @State private var showMigrateSheet = false
 
     // Notification preferences
     @State private var notifReminders = LocalStore.shared.notifReminders
@@ -168,6 +169,26 @@ struct SettingsSheet: View {
                         .foregroundColor(K.accentDark)
                 }
 
+                // Account & Login
+                Section(K.L.de ? "Konto" : "Account") {
+                    if let acc = appState.account {
+                        if let email = acc.email { Text(email).foregroundColor(.secondary) }
+                        Button(K.L.de ? "Abmelden" : "Sign out") {
+                            appState.signOutAccount()
+                        }
+                        .foregroundColor(K.red)
+                    } else {
+                        Text(K.L.de
+                             ? "Füge E-Mail & Passwort hinzu, damit du deine Gruppen nie verlierst."
+                             : "Add email & password so you never lose access to your groups.")
+                            .font(.system(size: 13)).foregroundColor(.secondary)
+                        Button(K.L.de ? "E-Mail & Passwort einrichten" : "Set email & password") {
+                            showMigrateSheet = true
+                        }
+                        .foregroundColor(K.accentDark)
+                    }
+                }
+
                 // Leave group
                 Section {
                     Button(K.L.leaveGroup, role: .destructive) {
@@ -192,6 +213,9 @@ struct SettingsSheet: View {
                 }
             }
             .onAppear { loadCurrentValues() }
+            .fullScreenCover(isPresented: $showMigrateSheet) {
+                MigrationSheet { showMigrateSheet = false }
+            }
             .confirmationDialog(K.L.confirmLeave, isPresented: $confirmLeave, titleVisibility: .visible) {
                 Button(K.L.leaveGroup, role: .destructive) {
                     appState.leaveCurrentGroup()
@@ -276,6 +300,7 @@ struct SettingsSheet: View {
             try await APIClient.shared.patchGroup(
                 id: group.id, fixedCheckinEnabled: on,
                 creatorUserId: profile.userId, creatorRecoveryCode: profile.recoveryCode,
+                accountToken: appState.account?.accountToken,
                 adminPassword: appState.adminPassword)
             await appState.refreshData()
             toast = on ? K.L.toastFixedCheckinOn : K.L.toastFixedCheckinOff
@@ -305,6 +330,7 @@ struct SettingsSheet: View {
                 id: group.id, gymLat: pin.latitude, gymLng: pin.longitude,
                 gymRadius: Int(radius),
                 creatorUserId: profile.userId, creatorRecoveryCode: profile.recoveryCode,
+                accountToken: appState.account?.accountToken,
                 adminPassword: appState.adminPassword)
             await appState.refreshData()
             toast = K.L.toastLocationSaved
@@ -357,6 +383,7 @@ struct SettingsSheet: View {
         do {
             try await APIClient.shared.saveNotifPrefs(
                 groupId: g.id, userId: p.userId, recoveryCode: p.recoveryCode,
+                accountToken: appState.account?.accountToken,
                 notifReminders: notifReminders, notifStreak: notifStreak, notifActivity: notifActivity,
                 reminderTime: store.reminderTime, quietStart: store.quietStart, quietEnd: store.quietEnd,
                 timezone: tz, notifMembers: notifMembers)

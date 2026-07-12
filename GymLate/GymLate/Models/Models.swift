@@ -45,6 +45,40 @@ struct Entry: Codable, Identifiable {
     var type: String  // "late" | "skip" | "attend"
     var reason: String?
     var auto: Bool?   // true = server-generated no-show skip (still counts as a streak miss)
+
+    private enum CodingKeys: String, CodingKey {
+        case id, person, date, mins, ts, type, reason, auto
+    }
+
+    init(id: String, person: String, date: String, mins: Int, ts: Int,
+         type: String, reason: String? = nil, auto: Bool? = nil) {
+        self.id = id; self.person = person; self.date = date; self.mins = mins
+        self.ts = ts; self.type = type; self.reason = reason; self.auto = auto
+    }
+
+    // Custom decode: `auto` is tolerant of both a JSON boolean and a JSON
+    // number (0/1), so a server that forgets to normalize a TINYINT column
+    // (as ours briefly did) can't silently fail the *entire* entries array —
+    // one bad element otherwise throws JSONDecoder.typeMismatch for the whole
+    // GroupData response, which AppState then masks by falling back to
+    // cached/outbox data.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        person = try c.decode(String.self, forKey: .person)
+        date = try c.decode(String.self, forKey: .date)
+        mins = try c.decode(Int.self, forKey: .mins)
+        ts = try c.decode(Int.self, forKey: .ts)
+        type = try c.decode(String.self, forKey: .type)
+        reason = try c.decodeIfPresent(String.self, forKey: .reason)
+        if let b = try? c.decodeIfPresent(Bool.self, forKey: .auto) {
+            auto = b
+        } else if let n = try? c.decodeIfPresent(Int.self, forKey: .auto) {
+            auto = (n != 0)
+        } else {
+            auto = nil
+        }
+    }
 }
 
 // MARK: - Local User Profile
@@ -55,7 +89,9 @@ struct UserProfile: Codable {
     var avatarEmoji: String
     var avatarColor: String
     var avatarImg: String?
-    var recoveryCode: String
+    // nil for profiles registered while signed into a global account (no
+    // recovery code is issued for those — see AccountInfo below).
+    var recoveryCode: String?
     var isCreator: Bool
 }
 
@@ -67,8 +103,49 @@ struct RegisterResponse: Codable {
     var avatarEmoji: String
     var avatarColor: String
     var avatarImg: String?
-    var recoveryCode: String
+    // Omitted by the server when the registration was made with an
+    // accountToken (account-linked registrations never get a recovery code).
+    var recoveryCode: String?
     var isCreator: Bool
+}
+
+// MARK: - Global Account (email/password + Apple/Google SSO)
+
+struct AccountProviders: Codable {
+    var apple: Bool
+    var google: Bool
+}
+
+/// Returned by every /api/account/* auth endpoint. `accountToken` is the
+/// long-lived bearer secret — store it in Keychain only, never UserDefaults.
+struct AccountInfo: Codable {
+    var accountId: String
+    var email: String?
+    var accountToken: String
+    var hasPassword: Bool
+    var providers: AccountProviders
+}
+
+struct AccountGroup: Codable {
+    var id: String
+    var code: String
+    var name: String
+    var profile: UserProfile
+}
+
+struct AccountGroupsResponse: Codable {
+    var groups: [AccountGroup]
+}
+
+struct LinkRecoveryItem: Encodable {
+    var groupId: String
+    var userId: String
+    var recoveryCode: String
+}
+
+struct LinkRecoveryResponse: Codable {
+    var linked: [String]
+    var failed: [String]
 }
 
 struct LoginResponse: Codable {

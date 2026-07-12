@@ -5,6 +5,7 @@ enum APIError: LocalizedError {
     case unauthorized
     case nameTaken
     case wrongCode
+    case notConfigured
     case server(String)
     case network(Error)
 
@@ -14,6 +15,7 @@ enum APIError: LocalizedError {
         case .unauthorized: return "Nicht autorisiert."
         case .nameTaken: return "Dieser Name ist bereits vergeben."
         case .wrongCode: return "Falscher Recovery Code."
+        case .notConfigured: return "Diese Anmeldeart ist noch nicht verfügbar."
         case .server(let code): return "Serverfehler: \(code)"
         case .network(let e): return e.localizedDescription
         }
@@ -64,6 +66,7 @@ final class APIClient {
         if http.statusCode == 404 { throw APIError.notFound }
         if http.statusCode == 401 { throw APIError.unauthorized }
         if http.statusCode == 409 { throw APIError.nameTaken }
+        if http.statusCode == 501 { throw APIError.notConfigured }
         if http.statusCode >= 400 {
             if let errBody = try? JSONDecoder().decode([String: String].self, from: data),
                let code = errBody["error"] {
@@ -98,29 +101,31 @@ final class APIClient {
     func patchGroup(id: String, gymDays: String? = nil, gymLat: Double? = nil, gymLng: Double? = nil,
                     gymRadius: Int? = nil, fixedCheckinEnabled: Bool? = nil,
                     creatorUserId: String? = nil, creatorRecoveryCode: String? = nil,
-                    adminPassword: String? = nil) async throws {
+                    accountToken: String? = nil, adminPassword: String? = nil) async throws {
         struct Body: Encodable {
             var gym_days: String?; var gym_lat: Double?; var gym_lng: Double?; var gym_radius: Int?
             var fixed_checkin_enabled: Bool?; var creatorUserId: String?; var creatorRecoveryCode: String?
-            var adminPassword: String?
+            var accountToken: String?; var adminPassword: String?
         }
         let _: OkResponse = try await request("PATCH", path: "/api/groups/\(id)", body: Body(
             gym_days: gymDays, gym_lat: gymLat, gym_lng: gymLng, gym_radius: gymRadius,
             fixed_checkin_enabled: fixedCheckinEnabled,
             creatorUserId: creatorUserId, creatorRecoveryCode: creatorRecoveryCode,
-            adminPassword: adminPassword))
+            accountToken: accountToken, adminPassword: adminPassword))
     }
 
     // MARK: - Users
 
     func registerUser(groupId: String, name: String, avatarEmoji: String, avatarColor: String,
-                      avatarImg: String? = nil) async throws -> RegisterResponse {
+                      avatarImg: String? = nil, accountToken: String? = nil) async throws -> RegisterResponse {
         struct Body: Encodable {
             let name: String; let avatarEmoji: String; let avatarColor: String; let avatarImg: String?
+            let accountToken: String?
         }
         return try await request("POST", path: "/api/groups/\(groupId)/users",
                                  body: Body(name: name, avatarEmoji: avatarEmoji,
-                                           avatarColor: avatarColor, avatarImg: avatarImg))
+                                           avatarColor: avatarColor, avatarImg: avatarImg,
+                                           accountToken: accountToken))
     }
 
     func loginUser(groupId: String, name: String, recoveryCode: String) async throws -> LoginResponse {
@@ -131,29 +136,32 @@ final class APIClient {
 
     func patchUser(groupId: String, userId: String, name: String? = nil,
                    avatarEmoji: String? = nil, avatarColor: String? = nil, avatarImg: String? = nil,
-                   availDays: String? = nil, recoveryCode: String? = nil,
+                   availDays: String? = nil, recoveryCode: String? = nil, accountToken: String? = nil,
                    streak: Int? = nil, freezes: Int? = nil, adminPassword: String? = nil) async throws {
         struct Body: Encodable {
             var name: String?; var avatarEmoji: String?; var avatarColor: String?; var avatarImg: String?
-            var avail_days: String?; var recoveryCode: String?
+            var avail_days: String?; var recoveryCode: String?; var accountToken: String?
             var streak: Int?; var freezes: Int?; var adminPassword: String?
         }
         let _: OkResponse = try await request("PATCH",
             path: "/api/groups/\(groupId)/users/\(userId)",
             body: Body(name: name, avatarEmoji: avatarEmoji, avatarColor: avatarColor,
                       avatarImg: avatarImg, avail_days: availDays, recoveryCode: recoveryCode,
+                      accountToken: accountToken,
                       streak: streak, freezes: freezes, adminPassword: adminPassword))
     }
 
     func deleteUser(groupId: String, userId: String, actorUserId: String? = nil,
-                    actorRecoveryCode: String? = nil, adminPassword: String? = nil) async throws {
+                    actorRecoveryCode: String? = nil, accountToken: String? = nil,
+                    adminPassword: String? = nil) async throws {
         struct Body: Encodable {
-            var actorUserId: String?; var actorRecoveryCode: String?; var adminPassword: String?
+            var actorUserId: String?; var actorRecoveryCode: String?; var accountToken: String?
+            var adminPassword: String?
         }
         let _: OkResponse = try await request("DELETE",
             path: "/api/groups/\(groupId)/users/\(userId)",
             body: Body(actorUserId: actorUserId, actorRecoveryCode: actorRecoveryCode,
-                      adminPassword: adminPassword))
+                      accountToken: accountToken, adminPassword: adminPassword))
     }
 
     // MARK: - Entries
@@ -168,14 +176,16 @@ final class APIClient {
     }
 
     func deleteEntry(groupId: String, entryId: String, actorUserId: String? = nil,
-                     actorRecoveryCode: String? = nil, adminPassword: String? = nil) async throws {
+                     actorRecoveryCode: String? = nil, accountToken: String? = nil,
+                     adminPassword: String? = nil) async throws {
         struct Body: Encodable {
-            var actorUserId: String?; var actorRecoveryCode: String?; var adminPassword: String?
+            var actorUserId: String?; var actorRecoveryCode: String?; var accountToken: String?
+            var adminPassword: String?
         }
         let _: OkResponse = try await request("DELETE",
             path: "/api/groups/\(groupId)/entries/\(entryId)",
             body: Body(actorUserId: actorUserId, actorRecoveryCode: actorRecoveryCode,
-                      adminPassword: adminPassword))
+                      accountToken: accountToken, adminPassword: adminPassword))
     }
 
     func patchEntry(groupId: String, entryId: String, type: String, date: String,
@@ -223,27 +233,60 @@ final class APIClient {
 
     // MARK: - Push notifications
 
-    func registerAPNsToken(token: String, groupId: String, userId: String, recoveryCode: String) async throws {
-        struct Body: Encodable { let userId: String; let groupId: String; let recoveryCode: String; let token: String }
+    func registerAPNsToken(token: String, groupId: String, userId: String,
+                           recoveryCode: String?, accountToken: String? = nil) async throws {
+        struct Body: Encodable { let userId: String; let groupId: String; let recoveryCode: String?; let accountToken: String?; let token: String }
         let _: OkResponse = try await request("POST", path: "/api/push/apns-token",
-                                               body: Body(userId: userId, groupId: groupId, recoveryCode: recoveryCode, token: token))
+                                               body: Body(userId: userId, groupId: groupId, recoveryCode: recoveryCode, accountToken: accountToken, token: token))
     }
 
-    func saveNotifPrefs(groupId: String, userId: String, recoveryCode: String,
+    func saveNotifPrefs(groupId: String, userId: String, recoveryCode: String?, accountToken: String? = nil,
                         notifReminders: Bool, notifStreak: Bool, notifActivity: Bool,
                         reminderTime: String, quietStart: String, quietEnd: String,
                         timezone: String, notifMembers: [String]?) async throws {
         struct Body: Encodable {
-            let recoveryCode: String
+            let recoveryCode: String?; let accountToken: String?
             let notifReminders: Bool; let notifStreak: Bool; let notifActivity: Bool
             let reminderTime: String; let quietStart: String; let quietEnd: String
             let timezone: String; let notifMembers: [String]?
         }
         let _: OkResponse = try await request("PATCH",
             path: "/api/groups/\(groupId)/users/\(userId)/notif",
-            body: Body(recoveryCode: recoveryCode, notifReminders: notifReminders,
+            body: Body(recoveryCode: recoveryCode, accountToken: accountToken, notifReminders: notifReminders,
                        notifStreak: notifStreak, notifActivity: notifActivity,
                        reminderTime: reminderTime, quietStart: quietStart, quietEnd: quietEnd,
                        timezone: timezone, notifMembers: notifMembers))
+    }
+
+    // MARK: - Global Accounts (email/password + Apple/Google SSO)
+
+    func registerAccount(email: String, password: String) async throws -> AccountInfo {
+        struct Body: Encodable { let email: String; let password: String }
+        return try await request("POST", path: "/api/account/register", body: Body(email: email, password: password))
+    }
+
+    func loginAccount(email: String, password: String) async throws -> AccountInfo {
+        struct Body: Encodable { let email: String; let password: String }
+        return try await request("POST", path: "/api/account/login", body: Body(email: email, password: password))
+    }
+
+    func appleSignIn(identityToken: String, email: String?) async throws -> AccountInfo {
+        struct Body: Encodable { let identityToken: String; let email: String? }
+        return try await request("POST", path: "/api/account/apple", body: Body(identityToken: identityToken, email: email))
+    }
+
+    func googleSignIn(identityToken: String) async throws -> AccountInfo {
+        struct Body: Encodable { let identityToken: String }
+        return try await request("POST", path: "/api/account/google", body: Body(identityToken: identityToken))
+    }
+
+    func accountGroups(accountToken: String) async throws -> AccountGroupsResponse {
+        struct Body: Encodable { let accountToken: String }
+        return try await request("POST", path: "/api/account/groups", body: Body(accountToken: accountToken))
+    }
+
+    func linkRecovery(accountToken: String, links: [LinkRecoveryItem]) async throws -> LinkRecoveryResponse {
+        struct Body: Encodable { let accountToken: String; let links: [LinkRecoveryItem] }
+        return try await request("POST", path: "/api/account/link-recovery", body: Body(accountToken: accountToken, links: links))
     }
 }

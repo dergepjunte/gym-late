@@ -106,8 +106,31 @@ function openSettings() {
   document.getElementById('mset-notif-section').style.display =
     ('Notification' in window) ? '' : 'none';
 
+  // Account & Login
+  const acc = loadAccount();
+  document.getElementById('mset-account-lbl').textContent = T.mgAccountSectionLbl;
+  document.getElementById('mset-account-nolink').style.display = acc ? 'none' : '';
+  document.getElementById('mset-account-linked').style.display = acc ? '' : 'none';
+  if (acc) {
+    document.getElementById('mset-account-email').textContent = acc.email || '';
+  } else {
+    document.getElementById('mset-account-hint').textContent = T.migSub;
+    document.getElementById('mset-account-secure-btn').textContent = T.migSetPw;
+  }
+  document.getElementById('mset-account-signout-btn').textContent = T.mgAccountSignOut;
+
   openPage('modal-settings');
 }
+
+document.getElementById('mset-account-secure-btn').addEventListener('click', () => {
+  closePage('modal-settings');
+  openAccountAuth('register', 'migrate');
+});
+document.getElementById('mset-account-signout-btn').addEventListener('click', () => {
+  clearAccount();
+  closePage('modal-settings');
+  showToast(T.mgAccountSignedOut);
+});
 
 document.getElementById('mset-close').addEventListener('click', () => closePage('modal-settings'));
 document.getElementById('mset-leave-btn').addEventListener('click', () => {

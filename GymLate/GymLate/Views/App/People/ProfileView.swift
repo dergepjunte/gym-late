@@ -188,6 +188,7 @@ struct ProfileView: View {
                 try await APIClient.shared.deleteUser(
                     groupId: group.id, userId: person.id,
                     actorUserId: actor.userId, actorRecoveryCode: actor.recoveryCode,
+                    accountToken: appState.account?.accountToken,
                     adminPassword: appState.adminPassword)
                 await appState.refreshData()
                 toast = K.L.toastKicked
@@ -338,7 +339,7 @@ struct EditProfileSheet: View {
                 groupId: group.id, userId: person.id,
                 name: name, avatarEmoji: emoji, avatarColor: color,
                 avatarImg: img ?? "",
-                recoveryCode: profile.recoveryCode)
+                recoveryCode: profile.recoveryCode, accountToken: appState.account?.accountToken)
             var updated = profile
             updated.name = name
             updated.avatarEmoji = emoji

@@ -4,6 +4,7 @@ const express = require('express');
 const crypto  = require('crypto');
 const path    = require('path');
 const fs      = require('fs');
+const { jwtVerify, createRemoteJWKSet } = require('jose');
 
 // ── Push Notification providers (optional — graceful no-op if env vars absent) ─
 let webpush = null;
@@ -58,8 +59,129 @@ function isAdmin(req) {
   return pw.length > 0 && sha256(pw) === ADMIN_PW_HASH;
 }
 
+// ── Account auth (email/password + Apple/Google SSO) ──────────────────────────
+// Password hashing uses Node's built-in crypto.scrypt (no bcrypt/argon2 —
+// avoids a native dependency, consistent with the rest of this file only
+// using built-in crypto). Stored format: "scrypt$N$r$p$<saltHex>$<hashHex>".
+const SCRYPT_N = 16384, SCRYPT_R = 8, SCRYPT_P = 1, SCRYPT_KEYLEN = 64;
+
+function hashPassword(password) {
+  return new Promise((resolve, reject) => {
+    const salt = crypto.randomBytes(16);
+    crypto.scrypt(password, salt, SCRYPT_KEYLEN, { N: SCRYPT_N, r: SCRYPT_R, p: SCRYPT_P }, (err, hash) => {
+      if (err) return reject(err);
+      resolve(`scrypt$${SCRYPT_N}$${SCRYPT_R}$${SCRYPT_P}$${salt.toString('hex')}$${hash.toString('hex')}`);
+    });
+  });
+}
+
+function verifyPassword(password, stored) {
+  return new Promise((resolve) => {
+    const parts = String(stored || '').split('$');
+    if (parts.length !== 6 || parts[0] !== 'scrypt') return resolve(false);
+    const [, nStr, rStr, pStr, saltHex, hashHex] = parts;
+    const salt = Buffer.from(saltHex, 'hex');
+    const expected = Buffer.from(hashHex, 'hex');
+    crypto.scrypt(password, salt, expected.length,
+      { N: Number(nStr), r: Number(rStr), p: Number(pStr) },
+      (err, actual) => {
+        if (err || actual.length !== expected.length) return resolve(false);
+        resolve(crypto.timingSafeEqual(actual, expected));
+      });
+  });
+}
+
+// Opaque bearer token (like recovery_code, but global to an account). Only
+// its SHA-256 hash is ever stored server-side.
+function genAccountToken() { return crypto.randomBytes(32).toString('hex'); }
+
+async function accountFromToken(req) {
+  const token = String(req.body?.accountToken ?? '').trim();
+  if (!token) return null;
+  return database.one('SELECT * FROM accounts WHERE token_hash = ?', [sha256(token)]);
+}
+
+// Shared "am I allowed to act as this per-group users row" check, used by
+// every endpoint that today only accepts a recovery code. Accepts EITHER
+// the row's own recovery code OR a valid accountToken for the account it's
+// linked to — so migrated users can drop the recovery code entirely while
+// un-migrated users are completely unaffected.
+async function authorizesAsUser(req, userRow, recoveryCodeRaw) {
+  const code = String(recoveryCodeRaw ?? '').replace(/-/g, '').trim().toUpperCase();
+  if (code && userRow.recovery_code.replace(/-/g, '') === code) return true;
+  if (userRow.account_id) {
+    const account = await accountFromToken(req);
+    if (account && account.id === userRow.account_id) return true;
+  }
+  return false;
+}
+
+function accountResponse(account, token) {
+  return {
+    accountId: account.id,
+    email: account.email || null,
+    accountToken: token,
+    hasPassword: !!account.password_hash,
+    providers: { apple: !!account.apple_sub, google: !!account.google_sub },
+  };
+}
+
+function normalizeEmail(email) {
+  return String(email || '').trim().toLowerCase();
+}
+
+// Apple/Google identity tokens are RS256 JWTs verified against each
+// provider's public JWKS (key rotation handled by `jose`'s remote-set cache).
+const APPLE_JWKS = createRemoteJWKSet(new URL('https://appleid.apple.com/auth/keys'));
+const GOOGLE_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'));
+
+async function verifyAppleToken(idToken) {
+  const aud = [process.env.APPLE_SERVICES_ID, process.env.APPLE_BUNDLE_ID].filter(Boolean);
+  if (!aud.length) return null; // not configured
+  const { payload } = await jwtVerify(idToken, APPLE_JWKS, { issuer: 'https://appleid.apple.com', audience: aud });
+  return { sub: payload.sub, email: payload.email || null };
+}
+
+async function verifyGoogleToken(idToken) {
+  const aud = [process.env.GOOGLE_WEB_CLIENT_ID, process.env.GOOGLE_IOS_CLIENT_ID].filter(Boolean);
+  if (!aud.length) return null; // not configured
+  const { payload } = await jwtVerify(idToken, GOOGLE_JWKS, { issuer: 'https://accounts.google.com', audience: aud });
+  return { sub: payload.sub, email: payload.email || null };
+}
+
 function isUniqueError(e) {
   return e?.code === 'SQLITE_CONSTRAINT_UNIQUE' || e?.code === 'ER_DUP_ENTRY';
+}
+
+// Resolve an SSO login to an account: match by provider sub, else fall back
+// to matching an existing account by email (so signing in with Google after
+// already having an email/password or Apple account on the same address
+// links them instead of creating a duplicate), else create a brand-new
+// account. `column` is always a hardcoded literal from our own code
+// ('apple_sub' | 'google_sub'), never user input.
+async function findOrLinkOrCreateAccount(column, sub, email) {
+  const bySub = await database.one(`SELECT * FROM accounts WHERE ${column} = ?`, [sub]);
+  if (bySub) return bySub;
+
+  if (email) {
+    const byEmail = await database.one('SELECT * FROM accounts WHERE email = ?', [email]);
+    if (byEmail) {
+      await database.run(`UPDATE accounts SET ${column} = ? WHERE id = ?`, [sub, byEmail.id]);
+      byEmail[column] = sub;
+      return byEmail;
+    }
+  }
+
+  const id = crypto.randomUUID();
+  await database.run(
+    `INSERT INTO accounts (id, email, ${column}, created_at) VALUES (?,?,?,?)`,
+    [id, email || null, sub, Date.now()]
+  );
+  return {
+    id, email: email || null, password_hash: null,
+    apple_sub: column === 'apple_sub' ? sub : null,
+    google_sub: column === 'google_sub' ? sub : null,
+  };
 }
 
 function insertIgnore() {
@@ -257,6 +379,27 @@ async function initSchema() {
     try { await database.run('ALTER TABLE entries ADD COLUMN auto TINYINT NOT NULL DEFAULT 0'); } catch (e) {
       if (e.code !== 'ER_DUP_FIELDNAME') throw e;
     }
+    // Global accounts (email/password + Apple/Google SSO), decoupled from the
+    // per-group `users` rows. One account can link to many `users` rows (one
+    // per group). NULLs are distinct under UNIQUE in MySQL, so an account
+    // missing a given credential never collides with another.
+    await database.run(`
+      CREATE TABLE IF NOT EXISTS accounts (
+        id VARCHAR(36) PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NULL,
+        password_hash VARCHAR(255) NULL,
+        apple_sub VARCHAR(255) UNIQUE NULL,
+        google_sub VARCHAR(255) UNIQUE NULL,
+        token_hash VARCHAR(64) UNIQUE NULL,
+        created_at BIGINT NOT NULL
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    try { await database.run('ALTER TABLE users ADD COLUMN account_id VARCHAR(36) NULL'); } catch (e) {
+      if (e.code !== 'ER_DUP_FIELDNAME') throw e;
+    }
+    try { await database.run('ALTER TABLE users ADD INDEX idx_users_account_id (account_id)'); } catch (e) {
+      if (e.code !== 'ER_DUP_KEYNAME') throw e;
+    }
     // Push notification tables
     await database.run(`
       CREATE TABLE IF NOT EXISTS push_subscriptions (
@@ -382,6 +525,23 @@ async function initSchema() {
   try { database.exec("ALTER TABLE entries ADD COLUMN type TEXT NOT NULL DEFAULT 'late'"); } catch {}
   try { database.exec('ALTER TABLE entries ADD COLUMN reason TEXT'); } catch {}
   try { database.exec('ALTER TABLE entries ADD COLUMN auto INTEGER NOT NULL DEFAULT 0'); } catch {}
+
+  // Global accounts (email/password + Apple/Google SSO), decoupled from the
+  // per-group `users` rows. One account can link to many `users` rows (one
+  // per group). NULLs are distinct under UNIQUE in SQLite too.
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS accounts (
+      id            TEXT PRIMARY KEY,
+      email         TEXT UNIQUE,
+      password_hash TEXT,
+      apple_sub     TEXT UNIQUE,
+      google_sub    TEXT UNIQUE,
+      token_hash    TEXT UNIQUE,
+      created_at    INTEGER NOT NULL
+    );
+  `);
+  try { database.exec('ALTER TABLE users ADD COLUMN account_id TEXT'); } catch {}
+  try { database.exec('CREATE INDEX IF NOT EXISTS idx_users_account_id ON users(account_id)'); } catch {}
 
   // Push notification tables
   database.exec(`
@@ -810,9 +970,9 @@ app.get('/api/push/vapid-public-key', (req, res) => {
 app.post('/api/push/subscribe', ah(async (req, res) => {
   const { userId, groupId, recoveryCode, subscription } = req.body || {};
   if (!userId || !groupId || !subscription?.endpoint) return res.status(400).json({ error: 'invalid' });
-  const user = await database.one('SELECT id, recovery_code FROM users WHERE id = ? AND group_id = ?', [userId, groupId]);
+  const user = await database.one('SELECT id, recovery_code, account_id FROM users WHERE id = ? AND group_id = ?', [userId, groupId]);
   if (!user) return res.status(404).json({ error: 'not_found' });
-  if (user.recovery_code.replace(/-/g, '') !== String(recoveryCode || '').replace(/-/g, '').toUpperCase()) {
+  if (!await authorizesAsUser(req, user, recoveryCode)) {
     return res.status(401).json({ error: 'unauthorized' });
   }
   await database.run(
@@ -841,9 +1001,9 @@ app.delete('/api/push/subscribe', ah(async (req, res) => {
 app.post('/api/push/apns-token', ah(async (req, res) => {
   const { userId, groupId, recoveryCode, token } = req.body || {};
   if (!userId || !groupId || !token) return res.status(400).json({ error: 'invalid' });
-  const user = await database.one('SELECT id, recovery_code FROM users WHERE id = ? AND group_id = ?', [userId, groupId]);
+  const user = await database.one('SELECT id, recovery_code, account_id FROM users WHERE id = ? AND group_id = ?', [userId, groupId]);
   if (!user) return res.status(404).json({ error: 'not_found' });
-  if (user.recovery_code.replace(/-/g, '') !== String(recoveryCode || '').replace(/-/g, '').toUpperCase()) {
+  if (!await authorizesAsUser(req, user, recoveryCode)) {
     return res.status(401).json({ error: 'unauthorized' });
   }
   await database.run(
@@ -862,10 +1022,9 @@ app.post('/api/push/apns-token', ah(async (req, res) => {
 // Save notification preferences
 app.patch('/api/groups/:id/users/:uid/notif', ah(async (req, res) => {
   const { id, uid } = req.params;
-  const user = await database.one('SELECT id, recovery_code FROM users WHERE id = ? AND group_id = ?', [uid, id]);
+  const user = await database.one('SELECT id, recovery_code, account_id FROM users WHERE id = ? AND group_id = ?', [uid, id]);
   if (!user) return res.status(404).json({ error: 'not_found' });
-  const rc = String(req.body?.recoveryCode || '').replace(/-/g, '').toUpperCase();
-  if (!isAdmin(req) && user.recovery_code.replace(/-/g, '') !== rc) return res.status(401).json({ error: 'unauthorized' });
+  if (!isAdmin(req) && !await authorizesAsUser(req, user, req.body?.recoveryCode)) return res.status(401).json({ error: 'unauthorized' });
 
   const sets = []; const params = [];
   const boolField = (key, col) => {
@@ -937,15 +1096,15 @@ app.patch('/api/groups/:id', ah(async (req, res) => {
   const group = await database.one('SELECT id, creator_user_id FROM `groups` WHERE id = ?', [id]);
   if (!group) return res.status(404).json({ error: 'not_found' });
 
-  // Auth: admin password OR creator + recovery code
+  // Auth: admin password OR creator + (recovery code OR linked accountToken)
   const admin = isAdmin(req);
   if (!admin) {
     const creatorUserId = String(req.body?.creatorUserId ?? '').trim();
-    const creatorRecoveryCode = String(req.body?.creatorRecoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
-    if (!creatorUserId || !creatorRecoveryCode) return res.status(400).json({ error: 'missing_fields' });
-    const actor = await database.one('SELECT id, recovery_code, is_creator FROM users WHERE id = ? AND group_id = ?', [creatorUserId, id]);
+    const creatorRecoveryCode = req.body?.creatorRecoveryCode;
+    if (!creatorUserId) return res.status(400).json({ error: 'missing_fields' });
+    const actor = await database.one('SELECT id, recovery_code, is_creator, account_id FROM users WHERE id = ? AND group_id = ?', [creatorUserId, id]);
     if (!actor) return res.status(401).json({ error: 'unauthorized' });
-    if (actor.recovery_code.replace(/-/g, '') !== creatorRecoveryCode) return res.status(401).json({ error: 'unauthorized' });
+    if (!await authorizesAsUser(req, actor, creatorRecoveryCode)) return res.status(401).json({ error: 'unauthorized' });
     if (Number(actor.is_creator) !== 1) return res.status(403).json({ error: 'not_creator' });
   }
 
@@ -1110,7 +1269,10 @@ app.get('/api/groups/:id', ah(async (req, res) => {
     gymLat: g.gym_lat ?? null, gymLng: g.gym_lng ?? null, gymRadius: g.gym_radius ?? null,
     fixedCheckinEnabled: Boolean(Number(g.fixed_checkin_enabled)),
     checkinTimeDate: g.checkin_time_date ?? null, checkinTime: g.checkin_time ?? null,
-    people, entries: allEntries });
+    // auto is stored as a TINYINT/INTEGER (0/1); normalize to a real boolean
+    // like isCreator/fixedCheckinEnabled — the iOS client's Bool? decode is
+    // strict and a numeric 0/1 here fails the *entire* entries array.
+    people, entries: allEntries.map(e => ({ ...e, auto: !!e.auto })) });
 }));
 
 // ── Users ────────────────────────────────────────────────────────────────────
@@ -1129,6 +1291,12 @@ app.post('/api/groups/:id/users', ah(async (req, res) => {
   const g = await database.one('SELECT id, creator_user_id FROM `groups` WHERE id = ?', [id]);
   if (!g) return res.status(404).json({ error: 'not_found' });
 
+  // If the client is already signed into a global account, link the new
+  // per-group row to it immediately (no recovery code shown/needed). A
+  // recovery_code is still generated and stored internally so the NOT NULL
+  // column and all legacy per-group auth paths keep working unchanged.
+  const account = await accountFromToken(req);
+
   const userId = crypto.randomUUID();
   const recoveryCode = genRecoveryCode();
   const isCreator = g.creator_user_id === null ? 1 : 0;
@@ -1136,9 +1304,9 @@ app.post('/api/groups/:id/users', ah(async (req, res) => {
 
   try {
     await database.run(`
-      INSERT INTO users (id, group_id, name, recovery_code, avatar_emoji, avatar_color, avatar_img, is_creator, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [userId, id, name, recoveryCode, avatarEmoji, avatarColor, avatarImg, isCreator, now]);
+      INSERT INTO users (id, group_id, name, recovery_code, avatar_emoji, avatar_color, avatar_img, is_creator, created_at, account_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [userId, id, name, recoveryCode, avatarEmoji, avatarColor, avatarImg, isCreator, now, account?.id || null]);
 
     await database.run(`${insertIgnore()} INTO members (id, group_id, name, created_at) VALUES (?,?,?,?)`, [userId, id, name, now]);
 
@@ -1146,7 +1314,9 @@ app.post('/api/groups/:id/users', ah(async (req, res) => {
       await database.run('UPDATE `groups` SET creator_user_id = ? WHERE id = ? AND creator_user_id IS NULL', [userId, id]);
     }
 
-    res.json({ userId, name, avatarEmoji, avatarColor, avatarImg, recoveryCode, isCreator: isCreator === 1 });
+    const resp = { userId, name, avatarEmoji, avatarColor, avatarImg, isCreator: isCreator === 1 };
+    if (!account) resp.recoveryCode = recoveryCode;
+    res.json(resp);
   } catch (e) {
     if (isUniqueError(e)) return res.status(409).json({ error: 'already_exists' });
     throw e;
@@ -1181,11 +1351,10 @@ app.post('/api/groups/:id/users/login', ah(async (req, res) => {
 app.patch('/api/groups/:id/users/:uid', ah(async (req, res) => {
   const { id, uid } = req.params;
   const admin = isAdmin(req);
-  const recoveryCode = String(req.body?.recoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
 
-  const user = await database.one('SELECT id, recovery_code, name, avail_edited_at FROM users WHERE id = ? AND group_id = ?', [uid, id]);
+  const user = await database.one('SELECT id, recovery_code, name, avail_edited_at, account_id FROM users WHERE id = ? AND group_id = ?', [uid, id]);
   if (!user) return res.status(404).json({ error: 'not_found' });
-  if (!admin && user.recovery_code.replace(/-/g, '') !== recoveryCode) return res.status(401).json({ error: 'unauthorized' });
+  if (!admin && !await authorizesAsUser(req, user, req.body?.recoveryCode)) return res.status(401).json({ error: 'unauthorized' });
 
   const newName = req.body?.name ? String(req.body.name).trim().slice(0, 30) : null;
   const newEmoji = req.body?.avatarEmoji ? String(req.body.avatarEmoji).slice(0, 16) : null;
@@ -1252,10 +1421,9 @@ app.delete('/api/groups/:id/users/:uid', ah(async (req, res) => {
   const { id, uid } = req.params;
   if (!isAdmin(req)) {
     const actorId = String(req.body?.actorUserId ?? '');
-    const actorCode = String(req.body?.actorRecoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
-    const actor = await database.one('SELECT id, recovery_code, is_creator FROM users WHERE id = ? AND group_id = ?', [actorId, id]);
+    const actor = await database.one('SELECT id, recovery_code, is_creator, account_id FROM users WHERE id = ? AND group_id = ?', [actorId, id]);
     if (!actor) return res.status(401).json({ error: 'unauthorized' });
-    if (actor.recovery_code.replace(/-/g, '') !== actorCode) return res.status(401).json({ error: 'unauthorized' });
+    if (!await authorizesAsUser(req, actor, req.body?.actorRecoveryCode)) return res.status(401).json({ error: 'unauthorized' });
     if (Number(actor.is_creator) !== 1) return res.status(403).json({ error: 'not_creator' });
     if (uid === actorId) return res.status(400).json({ error: 'cannot_kick_self' });
   }
@@ -1267,6 +1435,139 @@ app.delete('/api/groups/:id/users/:uid', ah(async (req, res) => {
   await database.run('DELETE FROM members WHERE group_id = ? AND name = ?', [id, target.name]);
 
   res.json({ ok: true });
+}));
+
+// ── Accounts (global email/password + Apple/Google SSO, linkable across groups) ─
+
+// Public config so clients don't hardcode SSO client IDs. Non-secret.
+app.get('/api/auth/config', (req, res) => {
+  res.json({
+    appleServicesId: process.env.APPLE_SERVICES_ID || null,
+    googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID || null,
+  });
+});
+
+app.post('/api/account/register', ah(async (req, res) => {
+  const email = normalizeEmail(req.body?.email);
+  const password = String(req.body?.password ?? '');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'invalid_email' });
+  if (password.length < 8) return res.status(400).json({ error: 'weak_password' });
+
+  const id = crypto.randomUUID();
+  const passwordHash = await hashPassword(password);
+  const token = genAccountToken();
+
+  try {
+    await database.run(
+      'INSERT INTO accounts (id, email, password_hash, token_hash, created_at) VALUES (?,?,?,?,?)',
+      [id, email, passwordHash, sha256(token), Date.now()]
+    );
+    res.json(accountResponse({ id, email, password_hash: passwordHash, apple_sub: null, google_sub: null }, token));
+  } catch (e) {
+    if (isUniqueError(e)) return res.status(409).json({ error: 'email_taken' });
+    throw e;
+  }
+}));
+
+app.post('/api/account/login', ah(async (req, res) => {
+  const email = normalizeEmail(req.body?.email);
+  const password = String(req.body?.password ?? '');
+  if (!email || !password) return res.status(400).json({ error: 'missing_fields' });
+
+  const account = await database.one('SELECT * FROM accounts WHERE email = ?', [email]);
+  if (!account || !account.password_hash || !await verifyPassword(password, account.password_hash)) {
+    return res.status(401).json({ error: 'wrong_credentials' });
+  }
+
+  const token = genAccountToken();
+  await database.run('UPDATE accounts SET token_hash = ? WHERE id = ?', [sha256(token), account.id]);
+  res.json(accountResponse(account, token));
+}));
+
+app.post('/api/account/apple', ah(async (req, res) => {
+  const idToken = String(req.body?.identityToken ?? '');
+  if (!idToken) return res.status(400).json({ error: 'missing_token' });
+  let claims;
+  try { claims = await verifyAppleToken(idToken); }
+  catch { return res.status(401).json({ error: 'invalid_token' }); }
+  if (!claims) return res.status(501).json({ error: 'sso_not_configured' });
+
+  // Apple only ever sends the email on the user's FIRST sign-in; the client
+  // must resend it (from that first response) on subsequent calls if it
+  // wants email-based account linking to keep working.
+  const email = claims.email ? normalizeEmail(claims.email)
+              : req.body?.email ? normalizeEmail(req.body.email) : null;
+  const account = await findOrLinkOrCreateAccount('apple_sub', claims.sub, email);
+  const token = genAccountToken();
+  await database.run('UPDATE accounts SET token_hash = ? WHERE id = ?', [sha256(token), account.id]);
+  res.json(accountResponse(account, token));
+}));
+
+app.post('/api/account/google', ah(async (req, res) => {
+  const idToken = String(req.body?.identityToken ?? '');
+  if (!idToken) return res.status(400).json({ error: 'missing_token' });
+  let claims;
+  try { claims = await verifyGoogleToken(idToken); }
+  catch { return res.status(401).json({ error: 'invalid_token' }); }
+  if (!claims) return res.status(501).json({ error: 'sso_not_configured' });
+
+  const email = claims.email ? normalizeEmail(claims.email) : null;
+  const account = await findOrLinkOrCreateAccount('google_sub', claims.sub, email);
+  const token = genAccountToken();
+  await database.run('UPDATE accounts SET token_hash = ? WHERE id = ?', [sha256(token), account.id]);
+  res.json(accountResponse(account, token));
+}));
+
+// The migration endpoint: link one or more existing per-group recovery-code
+// users to this account in a single call, so a person in multiple groups
+// migrates everything from one popup visit rather than group-by-group.
+app.post('/api/account/link-recovery', ah(async (req, res) => {
+  const account = await accountFromToken(req);
+  if (!account) return res.status(401).json({ error: 'unauthorized' });
+  const links = Array.isArray(req.body?.links) ? req.body.links : [];
+
+  const linked = [];
+  const failed = [];
+  for (const link of links) {
+    const groupId = String(link?.groupId ?? '');
+    const userId = String(link?.userId ?? '');
+    const code = String(link?.recoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
+    const user = groupId && userId
+      ? await database.one('SELECT id, recovery_code FROM users WHERE id = ? AND group_id = ?', [userId, groupId])
+      : null;
+    if (user && code && user.recovery_code.replace(/-/g, '') === code) {
+      await database.run('UPDATE users SET account_id = ? WHERE id = ?', [account.id, userId]);
+      linked.push(groupId);
+    } else {
+      failed.push(groupId);
+    }
+  }
+  res.json({ linked, failed });
+}));
+
+// One call, every group: lets a fresh sign-in (new device, or after
+// migrating) repopulate the full multi-group local state with no per-group
+// recovery codes involved.
+app.post('/api/account/groups', ah(async (req, res) => {
+  const account = await accountFromToken(req);
+  if (!account) return res.status(401).json({ error: 'unauthorized' });
+
+  const rows = await database.all(`
+    SELECT u.id AS user_id, u.group_id, u.name, u.avatar_emoji, u.avatar_color, u.avatar_img, u.is_creator,
+           g.code, g.name AS group_name
+    FROM users u JOIN \`groups\` g ON g.id = u.group_id
+    WHERE u.account_id = ?
+  `, [account.id]);
+
+  res.json({
+    groups: rows.map(r => ({
+      id: r.group_id, code: r.code, name: r.group_name,
+      profile: {
+        userId: r.user_id, name: r.name, avatarEmoji: r.avatar_emoji, avatarColor: r.avatar_color,
+        avatarImg: r.avatar_img || null, isCreator: Number(r.is_creator) === 1,
+      },
+    })),
+  });
 }));
 
 // ── Members (legacy, kept for compatibility) ─────────────────────────────────
@@ -1412,11 +1713,10 @@ app.delete('/api/groups/:id/entries/:eid', ah(async (req, res) => {
   if (!isAdmin(req)) {
     // Require creator auth for non-admin deletes
     const actorId = String(req.body?.actorUserId ?? '');
-    const actorCode = String(req.body?.actorRecoveryCode ?? '').replace(/-/g, '').trim().toUpperCase();
     if (!actorId) return res.status(401).json({ error: 'unauthorized' });
-    const actor = await database.one('SELECT recovery_code, is_creator FROM users WHERE id = ? AND group_id = ?', [actorId, id]);
+    const actor = await database.one('SELECT recovery_code, is_creator, account_id FROM users WHERE id = ? AND group_id = ?', [actorId, id]);
     if (!actor) return res.status(401).json({ error: 'unauthorized' });
-    if (actor.recovery_code.replace(/-/g, '') !== actorCode) return res.status(401).json({ error: 'unauthorized' });
+    if (!await authorizesAsUser(req, actor, req.body?.actorRecoveryCode)) return res.status(401).json({ error: 'unauthorized' });
     if (Number(actor.is_creator) !== 1) return res.status(403).json({ error: 'not_creator' });
   }
   const entry = await database.one('SELECT person, date, type FROM entries WHERE id = ? AND group_id = ?', [eid, id]);

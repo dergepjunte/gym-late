@@ -5,6 +5,16 @@ handleAvatarUpload('psu-img-input', 'psu-preview', 'psu-upload-btn', 'psu-upload
 handleAvatarUpload('ep-img-input',  'ep-preview',  'ep-upload-btn',  'ep-upload-msg',  img => { epSelImg = img; });
 
 function openProfileSetup() {
+  // Recovery codes are retired for brand-new profiles: anyone without an
+  // account yet is routed through email/password signup first. Once
+  // afterAccountAuth('signup') completes it calls openProfileSetup() again,
+  // this time with loadAccount() populated, and we fall through below.
+  // Existing recovery-code users are unaffected — "Already registered? Log
+  // in →" (below) still works with no account at all.
+  if (!loadAccount()) {
+    openAccountAuth('register', 'signup');
+    return;
+  }
   selEmoji = '🏋️'; selColor = '#7c3aed'; selImg = null;
   const prev = document.getElementById('psu-preview');
   prev.textContent = selEmoji;
@@ -82,10 +92,15 @@ document.getElementById('psu-submit-new').addEventListener('click', async () => 
   errEl.textContent = '';
   document.getElementById('psu-submit-new').disabled = true;
   try {
-    const r = await api.registerUser(pendingGroup.id, { name, avatarEmoji: selEmoji, avatarColor: selColor, avatarImg: selImg });
-    saveUser(pendingGroup.id, { userId:r.userId, name:r.name, avatarEmoji:r.avatarEmoji, avatarColor:r.avatarColor, avatarImg:r.avatarImg||null, recoveryCode:r.recoveryCode, isCreator:r.isCreator });
+    const acc = loadAccount();
+    const r = await api.registerUser(pendingGroup.id, {
+      name, avatarEmoji: selEmoji, avatarColor: selColor, avatarImg: selImg,
+      accountToken: acc?.accountToken,
+    });
+    saveUser(pendingGroup.id, { userId:r.userId, name:r.name, avatarEmoji:r.avatarEmoji, avatarColor:r.avatarColor, avatarImg:r.avatarImg||null, recoveryCode:r.recoveryCode||null, isCreator:r.isCreator });
     closePage('modal-profile-setup');
-    showRecoveryCode(r.recoveryCode);
+    if (r.recoveryCode) showRecoveryCode(r.recoveryCode);
+    else enterGroup(pendingGroup);
   } catch(e) {
     errEl.textContent = e.status===409 ? T.psuErrTaken : T.errServer;
   } finally { document.getElementById('psu-submit-new').disabled = false; }

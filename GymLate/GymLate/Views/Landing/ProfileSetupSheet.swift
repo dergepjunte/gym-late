@@ -15,6 +15,10 @@ struct ProfileSetupSheet: View {
     @State private var isLoading = false
     @State private var showRecoveryCode = false
     @State private var createdRecoveryCode = ""
+    // Recovery codes are retired for brand-new profiles: a create-mode entry
+    // with no local account yet is gated behind account creation first, then
+    // falls through to this same view once appState.account is populated.
+    @State private var showAccountGate = false
 
     enum Mode { case create, login }
 
@@ -56,6 +60,12 @@ struct ProfileSetupSheet: View {
                     showRecoveryCode = false
                     dismiss()
                 }
+            }
+            .fullScreenCover(isPresented: $showAccountGate) {
+                AccountAuthSheet(purpose: .signup, onCancel: { dismiss() })
+            }
+            .onAppear {
+                if mode == .create && appState.account == nil { showAccountGate = true }
             }
         }
     }
@@ -134,14 +144,19 @@ struct ProfileSetupSheet: View {
         do {
             if mode == .create {
                 let resp = try await APIClient.shared.registerUser(
-                    groupId: group.id, name: n, avatarEmoji: emoji, avatarColor: color)
+                    groupId: group.id, name: n, avatarEmoji: emoji, avatarColor: color,
+                    accountToken: appState.account?.accountToken)
                 let profile = UserProfile(userId: resp.userId, name: resp.name,
                                          avatarEmoji: resp.avatarEmoji, avatarColor: resp.avatarColor,
                                          avatarImg: resp.avatarImg, recoveryCode: resp.recoveryCode,
                                          isCreator: resp.isCreator)
-                createdRecoveryCode = resp.recoveryCode
                 await appState.enterGroup(group, profile: profile)
-                showRecoveryCode = true
+                if let code = resp.recoveryCode {
+                    createdRecoveryCode = code
+                    showRecoveryCode = true
+                } else {
+                    dismiss()
+                }
             } else {
                 let resp = try await APIClient.shared.loginUser(
                     groupId: group.id, name: n, recoveryCode: recoveryCode)

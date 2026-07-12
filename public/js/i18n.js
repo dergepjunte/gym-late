@@ -66,6 +66,20 @@ const TRANS = {
     // Recovery code modal
     rcTitle:'Recovery Code sichern!', rcSub:'Ohne diesen Code kannst du dich auf neuen Geräten nicht einloggen.',
     rcCopy:'Code kopieren', rcDone:'Ich hab\'s gespeichert! →',
+    // Account auth (email/password)
+    aaRegTitle:'Konto erstellen', aaLoginTitle:'Anmelden',
+    aaEmailLbl:'E-Mail', aaPwLbl:'Passwort',
+    aaRegBtn:'Konto erstellen', aaLoginBtn:'Anmelden',
+    aaToLogin:'Bereits ein Konto? Anmelden →', aaToReg:'Neues Konto erstellen →',
+    lsSigninBtn:'Schon ein Konto? Anmelden →',
+    aaErrEmail:'Bitte gültige E-Mail eingeben.', aaErrPw:'Passwort muss mind. 8 Zeichen haben.',
+    aaErrTaken:'Diese E-Mail ist bereits registriert.', aaErrWrong:'Falsche E-Mail oder Passwort.',
+    // Migration (recovery-code → account)
+    migTitle:'Konto sichern', migSub:'Füge E-Mail & Passwort hinzu, damit du deine Gruppen nie verlierst — auch auf neuen Geräten.',
+    migSetPw:'E-Mail & Passwort einrichten', migSkip:'Später',
+    migBannerTitle:'Konto sichern', migBannerSub:'Tippe, um dein Konto zu sichern',
+    migSuccess:'Konto gesichert — alle Gruppen verknüpft!',
+    mgAccountSectionLbl:'Konto', mgAccountSignOut:'Abmelden', mgAccountSignedOut:'Abgemeldet',
     // Profile view
     notifPrimerTitle:'Benachrichtigungen', notifPrimerBody:'GymLate erinnert dich an Gym-Tage und warnt dich, wenn dein Streak in Gefahr ist.', notifPrimerEnable:'Benachrichtigungen erlauben', notifPrimerLater:'Jetzt nicht',
     pvSettingsBtn:'⚙ Einstellungen',
@@ -91,6 +105,8 @@ const TRANS = {
     wS3label:'ihr habt verbraten', wS3sub:'Minuten',
     wS3hours: (h,m) => `das sind ${h}h ${m}min`,
     wS4label:'Zuspätkommer<br>der Woche',
+    wSkipLabel:'ihr habt gekniffen', wSkipSub:'mal',
+    wSkipTop:(n,c) => `Größter Drückeberger: ${n} (${c}×)`,
     wS5title:'Das Ranking',
     wS6a:'NÄCHSTE', wS6b:'WOCHE BESSER.', wClose:'Los geht\'s',
     // Group switcher
@@ -242,6 +258,20 @@ const TRANS = {
     // Recovery code modal
     rcTitle:'Save your Recovery Code!', rcSub:'Without this code you can\'t log in on new devices.',
     rcCopy:'Copy Code', rcDone:'I\'ve saved it! →',
+    // Account auth (email/password)
+    aaRegTitle:'Create account', aaLoginTitle:'Sign in',
+    aaEmailLbl:'Email', aaPwLbl:'Password',
+    aaRegBtn:'Create account', aaLoginBtn:'Sign in',
+    aaToLogin:'Already have an account? Sign in →', aaToReg:'Create a new account →',
+    lsSigninBtn:'Already have an account? Sign in →',
+    aaErrEmail:'Please enter a valid email.', aaErrPw:'Password must be at least 8 characters.',
+    aaErrTaken:'This email is already registered.', aaErrWrong:'Wrong email or password.',
+    // Migration (recovery-code → account)
+    migTitle:'Secure your account', migSub:'Add email & password so you never lose access to your groups — even on new devices.',
+    migSetPw:'Set email & password', migSkip:'Later',
+    migBannerTitle:'Secure your account', migBannerSub:'Tap to secure your account',
+    migSuccess:'Account secured — all groups linked!',
+    mgAccountSectionLbl:'Account', mgAccountSignOut:'Sign out', mgAccountSignedOut:'Signed out',
     // Profile view
     notifPrimerTitle:'Stay in the loop', notifPrimerBody:'GymLate can remind you on gym days and alert you when your streak is at risk.', notifPrimerEnable:'Enable notifications', notifPrimerLater:'Not now',
     pvSettingsBtn:'⚙ Settings',
@@ -267,6 +297,8 @@ const TRANS = {
     wS3label:'you wasted', wS3sub:'minutes',
     wS3hours: (h,m) => `that's ${h}h ${m}min`,
     wS4label:'Latecomer<br>of the Week',
+    wSkipLabel:'you bailed', wSkipSub:'times',
+    wSkipTop:(n,c) => `Biggest ghoster: ${n} (${c}×)`,
     wS5title:'The Ranking',
     wS6a:'DO BETTER', wS6b:'NEXT WEEK.', wClose:'Let\'s go',
     // Group switcher

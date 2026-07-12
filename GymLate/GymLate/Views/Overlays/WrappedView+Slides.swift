@@ -68,6 +68,40 @@ extension WrappedView {
     }
 
     @ViewBuilder
+    func skipsSlide(count: Int, topName: String, topCount: Int) -> some View {
+        VStack(spacing: 0) {
+            WFade(delay: 0) {
+                Text((K.L.de ? "ihr habt gekniffen" : "you bailed").uppercased())
+                    .wLabel()
+            }
+            Spacer().frame(height: 8)
+            WPop(delay: 0.1) {
+                WCountUp(target: count, delay: 0.28)
+                    .wNumber()
+            }
+            Spacer().frame(height: 8)
+            WRise(delay: 0.3) {
+                Text(K.L.de ? "mal" : "times")
+                    .font(.system(size: 26, weight: .bold))
+                    .foregroundColor(.white.opacity(0.75))
+                    .tracking(-0.5)
+            }
+            Spacer().frame(height: 24)
+            WPop(delay: 0.5) {
+                Text("⊘").font(.system(size: 58))
+            }
+            Spacer().frame(height: 14)
+            WFade(delay: 0.65) {
+                Text(K.L.de
+                     ? "Größter Drückeberger: \(topName) (\(topCount)×)"
+                     : "Biggest ghoster: \(topName) (\(topCount)×)")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.6))
+            }
+        }
+    }
+
+    @ViewBuilder
     func minutesSlide(total: Int) -> some View {
         let hours = total / 60, remMins = total % 60
         VStack(spacing: 0) {

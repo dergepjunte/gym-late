@@ -9,6 +9,9 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 
+  <!-- Google Identity Services (Sign in with Google) -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
   <!-- PWA -->
   <link rel="manifest" href="/manifest.json">
   <meta name="theme-color" content="#f0e9da" media="(prefers-color-scheme: light)">
@@ -133,6 +136,16 @@
   </div>
   <button class="notif-x" id="notif-x" aria-label="Dismiss">✕</button>
 </div>
+<!-- Migrate-to-account banner (independent of the opening bubble queue —
+     persistent across sessions until dismissed, not a one-shot ceremony) -->
+<div class="notif-bubble glass" id="migrate-bubble" role="alert" aria-live="polite">
+  <div class="notif-glyph" aria-hidden="true">🔐</div>
+  <div class="notif-body">
+    <div class="notif-t1" id="migrate-bubble-t1"></div>
+    <div class="notif-t2" id="migrate-bubble-t2"></div>
+  </div>
+  <button class="notif-x" id="migrate-bubble-x" aria-label="Dismiss">✕</button>
+</div>
 <!-- Replay Hint Chip -->
 <button class="replay-hint-chip glass" id="replay-hint"></button>
 
@@ -169,6 +182,9 @@
       <span id="ls-join-lbl"></span>
     </button>
     <div class="landing-btn-hint" id="ls-join-hint"></div>
+    <div style="text-align:center;margin-top:14px">
+      <button class="toggle-link" id="ls-signin-btn"></button>
+    </div>
     <div class="landing-admin-tools">
       <button class="btn btn-ghost btn-xl btn-full" id="btn-admin-login">
         <span id="ls-admin-lbl"></span>
@@ -656,12 +672,75 @@
 <!-- Recovery Code -->
 <div class="overlay" id="modal-recovery-code">
   <div class="modal glass">
-    
+
     <div class="success-title" id="rc-title"></div>
     <div class="success-sub" id="rc-sub"></div>
     <div class="rc-row" id="rc-boxes"></div>
     <button class="copy-code-btn" id="rc-copy"></button>
     <button class="btn btn-primary btn-full" id="rc-done"></button>
+  </div>
+</div>
+
+<!-- Account Auth (email + password register / login) -->
+<div class="fullpage" id="modal-account-auth">
+  <div class="fullpage-bar">
+    <button class="fullpage-back" id="aa-cancel">‹</button>
+    <div class="fullpage-bar-title" id="aa-bar-title"></div>
+  </div>
+  <div class="fullpage-inner">
+    <!-- REGISTER mode -->
+    <div id="aa-register-mode">
+      <h2 class="modal-title" id="aa-reg-title"></h2>
+      <div class="form-grp">
+        <label class="form-lbl" id="aa-reg-email-lbl"></label>
+        <input type="email" class="form-ctrl" id="aa-reg-email" autocomplete="email" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl" id="aa-reg-pw-lbl"></label>
+        <input type="password" class="form-ctrl" id="aa-reg-pw" autocomplete="new-password">
+      </div>
+      <div class="error-msg" id="aa-reg-error"></div>
+      <button class="btn btn-primary btn-full btn-xl" id="aa-submit-register" style="margin-top:8px"></button>
+      <div style="text-align:center;margin-top:14px">
+        <button class="toggle-link" id="aa-to-login"></button>
+      </div>
+    </div>
+
+    <!-- LOGIN mode -->
+    <div id="aa-login-mode" style="display:none">
+      <h2 class="modal-title" id="aa-login-title"></h2>
+      <div class="form-grp">
+        <label class="form-lbl" id="aa-login-email-lbl"></label>
+        <input type="email" class="form-ctrl" id="aa-login-email" autocomplete="email" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl" id="aa-login-pw-lbl"></label>
+        <input type="password" class="form-ctrl" id="aa-login-pw" autocomplete="current-password">
+      </div>
+      <div class="error-msg" id="aa-login-error"></div>
+      <button class="btn btn-primary btn-full btn-xl" id="aa-submit-login" style="margin-top:8px"></button>
+      <div style="text-align:center;margin-top:14px">
+        <button class="toggle-link" id="aa-to-register"></button>
+      </div>
+    </div>
+
+    <!-- SSO — mode-agnostic: Google either finds or creates the account -->
+    <div class="or-divider" id="aa-sso-divider" style="display:none"><span id="aa-sso-or"></span></div>
+    <div id="aa-google-btn" style="display:none;margin-top:4px"></div>
+  </div>
+</div>
+
+<!-- Migrate: link an existing recovery-code profile to an email/password account -->
+<div class="overlay" id="modal-migrate">
+  <div class="modal glass">
+    <div class="success-title" id="mig-title"></div>
+    <div class="success-sub" id="mig-sub"></div>
+    <button class="btn btn-primary btn-full btn-xl" id="mig-setpw-btn" style="margin-top:8px"></button>
+    <div class="or-divider" id="mig-sso-divider" style="display:none"><span id="mig-sso-or"></span></div>
+    <div id="mig-google-btn" style="display:none;margin-top:4px"></div>
+    <div style="text-align:center;margin-top:14px">
+      <button class="toggle-link" id="mig-skip-btn"></button>
+    </div>
   </div>
 </div>
 
@@ -839,6 +918,19 @@
       <button class="btn btn-primary" id="mset-notif-save" style="margin-top:16px;width:100%"></button>
     </div>
 
+    <!-- Account & Login -->
+    <div class="settings-section" id="mset-account-section">
+      <div class="settings-section-title" id="mset-account-lbl"></div>
+      <div id="mset-account-nolink">
+        <div class="mset-geo-hint" id="mset-account-hint"></div>
+        <button class="btn btn-primary" id="mset-account-secure-btn" style="margin-top:10px;width:100%"></button>
+      </div>
+      <div id="mset-account-linked" style="display:none">
+        <div class="mset-geo-hint" id="mset-account-email"></div>
+        <button class="btn" id="mset-account-signout-btn" style="margin-top:10px;width:100%"></button>
+      </div>
+    </div>
+
     <!-- Leave group -->
     <div class="settings-section" style="border-color:rgba(239,68,68,.35);">
       <button class="leave-btn" id="mset-leave-btn" style="width:100%"></button>
@@ -929,6 +1021,8 @@
 <script src="/js/modals.js"></script>
 <script src="/js/groups.js"></script>
 <script src="/js/profile.js"></script>
+<script src="/js/account.js"></script>
+<script src="/js/sso.js"></script>
 <script src="/js/settings.js"></script>
 <script src="/js/profile-edit.js"></script>
 <script src="/js/streak.js"></script>

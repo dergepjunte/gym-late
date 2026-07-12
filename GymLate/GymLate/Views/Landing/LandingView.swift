@@ -4,6 +4,7 @@ struct LandingView: View {
     @EnvironmentObject var appState: AppState
     @State private var showCreate = false
     @State private var showJoin = false
+    @State private var showSignIn = false
     @State private var toast: String?
 
     var body: some View {
@@ -52,12 +53,23 @@ struct LandingView: View {
                     }
                     .padding(.horizontal, 24)
 
+                    // Returning account users on a fresh device: one sign-in
+                    // restores every linked group, no recovery code needed.
+                    Button(K.L.de ? "Bereits ein Konto? Anmelden →" : "Already have an account? Sign in →") {
+                        showSignIn = true
+                    }
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(K.accentDark)
+
                     Spacer(minLength: 40)
                 }
             }
         }
         .fullPageCover(isPresented: $showCreate) { CreateGroupSheet() }
         .fullPageCover(isPresented: $showJoin) { JoinGroupSheet() }
+        .fullScreenCover(isPresented: $showSignIn) {
+            AccountAuthSheet(purpose: .signin, initialMode: .login, onCancel: { showSignIn = false })
+        }
         .toast($toast)
     }
 }

@@ -14,6 +14,7 @@ struct AppRootView: View {
         }
     }()
     @State private var showLogEntry = false
+    @State private var showMigrateSheet = false
     @State private var toast: String?
 
     private var myPerson: Person? {
@@ -68,6 +69,21 @@ struct AppRootView: View {
                 .id(bubble.id)
             }
 
+            // Migrate-to-account banner — independent of the opening-sequence
+            // bubble above; only shown once that queue has nothing pending,
+            // so the two never visually stack in the same screen position.
+            if appState.showMigrateBanner, appState.pendingBubble == nil {
+                VStack {
+                    Spacer()
+                    MigrateBannerView(onTap: { showMigrateSheet = true },
+                                      onDismiss: { appState.dismissMigrateBanner() })
+                        .padding(.horizontal, 16)
+                        .padding(.bottom, 84)
+                }
+                .zIndex(470)
+                .transition(.opacity)
+            }
+
             // Replay hint chip (shown after bubble dismiss)
             if let hint = appState.replayHint {
                 VStack {
@@ -108,6 +124,9 @@ struct AppRootView: View {
             }
         }
         .fullPageCover(isPresented: $showLogEntry) { LogEntrySheet(toast: $toast) }
+        .fullScreenCover(isPresented: $showMigrateSheet) {
+            MigrationSheet { showMigrateSheet = false }
+        }
         .fullPageCover(isPresented: $appState.showMyProfile) {
             if let me = myPerson { ProfileView(person: me) }
         }

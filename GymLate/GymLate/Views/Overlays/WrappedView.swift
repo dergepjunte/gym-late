@@ -26,6 +26,7 @@ struct WrappedView: View {
             case lateCount(Int)
             case minutes(total: Int)
             case king(name: String, count: Int, mins: Int)
+            case skips(count: Int, topName: String, topCount: Int)
             case ranking([(name: String, count: Int, mins: Int)])
             case cta
         }
@@ -42,29 +43,46 @@ struct WrappedView: View {
         let lateEntries = entries.filter {
             $0.date >= monStr && $0.date <= sunStr && ($0.type == "late" || $0.type.isEmpty)
         }
-        guard !lateEntries.isEmpty else { return [] }
-
-        let totalMins = lateEntries.reduce(0) { $0 + $1.mins }
-        var ps: [String: (count: Int, mins: Int)] = [:]
-        for e in lateEntries {
-            let old = ps[e.person] ?? (0, 0)
-            ps[e.person] = (old.count + 1, old.mins + e.mins)
+        let skipEntries = entries.filter {
+            $0.date >= monStr && $0.date <= sunStr && $0.type == "skip"
         }
-        let ranking = ps.sorted { $0.value.mins > $1.value.mins }
-            .map { (name: $0.key, count: $0.value.count, mins: $0.value.mins) }
-        let top = ranking[0]
+        guard !lateEntries.isEmpty || !skipEntries.isEmpty else { return [] }
 
         var out: [Slide] = [
             Slide(gradient: Theme.slideTitle,
                   kind: .intro(groupName: groupName,
                                weekRange: K.L.weekRange(monStr, sunStr)), duration: 3),
-            Slide(gradient: Theme.slideLate,
-                  kind: .lateCount(lateEntries.count), duration: 4),
-            Slide(gradient: Theme.slideMinutes,
-                  kind: .minutes(total: totalMins), duration: 4),
-            Slide(gradient: Theme.slideKing,
-                  kind: .king(name: top.name, count: top.count, mins: top.mins), duration: 4.5),
         ]
+
+        var ranking: [(name: String, count: Int, mins: Int)] = []
+        if !lateEntries.isEmpty {
+            let totalMins = lateEntries.reduce(0) { $0 + $1.mins }
+            var ps: [String: (count: Int, mins: Int)] = [:]
+            for e in lateEntries {
+                let old = ps[e.person] ?? (0, 0)
+                ps[e.person] = (old.count + 1, old.mins + e.mins)
+            }
+            ranking = ps.sorted { $0.value.mins > $1.value.mins }
+                .map { (name: $0.key, count: $0.value.count, mins: $0.value.mins) }
+            let top = ranking[0]
+
+            out.append(Slide(gradient: Theme.slideLate,
+                              kind: .lateCount(lateEntries.count), duration: 4))
+            out.append(Slide(gradient: Theme.slideMinutes,
+                              kind: .minutes(total: totalMins), duration: 4))
+            out.append(Slide(gradient: Theme.slideKing,
+                              kind: .king(name: top.name, count: top.count, mins: top.mins), duration: 4.5))
+        }
+
+        if !skipEntries.isEmpty {
+            var sps: [String: Int] = [:]
+            for e in skipEntries { sps[e.person, default: 0] += 1 }
+            let topSkip = sps.sorted { $0.value > $1.value }[0]
+            out.append(Slide(gradient: Theme.slideSkip,
+                              kind: .skips(count: skipEntries.count, topName: topSkip.key, topCount: topSkip.value),
+                              duration: 4))
+        }
+
         if ranking.count > 1 {
             out.append(Slide(gradient: Theme.slideRanking,
                              kind: .ranking(ranking), duration: 5))
@@ -262,6 +280,8 @@ struct WrappedView: View {
                 minutesSlide(total: total)
             case .king(let name, let count, let mins):
                 kingSlide(name: name, count: count, mins: mins)
+            case .skips(let count, let topName, let topCount):
+                skipsSlide(count: count, topName: topName, topCount: topCount)
             case .ranking(let rows):
                 rankingSlide(rows: rows)
             case .cta:

@@ -48,38 +48,49 @@ final class SyncEngine: ObservableObject {
     }
 
     /// Returns true when synced immediately, false when queued for later.
+    /// `accountToken` (when the profile is account-linked, i.e. `recoveryCode`
+    /// is nil) is used ONLY for the immediate online attempt — it is
+    /// deliberately NOT persisted into the offline outbox, so the on-disk
+    /// `PendingMutation.Payload` shape (and any already-queued mutations from
+    /// before this feature existed) stay untouched. If this specific write
+    /// happens to go offline for an already-migrated user, it's queued keyed
+    /// on `recoveryCode` (empty for account-linked profiles) and will need a
+    /// retry once online rather than replaying automatically — a narrow,
+    /// acceptable gap given how rare "offline + freshly migrated" is.
     func submitPatchUser(groupId: String, userId: String, name: String? = nil,
                          avatarEmoji: String? = nil, avatarColor: String? = nil,
                          avatarImg: String? = nil, availDays: String? = nil,
-                         recoveryCode: String) async throws -> Bool {
+                         recoveryCode: String?, accountToken: String? = nil) async throws -> Bool {
         do {
             try await api.patchUser(groupId: groupId, userId: userId, name: name,
                                     avatarEmoji: avatarEmoji, avatarColor: avatarColor,
                                     avatarImg: avatarImg, availDays: availDays,
-                                    recoveryCode: recoveryCode)
+                                    recoveryCode: recoveryCode, accountToken: accountToken)
             return true
         } catch where error.isNetworkError {
             enqueue(groupId: groupId, payload: .patchUser(
                 userId: userId, name: name, avatarEmoji: avatarEmoji,
                 avatarColor: avatarColor, avatarImg: avatarImg,
-                availDays: availDays, recoveryCode: recoveryCode))
+                availDays: availDays, recoveryCode: recoveryCode ?? ""))
             return false
         }
     }
 
     func submitPatchGroup(groupId: String, gymDays: String? = nil,
                           fixedCheckinEnabled: Bool? = nil,
-                          creatorUserId: String, creatorRecoveryCode: String) async throws -> Bool {
+                          creatorUserId: String, creatorRecoveryCode: String?,
+                          accountToken: String? = nil) async throws -> Bool {
         do {
             try await api.patchGroup(id: groupId, gymDays: gymDays,
                                      fixedCheckinEnabled: fixedCheckinEnabled,
                                      creatorUserId: creatorUserId,
-                                     creatorRecoveryCode: creatorRecoveryCode)
+                                     creatorRecoveryCode: creatorRecoveryCode,
+                                     accountToken: accountToken)
             return true
         } catch where error.isNetworkError {
             enqueue(groupId: groupId, payload: .patchGroup(
                 gymDays: gymDays, fixedCheckinEnabled: fixedCheckinEnabled,
-                creatorUserId: creatorUserId, creatorRecoveryCode: creatorRecoveryCode))
+                creatorUserId: creatorUserId, creatorRecoveryCode: creatorRecoveryCode ?? ""))
             return false
         }
     }

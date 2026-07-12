@@ -49,6 +49,7 @@ async function enterGroup(g) {
   applyI18n(); renderAll(); startPolling(); showScreen('app');
   runOpeningSequence();
   maybeShowNotifPrimer();
+  maybeShowMigrateBanner();
 }
 
 function updateMyProfileBtn() {

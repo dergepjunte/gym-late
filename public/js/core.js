@@ -47,6 +47,14 @@ const api = {
   kickUser:      (g,u,d)  => api.req('DELETE', `/groups/${g}/users/${u}`, d),
   testPush:      (type)   => api.req('POST', '/admin/test-push', { userId: userProfile?.userId, groupId: group?.id, adminPassword, type }),
   setCheckinTime:(g,d)    => api.req('POST',   `/groups/${g}/checkin-time`, d),
+  // Global accounts (email/password + Apple/Google SSO)
+  authConfig:      ()          => api.req('GET',  '/auth/config'),
+  accountRegister: (email,pw)  => api.req('POST', '/account/register', {email, password:pw}),
+  accountLogin:    (email,pw)  => api.req('POST', '/account/login', {email, password:pw}),
+  accountApple:    (idToken,em)=> api.req('POST', '/account/apple', {identityToken:idToken, email:em}),
+  accountGoogle:   (idToken)   => api.req('POST', '/account/google', {identityToken:idToken}),
+  accountGroups:   (token)     => api.req('POST', '/account/groups', {accountToken:token}),
+  linkRecovery:    (token,links)=> api.req('POST', '/account/link-recovery', {accountToken:token, links}),
 };
 
 // ════════════════════════════════════════════════════════
@@ -86,6 +94,35 @@ function clearGroup() {
 function saveUser(gid, u) { userProfile=u; localStorage.setItem('gymUser_'+gid, JSON.stringify(u)); }
 function loadUser(gid)    { try { userProfile=JSON.parse(localStorage.getItem('gymUser_'+gid)||'null'); } catch { userProfile=null; } }
 function clearUser(gid)   { userProfile=null; localStorage.removeItem('gymUser_'+gid); }
+
+// ════════════════════════════════════════════════════════
+//  ACCOUNT (global email/password + Apple/Google identity)
+// ════════════════════════════════════════════════════════
+let account = null; // { accountId, email, accountToken, hasPassword, providers }
+
+function saveAccount(a) { account=a; localStorage.setItem('gymAccount', JSON.stringify(a)); }
+function loadAccount()  { try { account=JSON.parse(localStorage.getItem('gymAccount')||'null'); } catch { account=null; } return account; }
+function clearAccount() { account=null; localStorage.removeItem('gymAccount'); }
+
+// Rebuild the full local multi-group state from one `/api/account/groups`
+// response — this is what lets a single sign-in (new device, or right after
+// migrating) restore every group without any per-group recovery code.
+function applyAccountGroups(resp) {
+  for (const g of (resp?.groups || [])) {
+    saveGroup({ id: g.id, code: g.code, name: g.name });
+    saveUser(g.id, { ...g.profile, recoveryCode: null });
+  }
+}
+
+// Build the {groupId,userId,recoveryCode} list for every locally-known
+// group that still has a plaintext recovery code — used to link everything
+// in one migration-popup visit.
+function collectRecoveryLinks() {
+  return loadAllGroups()
+    .map(g => { try { return { g, u: JSON.parse(localStorage.getItem('gymUser_'+g.id)||'null') }; } catch { return { g, u:null }; } })
+    .filter(({u}) => u && u.recoveryCode)
+    .map(({g,u}) => ({ groupId: g.id, userId: u.userId, recoveryCode: u.recoveryCode }));
+}
 
 // Avatar constants
 const AVATAR_EMOJIS = ['🏋️'];

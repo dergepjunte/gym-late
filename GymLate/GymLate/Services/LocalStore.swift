@@ -126,6 +126,54 @@ final class LocalStore {
         set { defaults.set(newValue, forKey: "gymNotifPrimerSeen") }
     }
 
+    // MARK: - Global Account
+    //
+    // Only the non-secret fields live here; the bearer `accountToken` is
+    // stored in Keychain only (see KeychainStore) and combined back into a
+    // full AccountInfo at read time by AppState.
+
+    private struct AccountMeta: Codable {
+        var accountId: String
+        var email: String?
+        var hasPassword: Bool
+        var providers: AccountProviders
+    }
+
+    private var accountMeta: AccountMeta? {
+        get { decode(AccountMeta.self, forKey: "gymAccountMeta") }
+        set { encode(newValue, forKey: "gymAccountMeta") }
+    }
+
+    private static let accountTokenKey = "gymAccountToken"
+
+    var account: AccountInfo? {
+        get {
+            guard let meta = accountMeta, let token = KeychainStore.read(key: Self.accountTokenKey) else { return nil }
+            return AccountInfo(accountId: meta.accountId, email: meta.email, accountToken: token,
+                               hasPassword: meta.hasPassword, providers: meta.providers)
+        }
+        set {
+            guard let info = newValue else {
+                accountMeta = nil
+                KeychainStore.delete(key: Self.accountTokenKey)
+                return
+            }
+            accountMeta = AccountMeta(accountId: info.accountId, email: info.email,
+                                      hasPassword: info.hasPassword, providers: info.providers)
+            KeychainStore.save(info.accountToken, key: Self.accountTokenKey)
+        }
+    }
+
+    /// A user has migrated a group locally once their stored profile for it
+    /// no longer carries a recovery code (server omits it once account-linked
+    /// registrations/logins are in play — see UserProfile.recoveryCode).
+    var migratableGroupLinks: [LinkRecoveryItem] {
+        allGroups.compactMap { g in
+            guard let p = userProfile(for: g.id), let code = p.recoveryCode, !code.isEmpty else { return nil }
+            return LinkRecoveryItem(groupId: g.id, userId: p.userId, recoveryCode: code)
+        }
+    }
+
     // MARK: - Admin (in-memory only — never persisted)
 
     var adminPassword: String? = nil

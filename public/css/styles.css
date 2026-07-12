@@ -890,6 +890,21 @@
       font-size: 18px; padding: 4px 2px; flex-shrink: 0;
       font-family: inherit; line-height: 1; opacity: .7;
     }
+    /* Migrate-to-account banner — deliberately more urgent than the
+       ceremony bubbles above: shows every session (not a one-time nag) and
+       pulses to draw the eye instead of blending in. */
+    @keyframes migrate-pulse {
+      0%,100% { box-shadow: 0 4px 18px rgba(99,102,241,.25); }
+      50%     { box-shadow: 0 4px 30px rgba(99,102,241,.55); }
+    }
+    #migrate-bubble.show {
+      animation: migrate-pulse 2.2s ease-in-out infinite;
+      border: 1px solid rgba(129,140,248,.45);
+    }
+    #migrate-bubble .notif-glyph {
+      background: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+    }
+
     .replay-hint-chip {
       position: fixed;
       bottom: calc(88px + env(safe-area-inset-bottom));

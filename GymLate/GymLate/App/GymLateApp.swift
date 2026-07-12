@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import GoogleSignIn
 
 @main
 struct GymLateApp: App {
@@ -22,12 +23,21 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         Task { @MainActor in
             NotificationManager.shared.registerAPNsToken(
                 deviceToken, groupId: group.id,
-                userId: profile.userId, recoveryCode: profile.recoveryCode)
+                userId: profile.userId, recoveryCode: profile.recoveryCode,
+                accountToken: AppState.shared.account?.accountToken)
         }
     }
 
     func application(_ application: UIApplication,
                      didFailToRegisterForRemoteNotificationsWithError error: Error) {}
+
+    // GoogleSignIn resumes its flow (Safari/Google-app redirect) through
+    // this URL callback — required for GIDSignIn.sharedInstance.signIn to
+    // ever complete.
+    func application(_ app: UIApplication, open url: URL,
+                     options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+        GIDSignIn.sharedInstance.handle(url)
+    }
 }
 
 struct RootView: View {

@@ -24,6 +24,14 @@ final class AppState: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
 
+    // Global account (email/password + Apple/Google SSO). nil = this device
+    // only has legacy per-group recovery-code profiles (or is brand new).
+    @Published var account: AccountInfo?
+    // Persistent "secure your account" nudge, independent of the one-shot
+    // opening-sequence bubbles — shown while there's a legacy profile with a
+    // recovery code but no linked account, until dismissed.
+    @Published var showMigrateBanner = false
+
     // Offline / sync state
     @Published var isOffline = false
     @Published var pendingSyncCount = 0
@@ -76,6 +84,8 @@ final class AppState: ObservableObject {
     private init() {
         // Restore saved state on launch
         activeGroup = store.activeGroup
+        account = store.account
+        refreshMigrateBanner()
         if let g = activeGroup {
             userProfile = store.userProfile(for: g.id)
             // Cold start into a restored group: render cache, sync, poll —
@@ -117,6 +127,7 @@ final class AppState: ObservableObject {
         runOpeningSequence()
         if !store.notifPrimerSeen { showNotifPrimer = true }
         else { Task { await NotificationManager.shared.requestPermission() } }
+        refreshMigrateBanner()
     }
 
     func switchGroup(_ group: GroupInfo) async {
@@ -250,7 +261,8 @@ final class AppState: ObservableObject {
         guard let g = activeGroup, let profile = userProfile else { throw APIError.notFound }
         let synced = try await sync.submitPatchUser(
             groupId: g.id, userId: profile.userId,
-            availDays: mask, recoveryCode: profile.recoveryCode)
+            availDays: mask, recoveryCode: profile.recoveryCode,
+            accountToken: account?.accountToken)
         if synced { await refreshData() } else { isOffline = true }
         return synced
     }
@@ -260,8 +272,93 @@ final class AppState: ObservableObject {
         guard let g = activeGroup, let profile = userProfile else { throw APIError.notFound }
         let synced = try await sync.submitPatchGroup(
             groupId: g.id, gymDays: mask,
-            creatorUserId: profile.userId, creatorRecoveryCode: profile.recoveryCode)
+            creatorUserId: profile.userId, creatorRecoveryCode: profile.recoveryCode,
+            accountToken: account?.accountToken)
         if synced { await refreshData() } else { isOffline = true }
         return synced
+    }
+
+    // MARK: - Global Account (email/password + Apple/Google SSO)
+
+    private func saveAccount(_ info: AccountInfo) {
+        account = info
+        store.account = info
+        showMigrateBanner = false
+    }
+
+    func signOutAccount() {
+        account = nil
+        store.account = nil
+    }
+
+    func registerAccount(email: String, password: String) async throws {
+        let info = try await api.registerAccount(email: email, password: password)
+        saveAccount(info)
+    }
+
+    func loginAccount(email: String, password: String) async throws {
+        let info = try await api.loginAccount(email: email, password: password)
+        saveAccount(info)
+        await applyAccountGroups(info)
+    }
+
+    func appleSignIn(identityToken: String, email: String?) async throws {
+        let info = try await api.appleSignIn(identityToken: identityToken, email: email)
+        saveAccount(info)
+        await applyAccountGroups(info)
+    }
+
+    func googleSignIn(identityToken: String) async throws {
+        let info = try await api.googleSignIn(identityToken: identityToken)
+        saveAccount(info)
+        await applyAccountGroups(info)
+    }
+
+    /// Fetch every group linked to this account and repopulate local state —
+    /// what lets a sign-in on a brand-new device (or right after migrating)
+    /// restore all groups with zero recovery codes involved.
+    func applyAccountGroups(_ info: AccountInfo) async {
+        guard let resp = try? await api.accountGroups(accountToken: info.accountToken) else { return }
+        for g in resp.groups {
+            let groupInfo = GroupInfo(id: g.id, code: g.code, name: g.name)
+            store.addGroup(groupInfo)
+            store.saveUserProfile(g.profile, for: g.id)
+        }
+        // Enter the first linked group if we don't already have one active.
+        if activeGroup == nil, let first = resp.groups.first {
+            let groupInfo = GroupInfo(id: first.id, code: first.code, name: first.name)
+            await enterGroup(groupInfo, profile: first.profile)
+        }
+    }
+
+    /// The migration entry point: link every locally-known recovery-code
+    /// profile to `account` in one call, so a person in multiple groups
+    /// migrates all of them from a single popup visit.
+    func migrateLinkAll() async {
+        guard let acc = account else { return }
+        let links = store.migratableGroupLinks
+        guard !links.isEmpty else { return }
+        guard let resp = try? await api.linkRecovery(accountToken: acc.accountToken, links: links) else { return }
+        guard !resp.linked.isEmpty else { return }
+        // Refresh every migrated profile so its local recoveryCode clears —
+        // future writes switch to the accountToken path automatically.
+        await applyAccountGroups(acc)
+        if let g = activeGroup, resp.linked.contains(g.id) {
+            userProfile = store.userProfile(for: g.id)
+        }
+        showMigrateBanner = false
+    }
+
+    /// Re-evaluate whether the "secure your account" banner should show.
+    /// Deliberately intrusive: true every time this device holds a legacy
+    /// recovery-code profile with no linked account — NOT a one-time nag.
+    /// Dismissing only clears it for the current view; it returns on the
+    /// next enterGroup (app open / group switch) until the user migrates.
+    func refreshMigrateBanner() {
+        showMigrateBanner = account == nil && !store.migratableGroupLinks.isEmpty
+    }
+
+    func dismissMigrateBanner() {
+        showMigrateBanner = false
     }
 }

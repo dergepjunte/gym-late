@@ -5,6 +5,7 @@ function applyI18n() {
   const set = (id,v) => { const el=document.getElementById(id); if(el&&v) el.textContent=v; };
   set('ls-sub',T.lsTagline); set('ls-create-lbl',T.lsCreate); set('ls-join-lbl',T.lsJoin); set('ls-or',T.lsOr);
   set('ls-create-hint',T.lsCreateHint); set('ls-join-hint',T.lsJoinHint);
+  set('ls-signin-btn',T.lsSigninBtn);
   set('ls-feat-streak',T.lsFeatStreak); set('ls-feat-checkin',T.lsFeatCheckin); set('ls-feat-group',T.lsFeatGroup);
   set('ls-admin-lbl',T.lsAdmin); set('ls-test-lbl',T.lsTestGroup); set('ls-admin-note',T.lsAdminNote);
   document.querySelectorAll('[data-tab="week"] .nav-lbl').forEach(el=>el.textContent=T.navWeek);
@@ -73,6 +74,16 @@ function applyI18n() {
   set('psu-submit-login',T.psuLoginBtn); set('psu-to-new',T.psuToNew);
   // Recovery code
   set('rc-title',T.rcTitle); set('rc-sub',T.rcSub); set('rc-copy',T.rcCopy); set('rc-done',T.rcDone);
+  // Account auth (email/password)
+  set('aa-reg-title',T.aaRegTitle); set('aa-reg-email-lbl',T.aaEmailLbl); set('aa-reg-pw-lbl',T.aaPwLbl);
+  set('aa-submit-register',T.aaRegBtn); set('aa-to-login',T.aaToLogin);
+  set('aa-login-title',T.aaLoginTitle); set('aa-login-email-lbl',T.aaEmailLbl); set('aa-login-pw-lbl',T.aaPwLbl);
+  set('aa-submit-login',T.aaLoginBtn); set('aa-to-register',T.aaToReg);
+  set('aa-sso-or',T.lsOr);
+  // Migrate popup
+  set('mig-title',T.migTitle); set('mig-sub',T.migSub);
+  set('mig-setpw-btn',T.migSetPw); set('mig-skip-btn',T.migSkip);
+  set('mig-sso-or',T.lsOr);
   // Profile view
   set('notif-primer-title',T.notifPrimerTitle); set('notif-primer-body',T.notifPrimerBody);
   set('notif-primer-enable',T.notifPrimerEnable); set('notif-primer-later',T.notifPrimerLater);

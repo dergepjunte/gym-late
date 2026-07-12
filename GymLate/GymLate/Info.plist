@@ -9,5 +9,20 @@
 			<true/>
 		</dict>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>GIDClientID</key>
+	<string>446590316544-ds5jv7hnqr7cu7fektus79d1jh4t2191.apps.googleusercontent.com</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.446590316544-ds5jv7hnqr7cu7fektus79d1jh4t2191</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

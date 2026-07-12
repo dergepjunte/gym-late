@@ -21,11 +21,13 @@ final class NotificationManager: NSObject {
         } catch {}
     }
 
-    func registerAPNsToken(_ tokenData: Data, groupId: String, userId: String, recoveryCode: String) {
+    func registerAPNsToken(_ tokenData: Data, groupId: String, userId: String,
+                           recoveryCode: String?, accountToken: String? = nil) {
         let token = tokenData.map { String(format: "%02x", $0) }.joined()
         Task {
             try? await APIClient.shared.registerAPNsToken(
-                token: token, groupId: groupId, userId: userId, recoveryCode: recoveryCode)
+                token: token, groupId: groupId, userId: userId,
+                recoveryCode: recoveryCode, accountToken: accountToken)
         }
     }
 
