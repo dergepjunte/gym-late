@@ -55,6 +55,10 @@ function applyI18n() {
   set('mset-geo-test',T.msetGeoTestBtn);
   // Settings fixed check-in time (beta)
   set('mset-fixedtime-lbl',T.msetFixedtimeLbl); set('mset-fixedtime-toggle-lbl',T.msetFixedtimeToggleLbl);
+  // Settings loading animation
+  set('mset-loading-lbl',T.msetLoadingLbl);
+  set('mset-loadstyle-barbell',T.loadingBarbell); set('mset-loadstyle-flame',T.loadingFlame);
+  set('mset-loadstyle-wordmark',T.loadingWordmark);
   // Settings notifications
   set('mset-notif-lbl',T.msetNotifLbl); set('mset-notif-reminders-lbl',T.msetNotifRemindersLbl);
   set('mset-reminder-time-lbl',T.msetReminderTimeLbl); set('mset-notif-streak-lbl',T.msetNotifStreakLbl);

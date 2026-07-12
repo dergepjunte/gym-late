@@ -66,6 +66,12 @@ function openSettings() {
   }
   document.getElementById('mset-avail-error').textContent = '';
 
+  // Launch loading animation style
+  const loadingStyle = localStorage.getItem('gymLoadingStyle') || 'barbell';
+  document.querySelectorAll('#mset-loadstyle-picker .loadstyle-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.style === loadingStyle);
+  });
+
   // Geo toggle — visible to all users
   const geoEnabled = localStorage.getItem('gymGeoEnabled') !== '0';
   document.getElementById('mset-geo-toggle').checked = geoEnabled;
@@ -141,6 +147,13 @@ document.getElementById('mset-leave-btn').addEventListener('click', () => {
 
 document.getElementById('mset-geo-toggle').addEventListener('change', e => {
   localStorage.setItem('gymGeoEnabled', e.target.checked ? '1' : '0');
+});
+
+document.querySelectorAll('#mset-loadstyle-picker .loadstyle-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    localStorage.setItem('gymLoadingStyle', btn.dataset.style);
+    document.querySelectorAll('#mset-loadstyle-picker .loadstyle-btn').forEach(b => b.classList.toggle('active', b === btn));
+  });
 });
 
 document.getElementById('mset-notif-save').addEventListener('click', async () => {

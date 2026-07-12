@@ -21,6 +21,8 @@ struct LaunchLoadingView: View {
     }
 
     @State private var appeared = false
+    /// Drives the continuous loop (bob / flicker / breathe) once the entrance settles.
+    @State private var loop = false
 
     private var style: LoadingStyle {
         LoadingStyle(rawValue: LocalStore.shared.loadingStyle) ?? .barbell
@@ -42,12 +44,27 @@ struct LaunchLoadingView: View {
                     .foregroundStyle(
                         LinearGradient(colors: Theme.accentGradient,
                                        startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .opacity(appeared ? 1 : 0)
+                    .opacity(appeared ? (style == .wordmark && loop ? 0.8 : 1) : 0)
                     .offset(y: appeared ? 0 : 8)
+                    .scaleEffect(style == .wordmark && loop ? 1.04 : 1)
             }
         }
         .onAppear {
             withAnimation(.spring(response: 0.6, dampingFraction: 0.5)) { appeared = true }
+            // Continuous loop starts once the entrance spring has settled, so
+            // the screen reads as alive the whole time it's on screen rather
+            // than a static reveal that just sits there.
+            withAnimation(.easeInOut(duration: loopDuration).repeatForever(autoreverses: true).delay(0.5)) {
+                loop = true
+            }
+        }
+    }
+
+    private var loopDuration: Double {
+        switch style {
+        case .barbell:  return 0.85
+        case .flame:    return 0.55
+        case .wordmark: return 1.1
         }
     }
 
@@ -55,7 +72,8 @@ struct LaunchLoadingView: View {
 
     /// Geometric barbell: a rounded bar with two plate discs on each side —
     /// mirrors the app's own dumbbell mark without relying on the SF Symbol
-    /// (dumbbell.fill only exists on iOS 17+).
+    /// (dumbbell.fill only exists on iOS 17+). Bobs up/down with a slight
+    /// tilt on a continuous loop, like a rep being lifted.
     private var barbellMark: some View {
         HStack(spacing: 0) {
             plate(size: 34)
@@ -68,7 +86,8 @@ struct LaunchLoadingView: View {
             plate(size: 34)
         }
         .scaleEffect(appeared ? 1 : 0.8)
-        .rotationEffect(.degrees(appeared ? 0 : -8))
+        .rotationEffect(.degrees(appeared ? (loop ? -4 : 0) : -8))
+        .offset(y: appeared && loop ? -7 : 0)
     }
 
     private func plate(size: CGFloat) -> some View {
@@ -83,7 +102,7 @@ struct LaunchLoadingView: View {
     private var flameMark: some View {
         ZStack {
             Circle()
-                .fill(Color(hex: "#fb923c").opacity(appeared ? 0.45 : 0))
+                .fill(Color(hex: "#fb923c").opacity(appeared ? (loop ? 0.6 : 0.4) : 0))
                 .frame(width: 90, height: 90)
                 .blur(radius: 24)
             Image(systemName: "flame.fill")
@@ -94,7 +113,8 @@ struct LaunchLoadingView: View {
                         colors: [Color(hex: "#fde047"), Color(hex: "#fb923c"), Color(hex: "#dc2626")],
                         startPoint: .top, endPoint: .bottom))
                     : AnyShapeStyle(Color.white.opacity(0.22)))
-                .scaleEffect(appeared ? 1 : 0.82)
+                .scaleEffect(appeared ? (loop ? 1.1 : 0.95) : 0.82)
+                .rotationEffect(.degrees(appeared && loop ? 3 : -3))
         }
     }
 }

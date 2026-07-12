@@ -27,7 +27,19 @@
 <body>
 
 <!-- Loading -->
-<div class="loading-screen" id="loading"><div class="spinner"></div></div>
+<div class="loading-screen" id="loading">
+  <div class="loading-motif">
+    <div class="loading-barbell" id="loading-barbell">
+      <div class="loading-plate loading-plate-lg"></div>
+      <div class="loading-plate loading-plate-sm"></div>
+      <div class="loading-bar"></div>
+      <div class="loading-plate loading-plate-sm"></div>
+      <div class="loading-plate loading-plate-lg"></div>
+    </div>
+    <div class="loading-flame" id="loading-flame">🔥</div>
+    <div class="loading-word">GymLate</div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════════════ -->
 <!--  WRAPPED OVERLAY                                      -->
@@ -928,6 +940,16 @@
       <div id="mset-account-linked" style="display:none">
         <div class="mset-geo-hint" id="mset-account-email"></div>
         <button class="btn" id="mset-account-signout-btn" style="margin-top:10px;width:100%"></button>
+      </div>
+    </div>
+
+    <!-- Launch loading animation -->
+    <div class="settings-section">
+      <div class="settings-section-title" id="mset-loading-lbl"></div>
+      <div class="loadstyle-picker" id="mset-loadstyle-picker">
+        <button type="button" class="loadstyle-btn" data-style="barbell" id="mset-loadstyle-barbell"></button>
+        <button type="button" class="loadstyle-btn" data-style="flame" id="mset-loadstyle-flame"></button>
+        <button type="button" class="loadstyle-btn" data-style="wordmark" id="mset-loadstyle-wordmark"></button>
       </div>
     </div>
 

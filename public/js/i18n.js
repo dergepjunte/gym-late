@@ -151,6 +151,11 @@ const TRANS = {
     msetFixedtimeToggleLbl:'Feste Uhrzeit aktiviert',
     toastFixedCheckinOn:'Feste Check-in-Zeit aktiviert',
     toastFixedCheckinOff:'Feste Check-in-Zeit deaktiviert',
+    // Launch loading animation
+    msetLoadingLbl:'Ladeanimation',
+    loadingBarbell:'Hantel',
+    loadingFlame:'Flamme',
+    loadingWordmark:'Schriftzug',
     // Notifications
     msetNotifLbl:'Benachrichtigungen',
     msetNotifRemindersLbl:'Gym-Erinnerung',
@@ -343,6 +348,11 @@ const TRANS = {
     msetFixedtimeToggleLbl:'Fixed time enabled',
     toastFixedCheckinOn:'Fixed check-in time enabled',
     toastFixedCheckinOff:'Fixed check-in time disabled',
+    // Launch loading animation
+    msetLoadingLbl:'Loading animation',
+    loadingBarbell:'Barbell',
+    loadingFlame:'Flame',
+    loadingWordmark:'Wordmark',
     // Notifications
     msetNotifLbl:'Notifications',
     msetNotifRemindersLbl:'Gym day reminder',

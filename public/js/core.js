@@ -286,7 +286,11 @@ function copyToClipboard(txt) {
 // ════════════════════════════════════════════════════════
 //  SCREENS & OVERLAYS
 // ════════════════════════════════════════════════════════
-function showLoading(y){ document.getElementById('loading').classList.toggle('hidden',!y); }
+function showLoading(y){
+  const el = document.getElementById('loading');
+  if (y) el.dataset.style = localStorage.getItem('gymLoadingStyle') || 'barbell';
+  el.classList.toggle('hidden',!y);
+}
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.add('hidden'));
   document.getElementById('screen-'+id).classList.remove('hidden');
