@@ -10,19 +10,18 @@ function maybeShowNotifPrimer() {
     initPush().catch(() => {});
     return;
   }
-  const el = document.getElementById('notif-primer');
-  if (el) el.classList.remove('hidden');
+  showFsOverlay('notif-primer');
 }
 
 document.getElementById('notif-primer-enable').addEventListener('click', async () => {
   localStorage.setItem('gymNotifPrimerSeen', '1');
-  document.getElementById('notif-primer').classList.add('hidden');
+  hideFsOverlay('notif-primer');
   await initPush().catch(() => {});
 });
 
 document.getElementById('notif-primer-later').addEventListener('click', () => {
   localStorage.setItem('gymNotifPrimerSeen', '1');
-  document.getElementById('notif-primer').classList.add('hidden');
+  hideFsOverlay('notif-primer');
 });
 
 async function initPush() {

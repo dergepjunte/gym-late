@@ -19,14 +19,13 @@ function updateDailyHypeTimeUI() {
 }
 
 function showDailyHype(force = false) {
-  const el = document.getElementById('daily-hype');
   updateDailyHypeTimeUI();
-  el.classList.remove('hidden');
+  showFsOverlay('daily-hype');
   if (!force) localStorage.setItem('gymDailyHypeSeen_' + todayStr(), '1');
 }
 
 document.getElementById('dh-close').addEventListener('click', () => {
-  document.getElementById('daily-hype').classList.add('hidden');
+  hideFsOverlay('daily-hype');
 });
 
 document.getElementById('dh-time-save').addEventListener('click', async () => {
@@ -61,7 +60,7 @@ function showGeoPrompt() {
   document.getElementById('gp-sub').textContent = isGymDay ? T.gpSub : T.gpNoGymDaySub;
   document.getElementById('gp-btns-gymday').classList.toggle('hidden', !isGymDay);
   document.getElementById('gp-btns-nogymday').classList.toggle('hidden', isGymDay);
-  document.getElementById('geo-prompt').classList.remove('hidden');
+  showFsOverlay('geo-prompt');
   localStorage.setItem('gymGeoPromptSeen_' + todayStr(), '1');
 }
 
@@ -89,19 +88,19 @@ function checkGeoAndPrompt(force = false) {
 }
 
 document.getElementById('gp-later').addEventListener('click', () => {
-  document.getElementById('geo-prompt').classList.add('hidden');
+  hideFsOverlay('geo-prompt');
 });
 document.getElementById('gp-later2').addEventListener('click', () => {
-  document.getElementById('geo-prompt').classList.add('hidden');
+  hideFsOverlay('geo-prompt');
 });
 
 document.getElementById('gp-checkin').addEventListener('click', async () => {
-  document.getElementById('geo-prompt').classList.add('hidden');
+  hideFsOverlay('geo-prompt');
   await submitSelfAttendEntry();
 });
 
 document.getElementById('gp-log-checkin').addEventListener('click', async () => {
-  document.getElementById('geo-prompt').classList.add('hidden');
+  hideFsOverlay('geo-prompt');
   await submitSelfAttendEntry();
 });
 

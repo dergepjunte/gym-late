@@ -21,7 +21,7 @@ function showWrapped(force = false) {
     `<div class="w-seg"><div class="w-fill" id="wf${i}"></div></div>`
   ).join('');
 
-  document.getElementById('wrapped').classList.remove('hidden');
+  showFsOverlay('wrapped');
   wShowSlide(0);
 
   if (!force) localStorage.setItem('gymWrappedSeen', mondayOf(todayStr()));
@@ -93,7 +93,7 @@ function wAdvance(dir) {
 
 function wClose() {
   clearTimeout(wTimer);
-  document.getElementById('wrapped').classList.add('hidden');
+  hideFsOverlay('wrapped');
   // Advance opening sequence if running
   if (window._seqWrappedNext) {
     const fn = window._seqWrappedNext;

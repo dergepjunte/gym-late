@@ -259,6 +259,8 @@ function openOv(id){ document.getElementById(id).classList.add('open'); }
 function closeOv(id){ document.getElementById(id).classList.remove('open'); }
 function openPage(id){ document.getElementById(id).classList.add('open'); }
 function closePage(id){ document.getElementById(id).classList.remove('open'); }
+function showFsOverlay(id){ document.getElementById(id)?.classList.remove('hidden'); }
+function hideFsOverlay(id){ document.getElementById(id)?.classList.add('hidden'); }
 
 function renderLandingAdminTools() {
   const show = adminMode && !group;

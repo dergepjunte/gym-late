@@ -90,13 +90,13 @@ function showStreakAnim(newStreak) {
     n.style.animation = 'none'; void n.offsetHeight; n.style.animation = '';
   });
   num.textContent = Math.max(0, newStreak - 1);
-  el.classList.remove('hidden');
+  showFsOverlay('streak-anim');
   // Count up to the new streak as the flame ignites
   setTimeout(() => wCount(num, newStreak), 750);
 }
 
 document.getElementById('sa-close').addEventListener('click', () => {
-  document.getElementById('streak-anim').classList.add('hidden');
+  hideFsOverlay('streak-anim');
   if (window._saNext) { const fn = window._saNext; window._saNext = null; fn(); }
 });
 
@@ -119,11 +119,11 @@ function computeCheckinLateness() {
 
 function showLateAnim(minsOff) {
   document.getElementById('la-sub').textContent = T.laSub(minsOff);
-  document.getElementById('late-anim').classList.remove('hidden');
+  showFsOverlay('late-anim');
 }
 
 document.getElementById('la-close').addEventListener('click', () => {
-  document.getElementById('late-anim').classList.add('hidden');
+  hideFsOverlay('late-anim');
   if (window._laNext) { const fn = window._laNext; window._laNext = null; fn(); }
 });
 
