@@ -125,7 +125,7 @@ struct ProfileSetupSheet: View {
                 TextField(K.L.de ? "Name eingeben…" : "Enter name…", text: $name)
             }
             Section("Recovery Code") {
-                SecureField("XXXX-XXXX-XXXX", text: $recoveryCode)
+                SecureField("AAAA-BBBB-CCCC", text: $recoveryCode)
                     .textInputAutocapitalization(.characters)
             }
             Section {

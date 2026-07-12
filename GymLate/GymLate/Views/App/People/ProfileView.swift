@@ -80,7 +80,7 @@ struct ProfileView: View {
                             Text(K.L.pvRcLbl)
                                 .font(.system(size: 13)).foregroundColor(.secondary)
                             HStack {
-                                Text(revealRC ? rc : "XXXX-XXXX-XXXX")
+                                Text(revealRC ? rc : "AAAA-BBBB-CCCC")
                                     .font(.system(.body, design: .monospaced))
                                     .onTapGesture {
                                         guard revealRC else { return }

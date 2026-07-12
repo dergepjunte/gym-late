@@ -64,11 +64,15 @@ struct SettingsSheet: View {
                     } header: {
                         HStack(spacing: 6) {
                             Text(K.L.msetFixedtimeLbl)
+                            // Outlined/tinted chip — matches web's .beta-badge (lighter
+                            // treatment than a filled accent capsule, so "BETA" doesn't
+                            // visually compete with primary CTAs).
                             Text("BETA")
                                 .font(.system(size: 9, weight: .black))
-                                .foregroundColor(K.onAccent)
+                                .foregroundColor(K.accentDark)
                                 .padding(.horizontal, 5).padding(.vertical, 1)
-                                .background(Capsule().fill(K.accent))
+                                .background(Capsule().fill(K.accentDeep.opacity(0.12)))
+                                .overlay(Capsule().strokeBorder(K.accentDeep.opacity(0.28), lineWidth: 1))
                         }
                     }
 

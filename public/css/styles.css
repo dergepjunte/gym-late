@@ -998,6 +998,9 @@
       0%,100% { transform:scale(.95) rotate(-3deg); }
       50%     { transform:scale(1.1) rotate(3deg); }
     }
+    @media (prefers-reduced-motion:reduce) {
+      .loading-word, .loading-barbell, .loading-flame { animation:none; }
+    }
 
     /* Style selection (mirrors LocalStore.loadingStyle on iOS) */
     .loading-screen[data-style="barbell"]  .loading-barbell { display:flex; }

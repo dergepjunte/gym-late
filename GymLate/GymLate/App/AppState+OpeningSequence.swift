@@ -122,14 +122,28 @@ extension AppState {
         guard !store.isGeoPromptSeen(date: today),
               let data = groupData,
               let gymLat = data.gymLat, let gymLng = data.gymLng else { return }
+
+        // Mirror web's checkGeoAndPrompt: skip if the user already has an
+        // attend/late entry for today (opening.js:66-73) — otherwise a
+        // check-in logged another way still triggers the geo prompt.
+        let me = userProfile?.name
+        let alreadyIn = data.entries.contains { e in
+            me != nil && e.person == me && e.date == today && (e.type == "attend" || e.type == "late")
+        }
+        guard !alreadyIn else { return }
+
         let radius = Double(data.gymRadius ?? 150)
-        store.markGeoPromptSeen(date: today)
 
         do {
             let loc = try await LocationManager.shared.fetchCurrentLocation()
             let gymCoord = CLLocationCoordinate2D(latitude: gymLat, longitude: gymLng)
             let dist = LocationManager.distance(from: loc.coordinate, to: gymCoord)
             if dist <= radius {
+                // Only mark "seen" once the prompt is actually about to show —
+                // matches web's showGeoPrompt(), which sets the flag itself
+                // rather than the caller pre-marking it. Keeps retrying (e.g.
+                // next poll) if the user is still out of range today.
+                store.markGeoPromptSeen(date: today)
                 geoCheckinPossible = true
                 showGeoPrompt = true
             }

@@ -53,7 +53,10 @@ struct LaunchLoadingView: View {
             withAnimation(.spring(response: 0.6, dampingFraction: 0.5)) { appeared = true }
             // Continuous loop starts once the entrance spring has settled, so
             // the screen reads as alive the whole time it's on screen rather
-            // than a static reveal that just sits there.
+            // than a static reveal that just sits there. Skipped entirely
+            // under Reduce Motion (matches the pattern used for the
+            // notification bubble transition in AppRootView.swift).
+            guard !UIAccessibility.isReduceMotionEnabled else { return }
             withAnimation(.easeInOut(duration: loopDuration).repeatForever(autoreverses: true).delay(0.5)) {
                 loop = true
             }
