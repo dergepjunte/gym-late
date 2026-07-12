@@ -50,7 +50,7 @@ struct NotifPrimerView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    Capsule()
                                         .fill(LinearGradient(
                                             colors: Theme.accentGradient,
                                             startPoint: .topLeading,

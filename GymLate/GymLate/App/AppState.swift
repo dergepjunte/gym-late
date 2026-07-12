@@ -23,6 +23,9 @@ final class AppState: ObservableObject {
     @Published var userProfile: UserProfile?
     @Published var isLoading = false
     @Published var errorMessage: String?
+    // Cold-start loading screen (LaunchLoadingView) — true only while the
+    // very first refreshData() on app launch is in flight.
+    @Published var isBootLoading = false
 
     // Global account (email/password + Apple/Google SSO). nil = this device
     // only has legacy per-group recovery-code profiles (or is brand new).
@@ -91,9 +94,13 @@ final class AppState: ObservableObject {
             // Cold start into a restored group: render cache, sync, poll —
             // same pipeline as enterGroup/switchGroup.
             showCachedDataOrSpinner(for: g.id)
+            isBootLoading = true
             Task {
+                async let minDelay: () = Task.sleep(nanoseconds: 900_000_000)
                 await refreshData()
                 isLoading = false
+                try? await minDelay
+                withAnimation(.easeInOut(duration: 0.4)) { isBootLoading = false }
                 startPolling()
                 runOpeningSequence()
                 if !store.notifPrimerSeen { showNotifPrimer = true }

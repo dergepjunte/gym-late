@@ -45,12 +45,15 @@ struct RootView: View {
 
     var body: some View {
         ZStack {
-            if appState.activeGroup != nil && appState.userProfile != nil {
-                AppRootView()
+            if appState.isBootLoading {
+                LaunchLoadingView().transition(.opacity)
+            } else if appState.activeGroup != nil && appState.userProfile != nil {
+                AppRootView().transition(.opacity)
             } else {
-                LandingView()
+                LandingView().transition(.opacity)
             }
         }
+        .animation(.easeInOut(duration: 0.4), value: appState.isBootLoading)
         .animation(.easeInOut(duration: 0.3), value: appState.activeGroup?.id)
     }
 }

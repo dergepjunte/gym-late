@@ -126,6 +126,14 @@ final class LocalStore {
         set { defaults.set(newValue, forKey: "gymNotifPrimerSeen") }
     }
 
+    // MARK: - Launch loading animation style
+
+    /// One of "barbell" (default), "flame", "wordmark" — see LaunchLoadingView.LoadingStyle.
+    var loadingStyle: String {
+        get { defaults.string(forKey: "gymLoadingStyle") ?? "barbell" }
+        set { defaults.set(newValue, forKey: "gymLoadingStyle") }
+    }
+
     // MARK: - Global Account
     //
     // Only the non-secret fields live here; the bearer `accountToken` is

@@ -39,7 +39,7 @@ struct GeoPromptView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(Color.white.opacity(0.2).cornerRadius(16))
+                            .background(Color.white.opacity(0.2).clipShape(Capsule()))
                     }
 
                     Button {
@@ -55,7 +55,7 @@ struct GeoPromptView: View {
                             .lineLimit(1).minimumScaleFactor(0.75)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(Color.white.cornerRadius(16))
+                            .background(Color.white.clipShape(Capsule()))
                     }
                 }
             }

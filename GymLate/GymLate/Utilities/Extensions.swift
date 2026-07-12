@@ -7,19 +7,28 @@ import SwiftUI
 struct GlassSurface: ViewModifier {
     var radius: CGFloat = 20
     var interactive: Bool = false
+    var capsule: Bool = false
     @Environment(\.colorScheme) private var scheme
 
     func body(content: Content) -> some View {
         let g = Theme.Glass.tokens(for: scheme)
-        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        let shape: AnyShape = capsule
+            ? AnyShape(Capsule())
+            : AnyShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
         return content
             .background {
                 if #available(iOS 26.0, *) {
-                    Color.clear.glassEffect(
-                        interactive ? .regular.interactive() : .regular,
-                        in: .rect(cornerRadius: radius))
+                    if capsule {
+                        Color.clear.glassEffect(
+                            interactive ? .regular.interactive() : .regular,
+                            in: .capsule)
+                    } else {
+                        Color.clear.glassEffect(
+                            interactive ? .regular.interactive() : .regular,
+                            in: .rect(cornerRadius: radius))
+                    }
                 } else {
-                    shape.fill(.ultraThinMaterial)
+                    shape.fill(Material.ultraThinMaterial)
                 }
             }
             .overlay {
@@ -30,7 +39,7 @@ struct GlassSurface: ViewModifier {
                 .allowsHitTesting(false)
             }
             .overlay {
-                shape.strokeBorder(LinearGradient(
+                shape.stroke(LinearGradient(
                     colors: [g.borderTop, g.border],
                     startPoint: .top, endPoint: .bottom), lineWidth: 1)
                 .allowsHitTesting(false)
@@ -55,17 +64,16 @@ extension View {
             .frame(maxWidth: .infinity)
             .frame(height: 52)
         if #available(iOS 26.0, *) {
-            base.glassEffect(.regular.tint(K.accent).interactive(),
-                             in: .rect(cornerRadius: 16))
+            base.glassEffect(.regular.tint(K.accent).interactive(), in: .capsule)
         } else {
             base.background(
                 LinearGradient(
                     colors: Theme.accentGradient,
                     startPoint: .topLeading, endPoint: .bottomTrailing)
-                .cornerRadius(16)
             )
+            .clipShape(Capsule())
             .overlay(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                Capsule()
                     .fill(LinearGradient(
                         stops: [.init(color: .white.opacity(0.35), location: 0),
                                 .init(color: .clear, location: 0.45)],
@@ -75,9 +83,9 @@ extension View {
         }
     }
 
-    /// Secondary, untinted Liquid Glass button surface.
+    /// Secondary, untinted Liquid Glass button surface. Fully rounded (pill).
     func glassButton(radius: CGFloat = 16) -> some View {
-        modifier(GlassSurface(radius: radius, interactive: true))
+        modifier(GlassSurface(radius: radius, interactive: true, capsule: true))
     }
 
     /// Right-to-left push page cover (replaces .fullScreenCover).

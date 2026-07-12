@@ -239,7 +239,7 @@ extension WrappedView {
                         .foregroundColor(Color(hex: "#1a0030"))
                         .padding(.horizontal, 52)
                         .padding(.vertical, 18)
-                        .background(Color.white.cornerRadius(40))
+                        .background(Color.white.clipShape(Capsule()))
                         .shadow(color: .black.opacity(0.4), radius: 28, y: 8)
                 }
                 .buttonStyle(.plain)

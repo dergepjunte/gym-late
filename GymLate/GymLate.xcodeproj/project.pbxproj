@@ -39,6 +39,7 @@
 		AE086CC31115AA2ED9CEBF86 /* EditEntrySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA66841CA55817955D576DA /* EditEntrySheet.swift */; };
 		AF295ABA810F833BF8887900 /* SettingsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05B044394281AAD61209FB8 /* SettingsSheet.swift */; };
 		B8D3E9F2E3AF3F2CB954DE30 /* WrappedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8EB04CC7DEF8173816B8DCF /* WrappedComponents.swift */; };
+		1F3B9D3180AD4A65AA3BB5D0 /* LaunchLoadingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE9385507A7843778FCC49D4 /* LaunchLoadingView.swift */; };
 		B9ADFE2B2F89F95BC4FD7845 /* JoinGroupSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = C405495A3F07C00A1D652611 /* JoinGroupSheet.swift */; };
 		BB4400104484F43B9238D44F /* GroupSwitcherSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEDFBAAEAFB2735EE86D9ECE /* GroupSwitcherSheet.swift */; };
 		BE3959344C3313993FCE34E5 /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CD7DB6E4687AB95C8ED4F04 /* AppRootView.swift */; };
@@ -96,6 +97,7 @@
 		9D9CAE4D04B30288FE0267BA /* NotifPrimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifPrimerView.swift; sourceTree = "<group>"; };
 		A05B044394281AAD61209FB8 /* SettingsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSheet.swift; sourceTree = "<group>"; };
 		A8EB04CC7DEF8173816B8DCF /* WrappedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrappedComponents.swift; sourceTree = "<group>"; };
+		CE9385507A7843778FCC49D4 /* LaunchLoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchLoadingView.swift; sourceTree = "<group>"; };
 		A99CBE77B0965BDD09535BAC /* GymLate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GymLate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA5EDBF2159AD236E683034B /* AdminLoginSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminLoginSheet.swift; sourceTree = "<group>"; };
 		B7953922313C309DBD0A3DEA /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
@@ -152,6 +154,7 @@
 				5E67BB4EE2F3E40D35140A2E /* GeoPromptView.swift */,
 				9D9CAE4D04B30288FE0267BA /* NotifPrimerView.swift */,
 				A8EB04CC7DEF8173816B8DCF /* WrappedComponents.swift */,
+				CE9385507A7843778FCC49D4 /* LaunchLoadingView.swift */,
 				0536D8A2882B1F60D374DDF8 /* WrappedView.swift */,
 				6E39DADE6CAD3A994CA66242 /* WrappedView+Slides.swift */,
 			);
@@ -434,6 +437,7 @@
 				EA4B2C4E9A2995B35F43A374 /* Theme.swift in Sources */,
 				50FD4E3325DDE7FEBBD4D4E2 /* WeekView.swift in Sources */,
 				B8D3E9F2E3AF3F2CB954DE30 /* WrappedComponents.swift in Sources */,
+				1F3B9D3180AD4A65AA3BB5D0 /* LaunchLoadingView.swift in Sources */,
 				EE13C8B1FB3AE9186D3D49A4 /* WrappedView+Slides.swift in Sources */,
 				C716B2DA80EE43C481425BD7 /* WrappedView.swift in Sources */,
 			);

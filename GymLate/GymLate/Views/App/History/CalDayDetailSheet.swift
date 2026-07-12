@@ -198,7 +198,7 @@ struct CalDayDetailSheet: View {
                 .foregroundColor(.secondary)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
-                .background(Color(.systemFill).cornerRadius(10))
+                .background(Color(.systemFill).clipShape(Capsule()))
 
                 Button { Task { await addEntry() } } label: {
                     Text(isAdding ? "…" : K.L.save)
@@ -206,7 +206,7 @@ struct CalDayDetailSheet: View {
                         .foregroundColor(K.onAccent)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 10)
-                        .background(K.accentDeep.cornerRadius(10))
+                        .background(K.accentDeep.clipShape(Capsule()))
                 }
                 .disabled(isAdding || addPerson.isEmpty)
             }

@@ -102,7 +102,7 @@ struct RecapView: View {
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 9)
                                     .frame(maxWidth: .infinity)
-                                    .glassCard(radius: 22)
+                                    .glassButton()
                             }
                             .buttonStyle(.plain)
                             .padding(.horizontal, 16)

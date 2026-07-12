@@ -106,6 +106,7 @@ struct AccountAuthSheet: View {
                 .frame(height: 44)
             }
             .buttonStyle(.bordered)
+            .buttonBorderShape(.capsule)
             .listRowInsets(EdgeInsets())
             .listRowBackground(Color.clear)
             .disabled(isLoading)

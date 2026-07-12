@@ -175,6 +175,12 @@ enum K {
         static var toastFixedCheckinOn: String { de ? "Feste Check-in-Zeit aktiviert" : "Fixed check-in time enabled" }
         static var toastFixedCheckinOff: String { de ? "Feste Check-in-Zeit deaktiviert" : "Fixed check-in time disabled" }
 
+        // Launch loading animation
+        static var msetLoadingLbl: String { de ? "Ladeanimation" : "Loading animation" }
+        static var loadingBarbell: String { de ? "Hantel" : "Barbell" }
+        static var loadingFlame: String { de ? "Flamme" : "Flame" }
+        static var loadingWordmark: String { de ? "Schriftzug" : "Wordmark" }
+
         // Notifications
         static var msetNotifLbl: String { de ? "Benachrichtigungen" : "Notifications" }
         static var msetNotifRemindersLbl: String { de ? "Gym-Erinnerung" : "Gym day reminder" }
@@ -244,7 +250,7 @@ enum K {
         static var replayHintCheckin: String { de ? "Über den Check-in-Button einchecken ›" : "Check in via the check-in button ›" }
 
         // Recap replay button
-        static var recapReplayBtn: String { de ? "▶ Wöchentlicher Rückblick" : "▶ Weekly Recap" }
+        static var recapReplayBtn: String { de ? "Wöchentlicher Rückblick" : "Weekly Recap" }
 
         // Admin calendar editing
         static var admCalAddEntry: String { de ? "+ Eintrag hinzufügen" : "+ Add entry" }

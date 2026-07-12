@@ -90,7 +90,7 @@ struct DailyHypeView: View {
                         .foregroundColor(K.accentDark)
                         .padding(.horizontal, 40)
                         .padding(.vertical, 16)
-                        .background(Color.white.cornerRadius(20))
+                        .background(Color.white.clipShape(Capsule()))
                 }
             }
             .opacity(opacity)

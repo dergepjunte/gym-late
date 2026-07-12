@@ -35,6 +35,9 @@ struct SettingsSheet: View {
     @State private var quietEnd       = hhmmToDate(LocalStore.shared.quietEnd)
     @State private var notifMembers: [String]? = LocalStore.shared.notifMembers
 
+    // Launch loading animation
+    @State private var loadingStyle = LaunchLoadingView.LoadingStyle(rawValue: LocalStore.shared.loadingStyle) ?? .barbell
+
     private let dayLabels = K.L.dayNames
     private var isCreatorOrAdmin: Bool {
         appState.userProfile?.isCreator == true || appState.adminMode
@@ -188,6 +191,19 @@ struct SettingsSheet: View {
                         .foregroundColor(K.accentDark)
                     }
                 }
+
+                // Launch loading animation
+                Section {
+                    Picker(K.L.msetLoadingLbl, selection: $loadingStyle) {
+                        ForEach(LaunchLoadingView.LoadingStyle.allCases) { style in
+                            Text(style.label).tag(style)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .onChange(of: loadingStyle) { _, style in
+                        LocalStore.shared.loadingStyle = style.rawValue
+                    }
+                } header: { Text(K.L.msetLoadingLbl) }
 
                 // Leave group
                 Section {

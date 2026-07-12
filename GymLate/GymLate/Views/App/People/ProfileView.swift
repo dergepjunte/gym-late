@@ -123,7 +123,7 @@ struct ProfileView: View {
                                     .foregroundColor(K.red)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
-                                    .background(K.red.opacity(0.1).cornerRadius(16))
+                                    .background(K.red.opacity(0.1).clipShape(Capsule()))
                             }
                             .padding(.horizontal, 16)
                         } else if appState.userProfile?.isCreator == true || appState.adminMode {
@@ -133,7 +133,7 @@ struct ProfileView: View {
                                     .foregroundColor(K.red)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 14)
-                                    .background(K.red.opacity(0.1).cornerRadius(16))
+                                    .background(K.red.opacity(0.1).clipShape(Capsule()))
                             }
                             .padding(.horizontal, 16)
                         }
