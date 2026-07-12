@@ -131,6 +131,13 @@ struct AccountAuthSheet: View {
             error = K.L.de ? "Anmeldung mit Google ist noch nicht verfügbar." : "Sign in with Google isn't available yet."
         } catch let gidError as GIDSignInError where gidError.code == .canceled {
             // User dismissed the Google sheet — not an error worth surfacing.
+        } catch is GIDSignInError {
+            // GIDSignInError's localizedDescription tends to be an internal,
+            // Google-SDK-flavored string (e.g. keychain/EMM/scope errors) —
+            // not something to show a user. One friendly fallback covers all
+            // non-cancel cases; details aren't actionable for the user anyway.
+            error = K.L.de ? "Google-Anmeldung fehlgeschlagen. Bitte erneut versuchen."
+                           : "Google sign-in failed. Please try again."
         } catch {
             self.error = error.localizedDescription
         }

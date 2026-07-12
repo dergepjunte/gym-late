@@ -23,7 +23,13 @@ async function initSso() {
   let cfg;
   try { cfg = await api.authConfig(); } catch { return; }
   if (!cfg.googleWebClientId) return;
-  if (!await waitForGoogleLib()) return;
+  if (!await waitForGoogleLib()) {
+    // The button silently never renders past this point — if that's
+    // unexpected (misconfigured origin, ad-blocker, CSP), this is the only
+    // signal a dev has to go on.
+    console.warn('[sso] Google Identity Services script did not load in time; Google sign-in button will not render.');
+    return;
+  }
 
   google.accounts.id.initialize({
     client_id: cfg.googleWebClientId,
@@ -52,7 +58,9 @@ async function handleGoogleCredential(response) {
     const r = await api.accountGoogle(response.credential);
     await afterAccountAuth(r);
   } catch (e) {
-    showToast(e.status === 401 ? T.aaErrWrong : T.errServer);
+    if (e.status === 401) showToast(T.aaErrWrong);
+    else if (e.status === 501) showToast(T.aaErrSsoNotConfigured);
+    else showToast(T.errServer);
   }
 }
 

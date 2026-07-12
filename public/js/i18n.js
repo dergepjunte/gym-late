@@ -74,6 +74,7 @@ const TRANS = {
     lsSigninBtn:'Schon ein Konto? Anmelden →',
     aaErrEmail:'Bitte gültige E-Mail eingeben.', aaErrPw:'Passwort muss mind. 8 Zeichen haben.',
     aaErrTaken:'Diese E-Mail ist bereits registriert.', aaErrWrong:'Falsche E-Mail oder Passwort.',
+    aaErrSsoNotConfigured:'Anmeldung mit Google ist noch nicht verfügbar.',
     // Migration (recovery-code → account)
     migTitle:'Konto sichern', migSub:'Füge E-Mail & Passwort hinzu, damit du deine Gruppen nie verlierst — auch auf neuen Geräten.',
     migSetPw:'E-Mail & Passwort einrichten', migSkip:'Später',
@@ -271,6 +272,7 @@ const TRANS = {
     lsSigninBtn:'Already have an account? Sign in →',
     aaErrEmail:'Please enter a valid email.', aaErrPw:'Password must be at least 8 characters.',
     aaErrTaken:'This email is already registered.', aaErrWrong:'Wrong email or password.',
+    aaErrSsoNotConfigured:'Google sign-in isn\'t available yet.',
     // Migration (recovery-code → account)
     migTitle:'Secure your account', migSub:'Add email & password so you never lose access to your groups — even on new devices.',
     migSetPw:'Set email & password', migSkip:'Later',
