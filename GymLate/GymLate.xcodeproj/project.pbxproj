@@ -31,6 +31,7 @@
 		9075F75BC90E768435C8568C /* AdminPanelPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6F3204E4F5286562B6D5EE19 /* AdminPanelPage.swift */; };
 		9515C89B38E15239712A53CF /* ConnectivityMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4DA024707F51F4EDA7F3FFD /* ConnectivityMonitor.swift */; };
 		9D2539B5BBD06F598230E1C4 /* BottomNav.swift in Sources */ = {isa = PBXBuildFile; fileRef = D76081DD1D44942ADCE0263A /* BottomNav.swift */; };
+		A179281067182E81A7D7F27F /* AppState+Ceremonies.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4AA0C508E9B82B8BD514C2A0 /* AppState+Ceremonies.swift */; };
 		AC0734326D397049FEE08B2E /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E8E8A9C353B25C44D9B99E /* Extensions.swift */; };
 		AE086CC31115AA2ED9CEBF86 /* EditEntrySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BA66841CA55817955D576DA /* EditEntrySheet.swift */; };
 		AF295ABA810F833BF8887900 /* SettingsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A05B044394281AAD61209FB8 /* SettingsSheet.swift */; };
@@ -40,6 +41,7 @@
 		C4D918BFF545FAD26F2AA906 /* CeremonyOverlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D9BF3A30DA09DAA0E38A040 /* CeremonyOverlays.swift */; };
 		C716B2DA80EE43C481425BD7 /* WrappedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0536D8A2882B1F60D374DDF8 /* WrappedView.swift */; };
 		C82D3B2F9AFBE25C8138D614 /* AdminPanelSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592ACFBCF976F16F9D870740 /* AdminPanelSection.swift */; };
+		D00FD94C48E717CAC36219AA /* AppState+OpeningSequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78820ED81005FE883E1B7433 /* AppState+OpeningSequence.swift */; };
 		D2B6DF9AE4376F88227B3226 /* GymLateApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 921C638398077365E459B898 /* GymLateApp.swift */; };
 		D2FDF01D12B40A3FE24B7922 /* AvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E74360B16FE641EF822A100 /* AvatarView.swift */; };
 		DBA6D3C02B165C2D4B853743 /* LogEntrySheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C412DA5DF8A622C52585435 /* LogEntrySheet.swift */; };
@@ -63,6 +65,7 @@
 		3CD7DB6E4687AB95C8ED4F04 /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
 		44A1859F4C1F10709CE877B0 /* CalDayDetailSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalDayDetailSheet.swift; sourceTree = "<group>"; };
 		48B216B28325FF5FA1DAECAD /* RecapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecapView.swift; sourceTree = "<group>"; };
+		4AA0C508E9B82B8BD514C2A0 /* AppState+Ceremonies.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppState+Ceremonies.swift"; sourceTree = "<group>"; };
 		592ACFBCF976F16F9D870740 /* AdminPanelSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminPanelSection.swift; sourceTree = "<group>"; };
 		59E8E8A9C353B25C44D9B99E /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		5E67BB4EE2F3E40D35140A2E /* GeoPromptView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GeoPromptView.swift; sourceTree = "<group>"; };
@@ -70,6 +73,7 @@
 		65CF269718473218A5DF0EC3 /* NotificationBubbleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationBubbleView.swift; sourceTree = "<group>"; };
 		6F3204E4F5286562B6D5EE19 /* AdminPanelPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminPanelPage.swift; sourceTree = "<group>"; };
 		751C7F62AE124835E71E5345 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		78820ED81005FE883E1B7433 /* AppState+OpeningSequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppState+OpeningSequence.swift"; sourceTree = "<group>"; };
 		7A1B62C54ABD7E9815004463 /* ProfileSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSetupSheet.swift; sourceTree = "<group>"; };
 		7D9BF3A30DA09DAA0E38A040 /* CeremonyOverlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CeremonyOverlays.swift; sourceTree = "<group>"; };
 		7E74360B16FE641EF822A100 /* AvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarView.swift; sourceTree = "<group>"; };
@@ -204,6 +208,8 @@
 			isa = PBXGroup;
 			children = (
 				8F8EF8E4E8D90346B6023078 /* AppState.swift */,
+				4AA0C508E9B82B8BD514C2A0 /* AppState+Ceremonies.swift */,
+				78820ED81005FE883E1B7433 /* AppState+OpeningSequence.swift */,
 				921C638398077365E459B898 /* GymLateApp.swift */,
 			);
 			path = App;
@@ -364,6 +370,8 @@
 				C82D3B2F9AFBE25C8138D614 /* AdminPanelSection.swift in Sources */,
 				DEE5FED636A5B11C4A5BBAEE /* AppHeader.swift in Sources */,
 				BE3959344C3313993FCE34E5 /* AppRootView.swift in Sources */,
+				A179281067182E81A7D7F27F /* AppState+Ceremonies.swift in Sources */,
+				D00FD94C48E717CAC36219AA /* AppState+OpeningSequence.swift in Sources */,
 				1CE2AE244236D880AD9F89F8 /* AppState.swift in Sources */,
 				D2FDF01D12B40A3FE24B7922 /* AvatarView.swift in Sources */,
 				9D2539B5BBD06F598230E1C4 /* BottomNav.swift in Sources */,
