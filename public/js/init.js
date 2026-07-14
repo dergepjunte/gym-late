@@ -84,39 +84,23 @@ async function saveNotifPrefsToServer(prefs) {
   });
 }
 
-async function init() {
-  showLoading(true); loadGroup();
-  if (group) {
-    loadUser(group.id);
+function init() {
+  // group/userProfile stay unset until a profile card is actually picked —
+  // switchToGroup() no-ops if the tapped group already matches the active `group`
+  let all = loadAllGroups();
+  if (all.length === 0) {
+    // Backfill the multi-group registry from a pre-multi-group install
     try {
-      data = await api.getGroup(group.id);
-    } catch(e) {
-      if (e.status===404) clearGroup();
-      showLoading(false); showScreen('landing'); return;
-    }
-    if (!userProfile) {
-      // Stored group but no user — show profile setup
-      showLoading(false);
-      pendingGroup = group;
-      applyI18n(); showScreen('landing'); openProfileSetup();
-      return;
-    }
-    // Check if user is still in the group (not kicked)
-    const me = data.people.find(p => p.id === userProfile.userId);
-    if (!me) {
-      clearUser(group.id); userProfile = null;
-      showLoading(false); showScreen('landing');
-      setTimeout(() => showToast(T.kicked), 300); return;
-    }
-    userProfile.isCreator = me.isCreator;
-    if ('avatarImg' in me) userProfile.avatarImg = me.avatarImg;
-    saveUser(group.id, userProfile);
-    updateMyProfileBtn();
-    applyI18n(); renderAll(); startPolling(); showLoading(false); showScreen('app');
-    runOpeningSequence();
-    maybeShowNotifPrimer();
+      const legacy = JSON.parse(localStorage.getItem('gymGroup') || 'null');
+      if (legacy) { saveAllGroups([legacy]); all = [legacy]; }
+    } catch {}
+  }
+  showLoading(false);
+  if (all.length > 0) {
+    renderProfilePicker();
+    showScreen('profile-picker');
     return;
   }
-  showLoading(false); showScreen('landing');
+  showScreen('landing');
 }
 init();

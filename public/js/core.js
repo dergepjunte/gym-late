@@ -94,6 +94,8 @@ function clearGroup() {
 function saveUser(gid, u) { userProfile=u; localStorage.setItem('gymUser_'+gid, JSON.stringify(u)); }
 function loadUser(gid)    { try { userProfile=JSON.parse(localStorage.getItem('gymUser_'+gid)||'null'); } catch { userProfile=null; } }
 function clearUser(gid)   { userProfile=null; localStorage.removeItem('gymUser_'+gid); }
+// Read a group's saved profile without touching the active userProfile/group globals
+function peekUserForGroup(gid) { try { return JSON.parse(localStorage.getItem('gymUser_'+gid)||'null'); } catch { return null; } }
 
 // ════════════════════════════════════════════════════════
 //  ACCOUNT (global email/password + Apple/Google identity)

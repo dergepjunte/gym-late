@@ -40,6 +40,8 @@ function applyI18n() {
   set('pill-hint', T.pillHint);
   // Groups section (People tab)
   set('lbl-groups',T.mgsTitle); set('pp-join-btn',T.mgsJoin); set('pp-create-btn',T.mgsCreate);
+  // Profile picker
+  set('picker-title',T.pickerTitle); set('landing-back-btn',T.pickerBack);
   // Overlays
   set('dh-title',T.dhTitle); set('dh-sub',T.dhSub); set('dh-close',T.dhClose);
   set('dh-time-picker-lbl',T.dhSetTimeLbl); set('dh-time-save',T.dhSetTimeBtn); set('dh-time-display-lbl',T.dhTimeSetLbl);
@@ -134,11 +136,12 @@ function getDayMask(containerId) {
 // ════════════════════════════════════════════════════════
 //  MODAL: CREATE GROUP
 // ════════════════════════════════════════════════════════
-document.getElementById('btn-show-create').addEventListener('click', () => {
+function openCreateModal() {
   document.getElementById('mc-name').value=''; document.getElementById('mc-error').textContent='';
   buildDayPicker('mc-day-picker', '1111100'); // Mon-Fri default
   openPage('modal-create'); setTimeout(()=>document.getElementById('mc-name').focus(),350);
-});
+}
+document.getElementById('btn-show-create').addEventListener('click', openCreateModal);
 document.getElementById('mc-cancel').addEventListener('click', ()=>closePage('modal-create'));
 document.getElementById('mc-submit').addEventListener('click', async () => {
   const name = document.getElementById('mc-name').value.trim();

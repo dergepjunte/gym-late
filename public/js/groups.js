@@ -28,9 +28,56 @@ async function switchToGroup(g) {
     saveUser(g.id, userProfile);
     showLoading(false);
     updateMyProfileBtn(); applyI18n(); renderAll(); startPolling(); showScreen('app');
+    runOpeningSequence();
+    maybeShowNotifPrimer();
+    maybeShowMigrateBanner();
     showToast(g.name);
   } catch { showLoading(false); showToast(T.errServer); }
 }
+
+// Profile-card grid (avatar + group name), used by the startup picker
+function buildProfileGridHTML(all) {
+  const cards = all.map(g => {
+    const u = peekUserForGroup(g.id) || {};
+    return `<div class="profile-card" data-gid="${esc(g.id)}">
+      ${avatarHtml(u, 'xl')}
+      <div class="profile-card-name">${esc(g.name)}</div>
+    </div>`;
+  }).join('');
+  const addTile = `<div class="profile-card profile-card-add">
+    <div class="avatar-circle-add">+</div>
+    <div class="profile-card-name">${esc(T.pickerAdd)}</div>
+  </div>`;
+  return cards + addTile;
+}
+
+function wireProfileGrid(gridEl, all, onAdd) {
+  gridEl.querySelectorAll('.profile-card[data-gid]').forEach(el => {
+    el.addEventListener('click', () => {
+      const g = all.find(x => x.id === el.dataset.gid);
+      if (g) switchToGroup(g);
+    });
+  });
+  const addEl = gridEl.querySelector('.profile-card-add');
+  if (addEl) addEl.addEventListener('click', onAdd);
+}
+
+function renderProfilePicker() {
+  const all = loadAllGroups();
+  const gridEl = document.getElementById('picker-grid');
+  gridEl.innerHTML = buildProfileGridHTML(all);
+  wireProfileGrid(gridEl, all, goToLanding);
+}
+
+function goToLanding() {
+  showScreen('landing');
+  document.getElementById('landing-back-btn').classList.toggle('hidden', loadAllGroups().length === 0);
+}
+
+document.getElementById('landing-back-btn').addEventListener('click', () => {
+  renderProfilePicker();
+  showScreen('profile-picker');
+});
 
 function buildGroupListHTML(all) {
   return all.map(g => {
@@ -63,13 +110,13 @@ function renderGroupsSection() {
 // Inline join/create from the People tab
 document.getElementById('pp-join-btn').addEventListener('click', () => {
   stopPolling();
-  showScreen('landing');
+  goToLanding();
   setTimeout(() => openPage('modal-join'), 200);
 });
 document.getElementById('pp-create-btn').addEventListener('click', () => {
   stopPolling();
-  showScreen('landing');
-  setTimeout(() => openPage('modal-create'), 200);
+  goToLanding();
+  setTimeout(openCreateModal, 200);
 });
 
 document.getElementById('leave-btn').addEventListener('click',()=>{

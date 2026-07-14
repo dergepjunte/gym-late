@@ -113,6 +113,8 @@ const TRANS = {
     // Group switcher
     mgsTitle:'Meine Gruppen', mgsJoin:'Einer anderen Gruppe beitreten', mgsCreate:'Neue Gruppe erstellen',
     mgsActive:'Aktiv', mgsSwitch:'Wechseln',
+    // Profile picker
+    pickerTitle:'Wer trainiert?', pickerAdd:'Hinzufügen', pickerBack:'← Profile',
     // Daily hype
     dhTitle:'Heute ist Gym-Tag!', dhSub:'Zeig, was du drauf hast. 💪', dhClose:'Los geht\'s!',
     // Geo prompt
@@ -311,6 +313,8 @@ const TRANS = {
     // Group switcher
     mgsTitle:'My Groups', mgsJoin:'Join another group', mgsCreate:'Create new group',
     mgsActive:'Active', mgsSwitch:'Switch',
+    // Profile picker
+    pickerTitle:'Who\'s training?', pickerAdd:'Add', pickerBack:'← Profiles',
     // Daily hype
     dhTitle:'Today is Gym Day!', dhSub:'Show them what you\'ve got. 💪', dhClose:'Let\'s go!',
     // Geo prompt
