@@ -37,10 +37,7 @@ function openSettings() {
   // Gym location section (creator or admin)
   const mapSection = document.getElementById('mset-map-section');
   mapSection.classList.toggle('hidden', !canEditGroup);
-  if (canEditGroup) {
-    // Initialize Leaflet map lazily after modal is visible
-    setTimeout(() => { initLeafletMap(); setTimeout(() => _leafletMap && _leafletMap.invalidateSize(), 80); }, 400);
-  }
+  // Leaflet map is initialized lazily by selectSettingsTab() once the Group tab is actually visible
 
   // Avail days (current user, within gym days mask)
   buildDayPicker('mset-avail-picker', availDays, gymDays);
@@ -108,10 +105,6 @@ function openSettings() {
       membersList.appendChild(row);
     }
   }
-  // Show/hide notif section based on push support
-  document.getElementById('mset-notif-section').style.display =
-    ('Notification' in window) ? '' : 'none';
-
   // Account & Login
   const acc = loadAccount();
   document.getElementById('mset-account-lbl').textContent = T.mgAccountSectionLbl;
@@ -125,8 +118,40 @@ function openSettings() {
   }
   document.getElementById('mset-account-signout-btn').textContent = T.mgAccountSignOut;
 
+  // Tabs — Group hidden for non-creators, Notify hidden without push support
+  const notifSupported = ('Notification' in window);
+  document.getElementById('mset-tab-group').classList.toggle('hidden', !canEditGroup);
+  document.getElementById('mset-tab-notify').classList.toggle('hidden', !notifSupported);
+  let targetTab = currentSettingsTab;
+  if (targetTab === 'group' && !canEditGroup) targetTab = 'you';
+  if (targetTab === 'notify' && !notifSupported) targetTab = 'you';
+  selectSettingsTab(targetTab);
+
   openPage('modal-settings');
 }
+
+// ── Settings tabs (You / Group / Notify / Account) ──
+let currentSettingsTab = 'you';
+
+function selectSettingsTab(tab) {
+  currentSettingsTab = tab;
+  document.querySelectorAll('#mset-tabs .settings-tab').forEach(btn => {
+    btn.classList.toggle('sel', btn.dataset.tab === tab);
+  });
+  document.querySelectorAll('.settings-panel').forEach(panel => {
+    panel.classList.toggle('hidden', panel.dataset.panel !== tab);
+  });
+  // Leaflet needs a visible container to size itself correctly — (re)init once the Group tab is shown
+  if (tab === 'group') {
+    setTimeout(() => { initLeafletMap(); setTimeout(() => _leafletMap && _leafletMap.invalidateSize(), 80); }, 50);
+  }
+}
+
+document.getElementById('mset-tabs').addEventListener('click', e => {
+  const btn = e.target.closest('.settings-tab');
+  if (!btn || btn.classList.contains('hidden')) return;
+  selectSettingsTab(btn.dataset.tab);
+});
 
 document.getElementById('mset-account-secure-btn').addEventListener('click', () => {
   closePage('modal-settings');

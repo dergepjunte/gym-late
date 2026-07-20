@@ -544,6 +544,7 @@
   <div class="fullpage-inner">
     <!-- Test Data -->
     <div class="admin-eyebrow" id="adm-section-data"></div>
+    <div class="admin-eyebrow-desc" id="adm-data-desc"></div>
     <div class="admin-grid">
       <button class="admin-tile" id="adm-add-btn">
         <div class="admin-tile-glyph" style="background:rgba(245,158,11,.15)">
@@ -561,6 +562,7 @@
 
     <!-- Ceremonies -->
     <div class="admin-eyebrow" id="adm-section-ceremonies"></div>
+    <div class="admin-eyebrow-desc" id="adm-ceremonies-desc"></div>
     <div class="admin-grid">
       <button class="admin-tile" id="adm-replay-btn">
         <div class="admin-tile-glyph" style="background:var(--accent-light)">
@@ -596,6 +598,7 @@
 
     <!-- Notifications -->
     <div class="admin-eyebrow" id="adm-section-notif"></div>
+    <div class="admin-eyebrow-desc" id="adm-notif-desc"></div>
     <div class="admin-grid">
       <button class="admin-tile" id="adm-test-reminder">
         <div class="admin-tile-glyph" style="background:rgba(99,102,241,.12)">
@@ -852,119 +855,146 @@
     <div class="fullpage-bar-title" id="mset-title"></div>
   </div>
   <div class="fullpage-inner">
-    <div class="settings-section" id="mset-gymdays-section">
-      <div class="settings-section-title" id="mset-gymdays-lbl"></div>
-      <div class="day-picker" id="mset-gym-picker"></div>
-      <div class="error-msg" id="mset-gym-error" style="margin-top:6px"></div>
-      <button class="btn btn-primary" id="mset-gym-save" style="margin-top:10px;width:100%"></button>
+    <div class="settings-tabs" id="mset-tabs">
+      <button type="button" class="settings-tab sel" data-tab="you" id="mset-tab-you"></button>
+      <button type="button" class="settings-tab" data-tab="group" id="mset-tab-group"></button>
+      <button type="button" class="settings-tab" data-tab="notify" id="mset-tab-notify"></button>
+      <button type="button" class="settings-tab" data-tab="account" id="mset-tab-account"></button>
     </div>
-    <!-- Fixed check-in time (Beta, creator/admin only) -->
-    <div class="settings-section hidden" id="mset-fixedtime-section">
-      <div class="settings-section-title"><span id="mset-fixedtime-lbl"></span> <span class="beta-badge">BETA</span></div>
-      <div class="geo-toggle-row">
-        <span class="geo-toggle-label" id="mset-fixedtime-toggle-lbl"></span>
-        <label class="toggle-switch">
-          <input type="checkbox" id="mset-fixedtime-toggle">
-          <span class="toggle-slider"></span>
-        </label>
+
+    <!-- YOU -->
+    <div class="settings-panel" data-panel="you">
+      <div class="settings-section" id="mset-avail-section">
+        <div class="settings-section-title" id="mset-avail-lbl"></div>
+        <div class="settings-section-desc" id="mset-avail-desc"></div>
+        <div class="day-picker" id="mset-avail-picker"></div>
+        <div class="avail-lock-info hidden" id="mset-avail-lock"></div>
+        <div class="error-msg" id="mset-avail-error" style="margin-top:6px"></div>
+        <button class="btn btn-primary" id="mset-avail-save" style="margin-top:10px;width:100%"></button>
       </div>
-      <div class="mset-geo-hint" id="mset-fixedtime-hint"></div>
-    </div>
-    <!-- Gym location section (creator/admin only) -->
-    <div class="settings-section hidden" id="mset-map-section">
-      <div class="settings-section-title" id="mset-location-lbl"></div>
-      <div id="mset-map-container"></div>
-      <div class="mset-radius-row">
-        <label id="mset-radius-lbl"></label>
-        <input type="range" id="mset-radius-slider" min="20" max="500" step="10" value="150">
-        <span class="mset-radius-val" id="mset-radius-val">150m</span>
+      <!-- Geo toggle section (all users) -->
+      <div class="settings-section" id="mset-geo-section">
+        <div class="settings-section-title" id="mset-geo-lbl"></div>
+        <div class="settings-section-desc" id="mset-geo-desc"></div>
+        <div class="geo-toggle-row">
+          <span class="geo-toggle-label" id="mset-geo-toggle-lbl"></span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="mset-geo-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <button class="btn btn-ghost" id="mset-geo-test" style="margin-top:8px;width:100%"></button>
+        <div class="mset-geo-hint" id="mset-geo-hint"></div>
       </div>
-      <button class="mset-locate-btn" id="mset-locate-btn"></button>
-      <div class="error-msg" id="mset-location-error" style="margin-top:6px"></div>
-      <button class="btn btn-primary" id="mset-location-save" style="margin-top:10px;width:100%"></button>
-    </div>
-    <div class="settings-section">
-      <div class="settings-section-title" id="mset-avail-lbl"></div>
-      <div class="day-picker" id="mset-avail-picker"></div>
-      <div class="avail-lock-info hidden" id="mset-avail-lock"></div>
-      <div class="error-msg" id="mset-avail-error" style="margin-top:6px"></div>
-      <button class="btn btn-primary" id="mset-avail-save" style="margin-top:10px;width:100%"></button>
-    </div>
-    <!-- Geo toggle section (all users) -->
-    <div class="settings-section" id="mset-geo-section">
-      <div class="settings-section-title" id="mset-geo-lbl"></div>
-      <div class="geo-toggle-row">
-        <span class="geo-toggle-label" id="mset-geo-toggle-lbl"></span>
-        <label class="toggle-switch">
-          <input type="checkbox" id="mset-geo-toggle">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <button class="btn btn-ghost" id="mset-geo-test" style="margin-top:8px;width:100%"></button>
-      <div class="mset-geo-hint" id="mset-geo-hint"></div>
-    </div>
-    <!-- Notifications -->
-    <div class="settings-section" id="mset-notif-section">
-      <div class="settings-section-title" id="mset-notif-lbl"></div>
-      <div class="notif-row">
-        <span class="notif-row-label" id="mset-notif-reminders-lbl"></span>
-        <label class="toggle-switch"><input type="checkbox" id="mset-notif-reminders"><span class="toggle-slider"></span></label>
-      </div>
-      <div class="notif-time-row" id="mset-reminder-time-row">
-        <span class="notif-row-label" id="mset-reminder-time-lbl"></span>
-        <input type="time" id="mset-reminder-time" class="notif-time-input">
-      </div>
-      <div class="notif-row" style="margin-top:12px">
-        <span class="notif-row-label" id="mset-notif-streak-lbl"></span>
-        <label class="toggle-switch"><input type="checkbox" id="mset-notif-streak"><span class="toggle-slider"></span></label>
-      </div>
-      <div class="notif-row" style="margin-top:12px">
-        <span class="notif-row-label" id="mset-notif-activity-lbl"></span>
-        <label class="toggle-switch"><input type="checkbox" id="mset-notif-activity"><span class="toggle-slider"></span></label>
-      </div>
-      <!-- Quiet hours -->
-      <div class="notif-quiet-row" style="margin-top:14px">
-        <span class="notif-row-label" id="mset-quiet-lbl"></span>
-        <div style="display:flex;gap:8px;align-items:center">
-          <input type="time" id="mset-quiet-start" class="notif-time-input">
-          <span style="color:var(--text-2);font-size:13px">–</span>
-          <input type="time" id="mset-quiet-end" class="notif-time-input">
+      <!-- Launch loading animation -->
+      <div class="settings-section" id="mset-loading-section">
+        <div class="settings-section-title" id="mset-loading-lbl"></div>
+        <div class="settings-section-desc" id="mset-loading-desc"></div>
+        <div class="loadstyle-picker" id="mset-loadstyle-picker">
+          <button type="button" class="loadstyle-btn" data-style="barbell" id="mset-loadstyle-barbell"></button>
+          <button type="button" class="loadstyle-btn" data-style="flame" id="mset-loadstyle-flame"></button>
+          <button type="button" class="loadstyle-btn" data-style="wordmark" id="mset-loadstyle-wordmark"></button>
         </div>
       </div>
-      <!-- Activity filter: who to get notified for -->
-      <div id="mset-notif-members-section" style="margin-top:14px">
-        <div class="notif-row-label" id="mset-notif-members-lbl" style="margin-bottom:8px"></div>
-        <div id="mset-notif-members-list"></div>
-      </div>
-      <button class="btn btn-primary" id="mset-notif-save" style="margin-top:16px;width:100%"></button>
     </div>
 
-    <!-- Account & Login -->
-    <div class="settings-section" id="mset-account-section">
-      <div class="settings-section-title" id="mset-account-lbl"></div>
-      <div id="mset-account-nolink">
-        <div class="mset-geo-hint" id="mset-account-hint"></div>
-        <button class="btn btn-primary" id="mset-account-secure-btn" style="margin-top:10px;width:100%"></button>
+    <!-- GROUP (creator/admin only) -->
+    <div class="settings-panel hidden" data-panel="group">
+      <div class="settings-section" id="mset-gymdays-section">
+        <div class="settings-section-title" id="mset-gymdays-lbl"></div>
+        <div class="settings-section-desc" id="mset-gymdays-desc"></div>
+        <div class="day-picker" id="mset-gym-picker"></div>
+        <div class="error-msg" id="mset-gym-error" style="margin-top:6px"></div>
+        <button class="btn btn-primary" id="mset-gym-save" style="margin-top:10px;width:100%"></button>
       </div>
-      <div id="mset-account-linked" style="display:none">
-        <div class="mset-geo-hint" id="mset-account-email"></div>
-        <button class="btn" id="mset-account-signout-btn" style="margin-top:10px;width:100%"></button>
+      <!-- Fixed check-in time (Beta, creator/admin only) -->
+      <div class="settings-section hidden" id="mset-fixedtime-section">
+        <div class="settings-section-title"><span id="mset-fixedtime-lbl"></span> <span class="beta-badge">BETA</span></div>
+        <div class="settings-section-desc" id="mset-fixedtime-desc"></div>
+        <div class="geo-toggle-row">
+          <span class="geo-toggle-label" id="mset-fixedtime-toggle-lbl"></span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="mset-fixedtime-toggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="mset-geo-hint" id="mset-fixedtime-hint"></div>
+      </div>
+      <!-- Gym location section (creator/admin only) -->
+      <div class="settings-section hidden" id="mset-map-section">
+        <div class="settings-section-title" id="mset-location-lbl"></div>
+        <div class="settings-section-desc" id="mset-location-desc"></div>
+        <div id="mset-map-container"></div>
+        <div class="mset-radius-row">
+          <label id="mset-radius-lbl"></label>
+          <input type="range" id="mset-radius-slider" min="20" max="500" step="10" value="150">
+          <span class="mset-radius-val" id="mset-radius-val">150m</span>
+        </div>
+        <button class="mset-locate-btn" id="mset-locate-btn"></button>
+        <div class="error-msg" id="mset-location-error" style="margin-top:6px"></div>
+        <button class="btn btn-primary" id="mset-location-save" style="margin-top:10px;width:100%"></button>
       </div>
     </div>
 
-    <!-- Launch loading animation -->
-    <div class="settings-section">
-      <div class="settings-section-title" id="mset-loading-lbl"></div>
-      <div class="loadstyle-picker" id="mset-loadstyle-picker">
-        <button type="button" class="loadstyle-btn" data-style="barbell" id="mset-loadstyle-barbell"></button>
-        <button type="button" class="loadstyle-btn" data-style="flame" id="mset-loadstyle-flame"></button>
-        <button type="button" class="loadstyle-btn" data-style="wordmark" id="mset-loadstyle-wordmark"></button>
+    <!-- NOTIFY -->
+    <div class="settings-panel hidden" data-panel="notify">
+      <div class="settings-section" id="mset-notif-section">
+        <div class="settings-section-title" id="mset-notif-lbl"></div>
+        <div class="settings-section-desc" id="mset-notif-desc"></div>
+        <div class="notif-row">
+          <span class="notif-row-label" id="mset-notif-reminders-lbl"></span>
+          <label class="toggle-switch"><input type="checkbox" id="mset-notif-reminders"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="notif-time-row" id="mset-reminder-time-row">
+          <span class="notif-row-label" id="mset-reminder-time-lbl"></span>
+          <input type="time" id="mset-reminder-time" class="notif-time-input">
+        </div>
+        <div class="notif-row" style="margin-top:12px">
+          <span class="notif-row-label" id="mset-notif-streak-lbl"></span>
+          <label class="toggle-switch"><input type="checkbox" id="mset-notif-streak"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="notif-row" style="margin-top:12px">
+          <span class="notif-row-label" id="mset-notif-activity-lbl"></span>
+          <label class="toggle-switch"><input type="checkbox" id="mset-notif-activity"><span class="toggle-slider"></span></label>
+        </div>
+        <!-- Quiet hours -->
+        <div class="notif-quiet-row" style="margin-top:14px">
+          <span class="notif-row-label" id="mset-quiet-lbl"></span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="time" id="mset-quiet-start" class="notif-time-input">
+            <span style="color:var(--text-2);font-size:13px">–</span>
+            <input type="time" id="mset-quiet-end" class="notif-time-input">
+          </div>
+        </div>
+        <!-- Activity filter: who to get notified for -->
+        <div id="mset-notif-members-section" style="margin-top:14px">
+          <div class="notif-row-label" id="mset-notif-members-lbl" style="margin-bottom:8px"></div>
+          <div id="mset-notif-members-list"></div>
+        </div>
+        <button class="btn btn-primary" id="mset-notif-save" style="margin-top:16px;width:100%"></button>
       </div>
     </div>
 
-    <!-- Leave group -->
-    <div class="settings-section" style="border-color:rgba(239,68,68,.35);">
-      <button class="leave-btn" id="mset-leave-btn" style="width:100%"></button>
+    <!-- ACCOUNT -->
+    <div class="settings-panel hidden" data-panel="account">
+      <div class="settings-section" id="mset-account-section">
+        <div class="settings-section-title" id="mset-account-lbl"></div>
+        <div class="settings-section-desc" id="mset-account-desc"></div>
+        <div id="mset-account-nolink">
+          <div class="mset-geo-hint" id="mset-account-hint"></div>
+          <button class="btn btn-primary" id="mset-account-secure-btn" style="margin-top:10px;width:100%"></button>
+        </div>
+        <div id="mset-account-linked" style="display:none">
+          <div class="mset-geo-hint" id="mset-account-email"></div>
+          <button class="btn" id="mset-account-signout-btn" style="margin-top:10px;width:100%"></button>
+        </div>
+      </div>
+
+      <!-- Leave group -->
+      <div class="settings-section" style="border-color:rgba(239,68,68,.35);">
+        <div class="settings-section-desc" id="mset-leave-desc"></div>
+        <button class="leave-btn" id="mset-leave-btn" style="width:100%"></button>
+      </div>
     </div>
   </div>
 </div>

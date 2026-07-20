@@ -396,6 +396,17 @@
       padding: 16px;
     }
     .settings-section-title { font-size:12px; font-weight:700; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; }
+    .settings-section-desc { font-size:12px; line-height:1.4; opacity:.6; color:var(--text-2); margin:-6px 0 12px; }
+    .settings-section-desc:empty { display:none; }
+    .settings-tabs { display:flex; gap:6px; margin-bottom:16px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .settings-tab {
+      flex:0 0 auto; padding:8px 14px; border-radius:20px; border:1.5px solid var(--glass-border);
+      background:var(--glass-inner); font-size:13px; font-weight:600;
+      color:var(--text-2); cursor:pointer; font-family:inherit; white-space:nowrap;
+      transition:border-color .15s, background .15s, transform .1s;
+    }
+    .settings-tab.sel { border-color:var(--accent-2); background:var(--accent-light); color:var(--accent-text); }
+    .settings-tab:active { transform:scale(.94); }
     .notif-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; }
     .notif-time-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0 0; }
     .notif-quiet-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
@@ -775,6 +786,11 @@
       font-size: 11px; font-weight: 700; letter-spacing: .7px;
       text-transform: uppercase; color: var(--text-3); margin: 20px 0 10px;
     }
+    .admin-eyebrow-desc {
+      font-size: 12px; line-height: 1.4; opacity: .6; color: var(--text-2);
+      margin: -4px 0 10px;
+    }
+    .admin-eyebrow-desc:empty { display: none; }
     .admin-exit-tile {
       width: 100%; padding: 14px; border-radius: 14px; border: none;
       font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer;

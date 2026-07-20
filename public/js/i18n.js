@@ -33,6 +33,11 @@ const TRANS = {
     dayNames:['Mo','Di','Mi','Do','Fr','Sa','So'],
     msetTitle:'Einstellungen', msetGymDaysLbl:'Gym-Tage der Gruppe', msetAvailLbl:'Meine verfügbaren Tage',
     msetGymSave:'Gym-Tage speichern', msetAvailSave:'Speichern', msetClose:'Schließen',
+    // Settings tabs
+    msetTabYou:'Für dich', msetTabGroup:'Gruppe', msetTabNotify:'Benachrichtigungen', msetTabAccount:'Konto',
+    msetGymdaysDesc:'An welchen Tagen die Gruppe trainiert. Verpasste Pflichttage kosten einen Freeze oder den Streak.',
+    msetAvailDesc:'Deine persönlichen Tage innerhalb der Gruppentage. Änderungen sind für 30 Tage gesperrt.',
+    msetLeaveDesc:'Entfernt dich dauerhaft aus dieser Gruppe. Dein Verlauf bleibt der Gruppe erhalten.',
     availLocked: d => `Gesperrt noch ${d}`,
     chestGotFreeze:'❄️ Freeze erhalten!', chestSub:'Du hast eine Streak-Schutzpflanze', chestNoReward:'Kein Gewinn diesmal', chestOk:'Cool!',
     chestStreak: n => `Dein Streak: 🔥 ${n}`,
@@ -81,6 +86,7 @@ const TRANS = {
     migBannerTitle:'Konto sichern', migBannerSub:'Tippe, um dein Konto zu sichern',
     migSuccess:'Konto gesichert — alle Gruppen verknüpft!',
     mgAccountSectionLbl:'Konto', mgAccountSignOut:'Abmelden', mgAccountSignedOut:'Abgemeldet',
+    msetAccountDesc:'Wie du dich anmeldest und dein Profil verlässt.',
     // Profile view
     notifPrimerTitle:'Benachrichtigungen', notifPrimerBody:'GymLate erinnert dich an Gym-Tage und warnt dich, wenn dein Streak in Gefahr ist.', notifPrimerEnable:'Benachrichtigungen erlauben', notifPrimerLater:'Jetzt nicht',
     pvSettingsBtn:'⚙ Einstellungen',
@@ -122,6 +128,7 @@ const TRANS = {
     // Settings — location
     msetLocationLbl:'Gym-Standort', msetRadiusLbl:'Radius', msetLocateBtn:'Meinen Standort nutzen',
     msetLocationSave:'Standort speichern',
+    msetLocationDesc:'Gym-Standort auf der Karte setzen, damit der automatische Check-in funktioniert.',
     // Profile view gym days
     pvGymDaysLbl:'Geht ins Gym:',
     // Admin user edit
@@ -133,6 +140,9 @@ const TRANS = {
     admClearFlags:'Tagesflags zurücksetzen',
     admSectionData:'Testdaten', admSectionCeremonies:'Animationen', admSectionNotif:'Benachrichtigungen (10s)',
     admTestReminder:'Erinnerung', admTestStreak:'Streak-Risiko', admTestActivity:'Aktivität', admTestAll:'Alle senden',
+    admDataDesc:'Testdaten für die Gruppe erzeugen oder löschen.',
+    admCeremoniesDesc:'Animationen und Overlays manuell auslösen, ohne auf den echten Trigger zu warten.',
+    admNotifDesc:'Sendet dir in 10 Sekunden eine Test-Benachrichtigung.',
     toastTestScheduled:'Wird in 10s gesendet…',
     // Settings fixed strings
     errAtLeastOneDay:'Mindestens 1 Tag wählen.',
@@ -149,18 +159,22 @@ const TRANS = {
     msetGeoToggleLbl:'Geo-Check aktiviert',
     msetGeoTestBtn:'Standort testen',
     msetGeoNoLoc:'Kein Gym-Standort gesetzt.',
+    msetGeoDesc:'Schlägt automatisch einen Check-in vor, sobald du in der Nähe des Gyms bist.',
     // Settings fixed check-in time (beta)
     msetFixedtimeLbl:'Feste Check-in-Zeit',
     msetFixedtimeToggleLbl:'Feste Uhrzeit aktiviert',
+    msetFixedtimeDesc:'Erlaubt Check-ins nur innerhalb eines festen Zeitfensters statt den ganzen Tag.',
     toastFixedCheckinOn:'Feste Check-in-Zeit aktiviert',
     toastFixedCheckinOff:'Feste Check-in-Zeit deaktiviert',
     // Launch loading animation
     msetLoadingLbl:'Ladeanimation',
+    msetLoadingDesc:'Animation, die kurz beim Start der App gezeigt wird.',
     loadingBarbell:'Hantel',
     loadingFlame:'Flamme',
     loadingWordmark:'Schriftzug',
     // Notifications
     msetNotifLbl:'Benachrichtigungen',
+    msetNotifDesc:'Erinnerungen, Streak-Warnungen und Gruppen-Aktivität als Push-Benachrichtigung.',
     msetNotifRemindersLbl:'Gym-Erinnerung',
     msetReminderTimeLbl:'Erinnerungszeit',
     msetNotifStreakLbl:'Streak in Gefahr',
@@ -232,6 +246,11 @@ const TRANS = {
     dayNames:['Mo','Tu','We','Th','Fr','Sa','Su'],
     msetTitle:'Settings', msetGymDaysLbl:'Group gym days', msetAvailLbl:'My available days',
     msetGymSave:'Save gym days', msetAvailSave:'Save', msetClose:'Close',
+    // Settings tabs
+    msetTabYou:'You', msetTabGroup:'Group', msetTabNotify:'Notify', msetTabAccount:'Account',
+    msetGymdaysDesc:'Which days the group trains. Missing a scheduled day costs a freeze or your streak.',
+    msetAvailDesc:'Your personal days within the group\'s schedule. Changes are locked for 30 days.',
+    msetLeaveDesc:'Permanently removes you from this group. Your history stays with the group.',
     availLocked: d => `Locked for ${d}`,
     chestGotFreeze:'❄️ Freeze received!', chestSub:'Your streak is protected for one miss', chestNoReward:'No reward this time', chestOk:'Nice!',
     chestStreak: n => `Your streak: 🔥 ${n}`,
@@ -281,6 +300,7 @@ const TRANS = {
     migBannerTitle:'Secure your account', migBannerSub:'Tap to secure your account',
     migSuccess:'Account secured — all groups linked!',
     mgAccountSectionLbl:'Account', mgAccountSignOut:'Sign out', mgAccountSignedOut:'Signed out',
+    msetAccountDesc:'How you sign in, and how you leave this group.',
     // Profile view
     notifPrimerTitle:'Stay in the loop', notifPrimerBody:'GymLate can remind you on gym days and alert you when your streak is at risk.', notifPrimerEnable:'Enable notifications', notifPrimerLater:'Not now',
     pvSettingsBtn:'⚙ Settings',
@@ -322,6 +342,7 @@ const TRANS = {
     // Settings — location
     msetLocationLbl:'Gym Location', msetRadiusLbl:'Radius', msetLocateBtn:'Use my location',
     msetLocationSave:'Save location',
+    msetLocationDesc:'Set the gym\'s location on the map so auto check-in can work.',
     // Profile view gym days
     pvGymDaysLbl:'Goes to gym:',
     // Admin user edit
@@ -333,6 +354,9 @@ const TRANS = {
     admClearFlags:'Clear today\'s flags',
     admSectionData:'Test data', admSectionCeremonies:'Ceremonies', admSectionNotif:'Notifications (10s delay)',
     admTestReminder:'Reminder', admTestStreak:'Streak risk', admTestActivity:'Activity', admTestAll:'Send all',
+    admDataDesc:'Seed or wipe demo test data for this group.',
+    admCeremoniesDesc:'Manually trigger animations and overlays without waiting for the real trigger.',
+    admNotifDesc:'Sends a test push notification to yourself in 10 seconds.',
     toastTestScheduled:'Sending in 10s…',
     // Settings fixed strings
     errAtLeastOneDay:'Select at least 1 day.',
@@ -349,18 +373,22 @@ const TRANS = {
     msetGeoToggleLbl:'Geo check-in enabled',
     msetGeoTestBtn:'Test location',
     msetGeoNoLoc:'No gym location set.',
+    msetGeoDesc:'Automatically suggests a check-in once you\'re near the gym.',
     // Settings fixed check-in time (beta)
     msetFixedtimeLbl:'Fixed check-in time',
     msetFixedtimeToggleLbl:'Fixed time enabled',
+    msetFixedtimeDesc:'Only allow check-ins within a fixed daily window instead of all day.',
     toastFixedCheckinOn:'Fixed check-in time enabled',
     toastFixedCheckinOff:'Fixed check-in time disabled',
     // Launch loading animation
     msetLoadingLbl:'Loading animation',
+    msetLoadingDesc:'The animation shown briefly when the app launches.',
     loadingBarbell:'Barbell',
     loadingFlame:'Flame',
     loadingWordmark:'Wordmark',
     // Notifications
     msetNotifLbl:'Notifications',
+    msetNotifDesc:'Reminders, streak warnings, and group activity as push notifications.',
     msetNotifRemindersLbl:'Gym day reminder',
     msetReminderTimeLbl:'Reminder time',
     msetNotifStreakLbl:'Streak at risk',

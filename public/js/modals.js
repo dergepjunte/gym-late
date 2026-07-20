@@ -24,6 +24,11 @@ function applyI18n() {
   set('ml-lbl-attend-date',T.mlLblAttendDate);
   set('mset-title',T.msetTitle); set('mset-gymdays-lbl',T.msetGymDaysLbl); set('mset-avail-lbl',T.msetAvailLbl);
   set('mset-gym-save',T.msetGymSave); set('mset-avail-save',T.msetAvailSave);
+  // Settings tabs + section descriptions
+  set('mset-tab-you',T.msetTabYou); set('mset-tab-group',T.msetTabGroup);
+  set('mset-tab-notify',T.msetTabNotify); set('mset-tab-account',T.msetTabAccount);
+  set('mset-gymdays-desc',T.msetGymdaysDesc); set('mset-avail-desc',T.msetAvailDesc);
+  set('mset-leave-desc',T.msetLeaveDesc);
   set('ml-lbl-skip-date',T.mlLblSkipDate); set('ml-lbl-reason',T.mlLblReason);
   set('ee-title',T.eeTitle); set('ee-mode-attend',T.mlModeAttend); set('ee-mode-late',T.mlModeLate); set('ee-mode-skip',T.mlModeSkip);
   set('ee-lbl-attend-date',T.mlLblAttendDate); set('ee-lbl-date',T.mlLblDate); set('ee-lbl-mins',T.mlLblMins);
@@ -31,12 +36,15 @@ function applyI18n() {
   set('ma-title',T.maTitle); set('ma-lbl',T.maLbl); set('ma-submit',T.maSubmit);
   set('adm-page-title',T.admTitle); set('adm-exit-btn',T.admExit);
   set('adm-section-data',T.admSectionData); set('adm-add-lbl',T.admAdd); set('adm-del-lbl',T.admDel);
+  set('adm-data-desc',T.admDataDesc);
   set('adm-section-ceremonies',T.admSectionCeremonies); set('adm-replay-lbl',T.admReplay);
   set('adm-force-hype-lbl',T.admForceHype); set('adm-force-geo-lbl',T.admForceGeo);
   set('adm-clear-flags-lbl',T.admClearFlags); set('adm-week-lbl',T.admWeekOn);
+  set('adm-ceremonies-desc',T.admCeremoniesDesc);
   set('adm-section-notif',T.admSectionNotif);
   set('adm-test-reminder-lbl',T.admTestReminder); set('adm-test-streak-lbl',T.admTestStreak);
   set('adm-test-activity-lbl',T.admTestActivity); set('adm-test-all-lbl',T.admTestAll);
+  set('adm-notif-desc',T.admNotifDesc);
   set('pill-hint', T.pillHint);
   // Groups section (People tab)
   set('lbl-groups',T.mgsTitle); set('pp-join-btn',T.mgsJoin); set('pp-create-btn',T.mgsCreate);
@@ -52,20 +60,25 @@ function applyI18n() {
   // Settings location
   set('mset-location-lbl',T.msetLocationLbl); set('mset-radius-lbl',T.msetRadiusLbl);
   set('mset-locate-btn',T.msetLocateBtn); set('mset-location-save',T.msetLocationSave);
+  set('mset-location-desc',T.msetLocationDesc);
   // Settings geo toggle
   set('mset-geo-lbl',T.msetGeoLbl); set('mset-geo-toggle-lbl',T.msetGeoToggleLbl);
-  set('mset-geo-test',T.msetGeoTestBtn);
+  set('mset-geo-test',T.msetGeoTestBtn); set('mset-geo-desc',T.msetGeoDesc);
   // Settings fixed check-in time (beta)
   set('mset-fixedtime-lbl',T.msetFixedtimeLbl); set('mset-fixedtime-toggle-lbl',T.msetFixedtimeToggleLbl);
+  set('mset-fixedtime-desc',T.msetFixedtimeDesc);
   // Settings loading animation
-  set('mset-loading-lbl',T.msetLoadingLbl);
+  set('mset-loading-lbl',T.msetLoadingLbl); set('mset-loading-desc',T.msetLoadingDesc);
   set('mset-loadstyle-barbell',T.loadingBarbell); set('mset-loadstyle-flame',T.loadingFlame);
   set('mset-loadstyle-wordmark',T.loadingWordmark);
   // Settings notifications
-  set('mset-notif-lbl',T.msetNotifLbl); set('mset-notif-reminders-lbl',T.msetNotifRemindersLbl);
+  set('mset-notif-lbl',T.msetNotifLbl); set('mset-notif-desc',T.msetNotifDesc);
+  set('mset-notif-reminders-lbl',T.msetNotifRemindersLbl);
   set('mset-reminder-time-lbl',T.msetReminderTimeLbl); set('mset-notif-streak-lbl',T.msetNotifStreakLbl);
   set('mset-notif-activity-lbl',T.msetNotifActivityLbl); set('mset-quiet-lbl',T.msetQuietLbl);
   set('mset-notif-members-lbl',T.msetNotifMembersLbl); set('mset-notif-save',T.msetNotifSave);
+  // Settings account
+  set('mset-account-desc',T.msetAccountDesc);
   // Profile view gym days
   set('pv-gym-days-lbl',T.pvGymDaysLbl);
   // Admin user edit
