@@ -127,6 +127,8 @@ function openSettings() {
   if (targetTab === 'notify' && !notifSupported) targetTab = 'you';
   selectSettingsTab(targetTab);
 
+  document.getElementById('mset-version').textContent = 'v' + APP_VERSION;
+
   openPage('modal-settings');
 }
 

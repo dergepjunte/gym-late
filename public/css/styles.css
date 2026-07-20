@@ -407,6 +407,7 @@
     }
     .settings-tab.sel { border-color:var(--accent-2); background:var(--accent-light); color:var(--accent-text); }
     .settings-tab:active { transform:scale(.94); }
+    .settings-version { text-align:center; font-size:11px; color:var(--text-3); opacity:.6; margin:24px 0 8px; }
     .notif-row { display:flex; align-items:center; justify-content:space-between; padding:4px 0; }
     .notif-time-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0 0; }
     .notif-quiet-row { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }

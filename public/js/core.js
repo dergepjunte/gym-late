@@ -1,4 +1,13 @@
 // ════════════════════════════════════════════════════════
+//  APP VERSION — V<major>.<minor>.<feature>.<patch>
+//  major: leaves beta / very large rewrites
+//  minor: mid-size updates (design, app-wide structure)
+//  feature: smaller feature additions
+//  patch: bugfixes
+// ════════════════════════════════════════════════════════
+const APP_VERSION = '0.2.12.1';
+
+// ════════════════════════════════════════════════════════
 //  DATE HELPERS
 // ════════════════════════════════════════════════════════
 const pad = n => String(n).padStart(2,'0');
