@@ -12,12 +12,20 @@ settings:
     SWIFT_VERSION: "5.9"
     DEVELOPMENT_TEAM: ""  # ← trage hier deine Apple-Team-ID ein (Xcode → Signing)
 
+packages:
+  GoogleSignIn-iOS:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: 7.0.0
+
 targets:
   GymLate:
     type: application
     platform: iOS
     sources:
       - path: GymLate
+    dependencies:
+      - package: GoogleSignIn-iOS
+        product: GoogleSignIn
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.gymlate.app

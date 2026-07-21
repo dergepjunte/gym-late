@@ -16,6 +16,11 @@ enum K {
     static let apiBaseURL  = "https://gym-late-production.up.railway.app"
     static let cornerRadius: CGFloat = 12
 
+    // Shared cross-platform product version — mirrors public/js/core.js APP_VERSION.
+    // Independent of the Xcode MARKETING_VERSION (App Store submission number);
+    // bump both by hand together per CLAUDE.md's versioning policy.
+    static let appVersion = "0.2.12.1"
+
     // Avatar options — same lists as the website
     static let avatarEmojis = ["🏋️"]
     static let avatarColors = ["#7c3aed", "#db2777", "#dc2626", "#ea580c", "#ca8a04",
@@ -157,6 +162,11 @@ enum K {
         static var mgsActive: String { de ? "Aktiv" : "Active" }
         static var mgsSwitch: String { de ? "Wechseln" : "Switch" }
 
+        // Profile picker (launch screen)
+        static var pickerTitle: String { de ? "Wer trainiert?" : "Who's training?" }
+        static var pickerAdd: String { de ? "Hinzufügen" : "Add" }
+        static var pickerBack: String { de ? "← Profile" : "← Profiles" }
+
         // Settings
         static var msetTitle: String { de ? "Einstellungen" : "Settings" }
         static var msetGymDaysLbl: String { de ? "Gym-Tage der Gruppe" : "Group gym days" }
@@ -174,6 +184,23 @@ enum K {
         static var msetFixedtimeToggleLbl: String { de ? "Feste Uhrzeit aktiviert" : "Fixed time enabled" }
         static var toastFixedCheckinOn: String { de ? "Feste Check-in-Zeit aktiviert" : "Fixed check-in time enabled" }
         static var toastFixedCheckinOff: String { de ? "Feste Check-in-Zeit deaktiviert" : "Fixed check-in time disabled" }
+
+        // Settings tabs (You / Group / Notify / Account)
+        static var msetTabYou: String { de ? "Für dich" : "You" }
+        static var msetTabGroup: String { de ? "Gruppe" : "Group" }
+        static var msetTabNotify: String { de ? "Benachrichtigungen" : "Notify" }
+        static var msetTabAccount: String { de ? "Konto" : "Account" }
+
+        // Settings section descriptions (shown under each section header)
+        static var msetGymdaysDesc: String { de ? "An welchen Tagen die Gruppe trainiert. Verpasste Pflichttage kosten einen Freeze oder den Streak." : "Which days the group trains. Missing a scheduled day costs a freeze or your streak." }
+        static var msetFixedtimeDesc: String { de ? "Erlaubt Check-ins nur innerhalb eines festen Zeitfensters statt den ganzen Tag." : "Only allow check-ins within a fixed daily window instead of all day." }
+        static var msetLocationDesc: String { de ? "Gym-Standort auf der Karte setzen, damit der automatische Check-in funktioniert." : "Set the gym's location on the map so auto check-in can work." }
+        static var msetAvailDesc: String { de ? "Deine persönlichen Tage innerhalb der Gruppentage. Änderungen sind für 30 Tage gesperrt." : "Your personal days within the group's schedule. Changes are locked for 30 days." }
+        static var msetGeoDesc: String { de ? "Schlägt automatisch einen Check-in vor, sobald du in der Nähe des Gyms bist." : "Automatically suggests a check-in once you're near the gym." }
+        static var msetNotifDesc: String { de ? "Erinnerungen, Streak-Warnungen und Gruppen-Aktivität als Push-Benachrichtigung." : "Reminders, streak warnings, and group activity as push notifications." }
+        static var msetAccountDesc: String { de ? "Wie du dich anmeldest und dein Profil verlässt." : "How you sign in, and how you leave this group." }
+        static var msetLoadingDesc: String { de ? "Animation, die kurz beim Start der App gezeigt wird." : "The animation shown briefly when the app launches." }
+        static var msetLeaveDesc: String { de ? "Entfernt dich dauerhaft aus dieser Gruppe. Dein Verlauf bleibt der Gruppe erhalten." : "Permanently removes you from this group. Your history stays with the group." }
 
         // Launch loading animation
         static var msetLoadingLbl: String { de ? "Ladeanimation" : "Loading animation" }

@@ -3,7 +3,8 @@
 Structural comparison of the reference web app (`../index.html`) against the
 SwiftUI app. Since 2026-07-09 the designs are unified: the website adopted
 the app's yellow Liquid Glass theme (structure stays web-canonical, design
-stays app-canonical). Last full audit: 2026-07-09; gap-closing pass same day.
+stays app-canonical). Last full audit: 2026-07-09; gap-closing pass 2026-07-21
+(launch profile picker, tabbed settings + descriptions, shared version footer).
 
 ## Struktur (Screens & Navigation)
 
@@ -17,6 +18,7 @@ stays app-canonical). Last full audit: 2026-07-09; gap-closing pass same day.
 | Group pill: name · code, tap-to-copy, switch button | ✅ |
 | FAB „+" on Woche **and** Verlauf | ✅ Verlauf has the FAB; Woche keeps the inline CTA (dashboard UX direction) |
 | i18n: de + en via `navigator.language` | ✅ `K.L` switches on the system locale |
+| Netflix-style profile picker on cold start (`#screen-profile-picker`) | ✅ `ProfilePickerView` — always shown when ≥1 saved group, no more silent auto-entry; "+" tile returns to landing with a back button |
 
 ## Woche
 
@@ -56,6 +58,9 @@ stays app-canonical). Last full audit: 2026-07-09; gap-closing pass same day.
 | Settings: fixed check-in time toggle (BETA) | ✅ |
 | Settings: geo check-in toggle + „Standort testen" | ✅ Toggle gates the geo prompt; test shows distance |
 | Edit profile: name, emoji, color, photo | ✅ Web avatar lists (single 🏋️ emoji, 10 colors) |
+| Settings: 4 tabs You/Group/Notify/Account, Group hidden for non-creators | ✅ Native segmented `Picker` bound to `SettingsTab` |
+| Settings: one-line description under every section | ✅ `sectionHeader()` VStack (title + `.caption2` desc) |
+| Settings: shared version footer (`#mset-version`) | ✅ `v\(K.appVersion)` below the Form, visible on every tab |
 
 ## Overlays
 

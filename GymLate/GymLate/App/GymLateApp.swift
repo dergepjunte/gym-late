@@ -47,6 +47,11 @@ struct RootView: View {
         ZStack {
             if appState.isBootLoading {
                 LaunchLoadingView().transition(.opacity)
+            } else if appState.showLaunchPicker {
+                // Netflix-style "Wer trainiert?" grid (website: #screen-profile-picker) —
+                // shown on every cold start with ≥1 saved group instead of silently
+                // re-entering the last-active one.
+                ProfilePickerView().transition(.opacity)
             } else if appState.activeGroup != nil && appState.userProfile != nil {
                 AppRootView().transition(.opacity)
             } else {
@@ -54,6 +59,7 @@ struct RootView: View {
             }
         }
         .animation(.easeInOut(duration: 0.4), value: appState.isBootLoading)
+        .animation(.easeInOut(duration: 0.3), value: appState.showLaunchPicker)
         .animation(.easeInOut(duration: 0.3), value: appState.activeGroup?.id)
     }
 }

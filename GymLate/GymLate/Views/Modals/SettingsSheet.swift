@@ -2,11 +2,27 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
-/// Settings (website: #modal-settings) — gym days, fixed check-in time (beta),
-/// gym location map, my available days, geo check-in toggle, leave group.
+/// Website: #modal-settings tabs (settings-tabs / settings-panel).
+enum SettingsTab: String, CaseIterable, Identifiable {
+    case you, group, notify, account
+    var id: Self { self }
+    var label: String {
+        switch self {
+        case .you: return K.L.msetTabYou
+        case .group: return K.L.msetTabGroup
+        case .notify: return K.L.msetTabNotify
+        case .account: return K.L.msetTabAccount
+        }
+    }
+}
+
+/// Settings (website: #modal-settings) — 4 tabs (You/Group/Notify/Account):
+/// gym days, fixed check-in time (beta), gym location map, my available days,
+/// geo check-in toggle, notifications, account & login, leave group.
 struct SettingsSheet: View {
     @EnvironmentObject var appState: AppState
-    @Environment(\.pageDismiss) var dismiss
+    @Environment(\.dismiss) private var dismiss
+    @State private var tab: SettingsTab = .you
     @State private var gymDays = Array(repeating: true, count: 7)
     @State private var availDays: [Bool]? = nil
     @State private var isLoading = false
@@ -43,184 +59,222 @@ struct SettingsSheet: View {
         appState.userProfile?.isCreator == true || appState.adminMode
     }
 
+    /// Group tab disappears entirely for non-creators (website: whole `settings-tab`
+    /// button hidden, not just its sections).
+    private var visibleTabs: [SettingsTab] {
+        SettingsTab.allCases.filter { $0 != .group || isCreatorOrAdmin }
+    }
+
     var body: some View {
         NavigationStack {
-            Form {
-                // Gym days (group, creator only)
-                if isCreatorOrAdmin {
-                    Section {
-                        dayPickerRow(days: $gymDays)
-                        Button(K.L.msetGymSave) { Task { await saveGymDays() } }
-                            .foregroundColor(K.accentDark)
-                    } header: { Text(K.L.msetGymDaysLbl) }
+            VStack(spacing: 0) {
+                Picker("", selection: $tab) {
+                    ForEach(visibleTabs) { t in Text(t.label).tag(t) }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+                .padding(.top, 8)
 
-                    // Fixed check-in time (beta)
-                    Section {
-                        Toggle(K.L.msetFixedtimeToggleLbl, isOn: $fixedTimeEnabled)
-                            .tint(K.accentDeep)
-                            .onChange(of: fixedTimeEnabled) { _, on in
-                                Task { await saveFixedTime(on) }
-                            }
-                    } header: {
-                        HStack(spacing: 6) {
-                            Text(K.L.msetFixedtimeLbl)
-                            // Outlined/tinted chip — matches web's .beta-badge (lighter
-                            // treatment than a filled accent capsule, so "BETA" doesn't
-                            // visually compete with primary CTAs).
-                            Text("BETA")
-                                .font(.system(size: 9, weight: .black))
+                Form {
+                    if tab == .you {
+                        // My available days
+                        Section {
+                            dayPickerRow(days: Binding(
+                                get: { availDays ?? Array(repeating: true, count: 7) },
+                                set: { availDays = $0 }
+                            ))
+                            Button(K.L.save) { Task { await saveAvailDays() } }
                                 .foregroundColor(K.accentDark)
-                                .padding(.horizontal, 5).padding(.vertical, 1)
-                                .background(Capsule().fill(K.accentDeep.opacity(0.12)))
-                                .overlay(Capsule().strokeBorder(K.accentDeep.opacity(0.28), lineWidth: 1))
-                        }
-                    }
+                        } header: { sectionHeader(K.L.msetAvailLbl, K.L.msetAvailDesc) }
 
-                    // Gym location map picker
-                    Section {
-                        MapReader { proxy in
-                            Map(position: $mapCamera) {
-                                if let pin {
-                                    Marker("Gym", coordinate: pin)
-                                        .tint(K.accentDeep)
-                                    MapCircle(center: pin, radius: radius)
-                                        .foregroundStyle(K.accent.opacity(0.15))
-                                        .stroke(K.accentDeep, lineWidth: 1.5)
-                                }
-                            }
-                            .frame(height: 220)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .onTapGesture { screenPoint in
-                                if let coord = proxy.convert(screenPoint, from: .local) {
-                                    pin = coord
-                                }
-                            }
-                        }
-                        HStack {
-                            Text(K.L.msetRadiusLbl)
-                            Slider(value: $radius, in: 20...500, step: 10)
+                        // Geo check-in toggle (all users)
+                        Section {
+                            Toggle(K.L.msetGeoToggleLbl, isOn: $geoEnabled)
                                 .tint(K.accentDeep)
-                            Text("\(Int(radius))m")
-                                .font(.system(size: 13, design: .monospaced))
-                                .frame(width: 48, alignment: .trailing)
-                        }
-                        Button(K.L.msetLocateBtn) { Task { await locateMe() } }
-                            .foregroundColor(K.accentDark)
-                        Button(K.L.msetLocationSave) { Task { await saveLocation() } }
-                            .foregroundColor(K.accentDark)
-                            .disabled(pin == nil)
-                    } header: { Text(K.L.msetLocationLbl) }
-                }
-
-                // My available days
-                Section {
-                    dayPickerRow(days: Binding(
-                        get: { availDays ?? Array(repeating: true, count: 7) },
-                        set: { availDays = $0 }
-                    ))
-                    Button(K.L.save) { Task { await saveAvailDays() } }
-                        .foregroundColor(K.accentDark)
-                } header: { Text(K.L.msetAvailLbl) }
-
-                // Geo check-in toggle (all users)
-                Section {
-                    Toggle(K.L.msetGeoToggleLbl, isOn: $geoEnabled)
-                        .tint(K.accentDeep)
-                        .onChange(of: geoEnabled) { _, on in
-                            LocalStore.shared.geoEnabled = on
-                        }
-                    Button(K.L.msetGeoTestBtn) { Task { await testLocation() } }
-                        .foregroundColor(K.accentDark)
-                } header: { Text(K.L.msetGeoLbl) }
-
-                // Notifications
-                Section {
-                    Toggle(K.L.msetNotifRemindersLbl, isOn: $notifReminders)
-                        .tint(K.accentDeep)
-                    if notifReminders {
-                        DatePicker(K.L.msetReminderTimeLbl, selection: $reminderTime, displayedComponents: .hourAndMinute)
-                            .tint(K.accentDeep)
-                    }
-                    Toggle(K.L.msetNotifStreakLbl, isOn: $notifStreak)
-                        .tint(K.accentDeep)
-                    Toggle(K.L.msetNotifActivityLbl, isOn: $notifActivity)
-                        .tint(K.accentDeep)
-                } header: { Text(K.L.msetNotifLbl) }
-
-                Section {
-                    DatePicker(K.L.msetQuietStartLbl, selection: $quietStart, displayedComponents: .hourAndMinute)
-                        .tint(K.accentDeep)
-                    DatePicker(K.L.msetQuietEndLbl, selection: $quietEnd, displayedComponents: .hourAndMinute)
-                        .tint(K.accentDeep)
-                } header: { Text(K.L.msetQuietLbl) }
-
-                if notifActivity, let people = appState.groupData?.people.filter({ $0.id != appState.userProfile?.userId }) {
-                    Section {
-                        ForEach(people, id: \.id) { person in
-                            let isOn = Binding<Bool>(
-                                get: { notifMembers == nil || notifMembers!.contains(person.id) },
-                                set: { on in
-                                    var members = notifMembers ?? people.map(\.id)
-                                    if on { if !members.contains(person.id) { members.append(person.id) } }
-                                    else { members.removeAll { $0 == person.id } }
-                                    notifMembers = members.count == people.count ? nil : members
+                                .onChange(of: geoEnabled) { _, on in
+                                    LocalStore.shared.geoEnabled = on
                                 }
-                            )
-                            Toggle(person.name, isOn: isOn).tint(K.accentDeep)
-                        }
-                    } header: { Text(K.L.msetNotifMembersLbl) }
-                }
+                            Button(K.L.msetGeoTestBtn) { Task { await testLocation() } }
+                                .foregroundColor(K.accentDark)
+                        } header: { sectionHeader(K.L.msetGeoLbl, K.L.msetGeoDesc) }
 
-                Section {
-                    Button(K.L.save) { Task { await saveNotifPrefs() } }
-                        .foregroundColor(K.accentDark)
-                }
+                        // Launch loading animation
+                        Section {
+                            Picker(K.L.msetLoadingLbl, selection: $loadingStyle) {
+                                ForEach(LaunchLoadingView.LoadingStyle.allCases) { style in
+                                    Text(style.label).tag(style)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            .onChange(of: loadingStyle) { _, style in
+                                LocalStore.shared.loadingStyle = style.rawValue
+                            }
+                        } header: { sectionHeader(K.L.msetLoadingLbl, K.L.msetLoadingDesc) }
+                    }
 
-                // Account & Login
-                Section(K.L.de ? "Konto" : "Account") {
-                    if let acc = appState.account {
-                        if let email = acc.email { Text(email).foregroundColor(.secondary) }
-                        Button(K.L.de ? "Abmelden" : "Sign out") {
-                            appState.signOutAccount()
+                    // Gym days / fixed check-in time / gym location (creator or admin)
+                    if tab == .group && isCreatorOrAdmin {
+                        Section {
+                            dayPickerRow(days: $gymDays)
+                            Button(K.L.msetGymSave) { Task { await saveGymDays() } }
+                                .foregroundColor(K.accentDark)
+                        } header: { sectionHeader(K.L.msetGymDaysLbl, K.L.msetGymdaysDesc) }
+
+                        // Fixed check-in time (beta)
+                        Section {
+                            Toggle(K.L.msetFixedtimeToggleLbl, isOn: $fixedTimeEnabled)
+                                .tint(K.accentDeep)
+                                .onChange(of: fixedTimeEnabled) { _, on in
+                                    Task { await saveFixedTime(on) }
+                                }
+                        } header: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack(spacing: 6) {
+                                    Text(K.L.msetFixedtimeLbl)
+                                    // Outlined/tinted chip — matches web's .beta-badge (lighter
+                                    // treatment than a filled accent capsule, so "BETA" doesn't
+                                    // visually compete with primary CTAs).
+                                    Text("BETA")
+                                        .font(.system(size: 9, weight: .black))
+                                        .foregroundColor(K.accentDark)
+                                        .padding(.horizontal, 5).padding(.vertical, 1)
+                                        .background(Capsule().fill(K.accentDeep.opacity(0.12)))
+                                        .overlay(Capsule().strokeBorder(K.accentDeep.opacity(0.28), lineWidth: 1))
+                                }
+                                Text(K.L.msetFixedtimeDesc)
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                                    .textCase(nil)
+                            }
                         }
-                        .foregroundColor(K.red)
-                    } else {
-                        Text(K.L.de
-                             ? "Füge E-Mail & Passwort hinzu, damit du deine Gruppen nie verlierst."
-                             : "Add email & password so you never lose access to your groups.")
-                            .font(.system(size: 13)).foregroundColor(.secondary)
-                        Button(K.L.de ? "E-Mail & Passwort einrichten" : "Set email & password") {
-                            showMigrateSheet = true
+
+                        // Gym location map picker
+                        Section {
+                            MapReader { proxy in
+                                Map(position: $mapCamera) {
+                                    if let pin {
+                                        Marker("Gym", coordinate: pin)
+                                            .tint(K.accentDeep)
+                                        MapCircle(center: pin, radius: radius)
+                                            .foregroundStyle(K.accent.opacity(0.15))
+                                            .stroke(K.accentDeep, lineWidth: 1.5)
+                                    }
+                                }
+                                .frame(height: 220)
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .onTapGesture { screenPoint in
+                                    if let coord = proxy.convert(screenPoint, from: .local) {
+                                        pin = coord
+                                    }
+                                }
+                            }
+                            HStack {
+                                Text(K.L.msetRadiusLbl)
+                                Slider(value: $radius, in: 20...500, step: 10)
+                                    .tint(K.accentDeep)
+                                Text("\(Int(radius))m")
+                                    .font(.system(size: 13, design: .monospaced))
+                                    .frame(width: 48, alignment: .trailing)
+                            }
+                            Button(K.L.msetLocateBtn) { Task { await locateMe() } }
+                                .foregroundColor(K.accentDark)
+                            Button(K.L.msetLocationSave) { Task { await saveLocation() } }
+                                .foregroundColor(K.accentDark)
+                                .disabled(pin == nil)
+                        } header: { sectionHeader(K.L.msetLocationLbl, K.L.msetLocationDesc) }
+                    }
+
+                    if tab == .notify {
+                        // Notifications
+                        Section {
+                            Toggle(K.L.msetNotifRemindersLbl, isOn: $notifReminders)
+                                .tint(K.accentDeep)
+                            if notifReminders {
+                                DatePicker(K.L.msetReminderTimeLbl, selection: $reminderTime, displayedComponents: .hourAndMinute)
+                                    .tint(K.accentDeep)
+                            }
+                            Toggle(K.L.msetNotifStreakLbl, isOn: $notifStreak)
+                                .tint(K.accentDeep)
+                            Toggle(K.L.msetNotifActivityLbl, isOn: $notifActivity)
+                                .tint(K.accentDeep)
+                        } header: { sectionHeader(K.L.msetNotifLbl, K.L.msetNotifDesc) }
+
+                        Section {
+                            DatePicker(K.L.msetQuietStartLbl, selection: $quietStart, displayedComponents: .hourAndMinute)
+                                .tint(K.accentDeep)
+                            DatePicker(K.L.msetQuietEndLbl, selection: $quietEnd, displayedComponents: .hourAndMinute)
+                                .tint(K.accentDeep)
+                        } header: { Text(K.L.msetQuietLbl) }
+
+                        if notifActivity, let people = appState.groupData?.people.filter({ $0.id != appState.userProfile?.userId }) {
+                            Section {
+                                ForEach(people, id: \.id) { person in
+                                    let isOn = Binding<Bool>(
+                                        get: { notifMembers == nil || notifMembers!.contains(person.id) },
+                                        set: { on in
+                                            var members = notifMembers ?? people.map(\.id)
+                                            if on { if !members.contains(person.id) { members.append(person.id) } }
+                                            else { members.removeAll { $0 == person.id } }
+                                            notifMembers = members.count == people.count ? nil : members
+                                        }
+                                    )
+                                    Toggle(person.name, isOn: isOn).tint(K.accentDeep)
+                                }
+                            } header: { Text(K.L.msetNotifMembersLbl) }
                         }
-                        .foregroundColor(K.accentDark)
+
+                        Section {
+                            Button(K.L.save) { Task { await saveNotifPrefs() } }
+                                .foregroundColor(K.accentDark)
+                        }
+                    }
+
+                    if tab == .account {
+                        // Account & Login
+                        Section {
+                            if let acc = appState.account {
+                                if let email = acc.email { Text(email).foregroundColor(.secondary) }
+                                Button(K.L.de ? "Abmelden" : "Sign out") {
+                                    appState.signOutAccount()
+                                }
+                                .foregroundColor(K.red)
+                            } else {
+                                Text(K.L.de
+                                     ? "Füge E-Mail & Passwort hinzu, damit du deine Gruppen nie verlierst."
+                                     : "Add email & password so you never lose access to your groups.")
+                                    .font(.system(size: 13)).foregroundColor(.secondary)
+                                Button(K.L.de ? "E-Mail & Passwort einrichten" : "Set email & password") {
+                                    showMigrateSheet = true
+                                }
+                                .foregroundColor(K.accentDark)
+                            }
+                        } header: { sectionHeader(K.L.de ? "Konto" : "Account", K.L.msetAccountDesc) }
+
+                        // Leave group
+                        Section {
+                            Text(K.L.msetLeaveDesc)
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            Button(K.L.leaveGroup, role: .destructive) {
+                                confirmLeave = true
+                            }
+                        }
+                    }
+
+                    if !error.isEmpty {
+                        Section { Text(error).foregroundColor(.red) }
                     }
                 }
+                .scrollContentBackground(.hidden)
 
-                // Launch loading animation
-                Section {
-                    Picker(K.L.msetLoadingLbl, selection: $loadingStyle) {
-                        ForEach(LaunchLoadingView.LoadingStyle.allCases) { style in
-                            Text(style.label).tag(style)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .onChange(of: loadingStyle) { _, style in
-                        LocalStore.shared.loadingStyle = style.rawValue
-                    }
-                } header: { Text(K.L.msetLoadingLbl) }
-
-                // Leave group
-                Section {
-                    Button(K.L.leaveGroup, role: .destructive) {
-                        confirmLeave = true
-                    }
-                }
-
-                if !error.isEmpty {
-                    Section { Text(error).foregroundColor(.red) }
-                }
+                // Website: #mset-version, sits after all settings-panels so it's
+                // visible regardless of the active tab.
+                Text("v\(K.appVersion)")
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 10)
             }
-            .scrollContentBackground(.hidden)
             .background(GymBackground())
             .navigationTitle(K.L.msetTitle)
             .navigationBarTitleDisplayMode(.inline)
@@ -233,6 +287,9 @@ struct SettingsSheet: View {
                 }
             }
             .onAppear { loadCurrentValues() }
+            .onChange(of: appState.adminMode) { _, _ in
+                if tab == .group && !isCreatorOrAdmin { tab = .you }
+            }
             .fullScreenCover(isPresented: $showMigrateSheet) {
                 MigrationSheet { showMigrateSheet = false }
             }
@@ -244,6 +301,17 @@ struct SettingsSheet: View {
                 Button(K.L.cancel, role: .cancel) {}
             }
             .toast($toast)
+        }
+    }
+
+    @ViewBuilder
+    private func sectionHeader(_ title: String, _ desc: String) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+            Text(desc)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .textCase(nil)
         }
     }
 

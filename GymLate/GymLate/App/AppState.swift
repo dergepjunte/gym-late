@@ -23,9 +23,13 @@ final class AppState: ObservableObject {
     @Published var userProfile: UserProfile?
     @Published var isLoading = false
     @Published var errorMessage: String?
-    // Cold-start loading screen (LaunchLoadingView) — true only while the
-    // very first refreshData() on app launch is in flight.
+    // Cold-start loading screen (LaunchLoadingView) — shown briefly on every
+    // launch for the branded splash, independent of any network refresh.
     @Published var isBootLoading = false
+    // Netflix-style launch picker (website: #screen-profile-picker) — true on
+    // cold start whenever ≥1 group is saved locally; set false once a saved
+    // profile is tapped (switchGroup) or the user chooses "+" to add a new one.
+    @Published var showLaunchPicker = false
 
     // Global account (email/password + Apple/Google SSO). nil = this device
     // only has legacy per-group recovery-code profiles (or is brand new).
@@ -85,27 +89,26 @@ final class AppState: ObservableObject {
     private let sync = SyncEngine.shared
 
     private init() {
-        // Restore saved state on launch
-        activeGroup = store.activeGroup
         account = store.account
         refreshMigrateBanner()
-        if let g = activeGroup {
-            userProfile = store.userProfile(for: g.id)
-            // Cold start into a restored group: render cache, sync, poll —
-            // same pipeline as enterGroup/switchGroup.
-            showCachedDataOrSpinner(for: g.id)
-            isBootLoading = true
-            Task {
-                async let minDelay: () = Task.sleep(nanoseconds: 900_000_000)
-                await refreshData()
-                isLoading = false
-                try? await minDelay
-                withAnimation(.easeInOut(duration: 0.4)) { isBootLoading = false }
-                startPolling()
-                runOpeningSequence()
-                if !store.notifPrimerSeen { showNotifPrimer = true }
-                else { await NotificationManager.shared.requestPermission() }
-            }
+
+        // Legacy single-group installs (pre-multi-group `gymGroups` key) get
+        // backfilled so they still get a pickable entry instead of losing
+        // access to their group (website: init.js legacy backfill).
+        if store.allGroups.isEmpty, let legacy = store.activeGroup {
+            store.addGroup(legacy)
+        }
+
+        // Netflix-style launch picker (website: init.js cold-start logic) —
+        // show the branded splash briefly, then either "Wer trainiert?" (≥1
+        // saved group) or the classic landing screen. Cold start no longer
+        // silently re-enters the last-active group: `activeGroup`/`userProfile`
+        // stay nil until a saved profile is tapped (see switchGroup).
+        isBootLoading = true
+        Task {
+            try? await Task.sleep(nanoseconds: 900_000_000)
+            showLaunchPicker = !store.allGroups.isEmpty
+            withAnimation(.easeInOut(duration: 0.4)) { isBootLoading = false }
         }
 
         sync.$pendingCount
@@ -138,6 +141,11 @@ final class AppState: ObservableObject {
     }
 
     func switchGroup(_ group: GroupInfo) async {
+        // Dismiss the launch picker (website: switchToGroup clears the picker
+        // screen too) — no-op if already dismissed, e.g. when called from the
+        // in-app GroupSwitcherSheet rather than the cold-start picker.
+        showLaunchPicker = false
+
         stopPolling()
         showWrapped = false; showDailyHype = false; showGeoPrompt = false
         pendingBubble = nil; bubbleQueue = []; replayHint = nil
@@ -152,6 +160,12 @@ final class AppState: ObservableObject {
 
         startPolling()
         runOpeningSequence()
+        // Website's updated switchToGroup now runs the full enter-group
+        // ceremony (cold start no longer does this automatically) — mirror
+        // that here so it matches enterGroup's behavior.
+        if !store.notifPrimerSeen { showNotifPrimer = true }
+        else { Task { await NotificationManager.shared.requestPermission() } }
+        refreshMigrateBanner()
     }
 
     /// Cache-first: render the last-known data instantly (with pending writes

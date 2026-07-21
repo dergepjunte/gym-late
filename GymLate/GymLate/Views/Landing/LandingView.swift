@@ -7,9 +7,24 @@ struct LandingView: View {
     @State private var showSignIn = false
     @State private var toast: String?
 
+    private var hasSavedGroups: Bool { !LocalStore.shared.allGroups.isEmpty }
+
     var body: some View {
-        ZStack {
+        ZStack(alignment: .topLeading) {
             GymBackground()
+
+            // Website: #landing-back-btn — only shown when ≥1 group is saved,
+            // returns to the Netflix-style launch picker.
+            if hasSavedGroups {
+                Button(K.L.pickerBack) {
+                    appState.showLaunchPicker = true
+                }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.secondary)
+                .padding(.top, 8)
+                .padding(.leading, 16)
+                .zIndex(1)
+            }
 
             ScrollView {
                 VStack(spacing: 32) {
