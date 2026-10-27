@@ -57,10 +57,12 @@ struct CreateGroupSheet: View {
                         .disabled(isLoading || groupName.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
-            .fullPageCover(isPresented: $showProfile) {
-                if let g = createdGroup {
-                    ProfileSetupSheet(group: g, isNew: true)
-                }
+        }
+        // Ausserhalb des NavigationStack: ein Overlay innerhalb legt die Toolbars beider Seiten
+        // in dieselbe Leiste (doppelte Pfeile und Buttons).
+        .fullPageCover(isPresented: $showProfile) {
+            if let g = createdGroup {
+                ProfileSetupSheet(group: g, isNew: true)
             }
         }
     }

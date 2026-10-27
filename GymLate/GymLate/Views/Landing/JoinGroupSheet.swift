@@ -42,11 +42,6 @@ struct JoinGroupSheet: View {
                         .disabled(isLoading || code.count < 6)
                 }
             }
-            .fullPageCover(isPresented: $showProfile) {
-                if let g = foundGroup {
-                    ProfileSetupSheet(group: g, isNew: false)
-                }
-            }
             // Collapse the whole landing cover chain once login succeeds so
             // no stale NavigationStack back-chevrons remain visible.
             .onChange(of: appState.activeGroup?.id) { _, id in
@@ -56,6 +51,12 @@ struct JoinGroupSheet: View {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                     dismiss()
                 }
+            }
+        }
+        // Ausserhalb des NavigationStack (siehe CreateGroupSheet): sonst doppelte Toolbars.
+        .fullPageCover(isPresented: $showProfile) {
+            if let g = foundGroup {
+                ProfileSetupSheet(group: g, isNew: false)
             }
         }
     }

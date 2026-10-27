@@ -12,14 +12,14 @@ enum K {
     static let gold        = Color(hex: "#f59e0b")   // == accentDeep; status-gold stays the deep end of the accent family
     static let amberText   = Color(light: "#b45309", dark: "#fbbf24")  // readable amber for labels on glass
 
-    // Deployed server URL (Railway)
-    static let apiBaseURL  = "https://gym-late-production.up.railway.app"
+    // Deployed server URL (NAS, seit 27.10.2026; Railway-App war weg)
+    static let apiBaseURL  = "https://nas.taild006d5.ts.net/gymlate"
     static let cornerRadius: CGFloat = 12
 
     // Shared cross-platform product version — mirrors public/js/core.js APP_VERSION.
     // Independent of the Xcode MARKETING_VERSION (App Store submission number);
     // bump both by hand together per CLAUDE.md's versioning policy.
-    static let appVersion = "0.2.12.1"
+    static let appVersion = "0.2.13.2"
 
     // Avatar options — same lists as the website
     static let avatarEmojis = ["🏋️"]

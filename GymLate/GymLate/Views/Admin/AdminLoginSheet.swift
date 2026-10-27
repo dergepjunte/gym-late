@@ -10,6 +10,7 @@ struct AdminLoginSheet: View {
     @State private var password = ""
     @State private var error = ""
     @State private var isLoading = false
+    @State private var errorActive = false
 
     var body: some View {
         NavigationStack {
@@ -18,6 +19,18 @@ struct AdminLoginSheet: View {
                     SecureField(K.L.maLbl, text: $password)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                        .onChange(of: password) { old, new in
+                            if errorActive {
+                                errorActive = false
+                                error = ""
+                                // Drop the stale rejected text, keep only what was just typed.
+                                if new.count > old.count, new.hasPrefix(old) {
+                                    password = String(new.dropFirst(old.count))
+                                } else {
+                                    password = ""
+                                }
+                            }
+                        }
                 }
                 if !error.isEmpty {
                     Section { Text(error).foregroundColor(.red) }
@@ -52,6 +65,7 @@ struct AdminLoginSheet: View {
             dismiss()
         } else {
             error = K.L.maError
+            errorActive = true
         }
         isLoading = false
     }
