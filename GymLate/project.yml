@@ -29,6 +29,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.gymlate.app
+        DEVELOPMENT_TEAM: 885S8T9D2F  # Gmail-Account-Team; beim Signieren mit anderem Team per Kommandozeile ueberschreiben
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_CFBundleDisplayName: GymLate

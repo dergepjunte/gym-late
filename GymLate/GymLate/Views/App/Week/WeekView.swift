@@ -302,15 +302,20 @@ struct CheckinTimeHero: View {
         .glassCard()
     }
 
+    /// "Ändern" ist jetzt ein Vorschlag: fest wird die neue Zeit erst, wenn die Gruppe im Chat zustimmt.
     private func saveTime() async {
-        guard let group = appState.activeGroup else { return }
+        guard let group = appState.activeGroup, let profile = appState.userProfile else { return }
         let f = DateFormatter(); f.dateFormat = "HH:mm"
         let hhmm = f.string(from: pickedTime)
         do {
-            try await APIClient.shared.setCheckinTime(groupId: group.id,
-                                                      date: dateYMD(Date()), time: hhmm)
+            _ = try await APIClient.shared.chatPropose(
+                groupId: group.id,
+                auth: ChatAuth(userId: profile.userId, recoveryCode: profile.recoveryCode,
+                               accountToken: appState.account?.accountToken),
+                date: dateYMD(Date()), time: hhmm)
             await appState.refreshData()
             editing = false
+            toast = K.L.de ? "Vorschlag \(hhmm) gesendet – die anderen stimmen im Chat ab." : "Proposal \(hhmm) sent – the others vote in the chat."
         } catch {
             toast = K.L.errServer
         }

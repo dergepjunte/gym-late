@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		051794B009EF265647A02073 /* CalDayDetailSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A1859F4C1F10709CE877B0 /* CalDayDetailSheet.swift */; };
 		0912F89CC5BA563DCFE32B8B /* NotifPrimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D9CAE4D04B30288FE0267BA /* NotifPrimerView.swift */; };
+		0BE3AEA2CD39555E4699DD72 /* ChatModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CD72E309892B37A6E17D26 /* ChatModels.swift */; };
 		0DAC8D57ABADEE63C7F9CD4E /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7A8830F083C877C2E8466B0 /* Models.swift */; };
 		0DCD4C14EDAF09C71BA0BAC3 /* LandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E0E050A845C35982874A330B /* LandingView.swift */; };
 		12F16F52BA1D6D1A27883604 /* NotificationBubbleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65CF269718473218A5DF0EC3 /* NotificationBubbleView.swift */; };
@@ -26,6 +27,7 @@
 		5A2168551B37CB9C40596BCC /* DailyHypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D01AFED4646FE1CAD7A9EDAC /* DailyHypeView.swift */; };
 		5B009AA3D968528105FF43F0 /* OutboxStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00D2D338B31254CC2F60789B /* OutboxStore.swift */; };
 		5F9DB7C5699FF11C42A319A6 /* AccountAuthSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5DB45C693B38E880599BF7E1 /* AccountAuthSheet.swift */; };
+		67DA8BC316D7F01104D7FFA1 /* ChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CBDB35F444970005F343817 /* ChatView.swift */; };
 		6F273BF954259F3377C5F858 /* PeopleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F1B81D3104891A556E1C638 /* PeopleView.swift */; };
 		73074BB36C15A50674093DF3 /* GroupDataCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33BF69529961C204F27967EE /* GroupDataCache.swift */; };
 		7BDEED20CAB00CB5B01F1D62 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 649B68207067BC59B7301413 /* KeychainStore.swift */; };
@@ -44,6 +46,7 @@
 		BB4400104484F43B9238D44F /* GroupSwitcherSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEDFBAAEAFB2735EE86D9ECE /* GroupSwitcherSheet.swift */; };
 		BE3959344C3313993FCE34E5 /* AppRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CD7DB6E4687AB95C8ED4F04 /* AppRootView.swift */; };
 		BEA83E23C1DCE49BFF4123B0 /* ProfilePickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EA86D05C25A60DFC4DE4A54 /* ProfilePickerView.swift */; };
+		BEECF47BDDE7E1BC9EEF8E0D /* GlyphZoom.swift in Sources */ = {isa = PBXBuildFile; fileRef = 894E6CA94900C603DCBB49D2 /* GlyphZoom.swift */; };
 		C4D918BFF545FAD26F2AA906 /* CeremonyOverlays.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D9BF3A30DA09DAA0E38A040 /* CeremonyOverlays.swift */; };
 		C716B2DA80EE43C481425BD7 /* WrappedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0536D8A2882B1F60D374DDF8 /* WrappedView.swift */; };
 		C82D3B2F9AFBE25C8138D614 /* AdminPanelSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 592ACFBCF976F16F9D870740 /* AdminPanelSection.swift */; };
@@ -85,9 +88,11 @@
 		751C7F62AE124835E71E5345 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		78820ED81005FE883E1B7433 /* AppState+OpeningSequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "AppState+OpeningSequence.swift"; sourceTree = "<group>"; };
 		7A1B62C54ABD7E9815004463 /* ProfileSetupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSetupSheet.swift; sourceTree = "<group>"; };
+		7CBDB35F444970005F343817 /* ChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatView.swift; sourceTree = "<group>"; };
 		7D9BF3A30DA09DAA0E38A040 /* CeremonyOverlays.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CeremonyOverlays.swift; sourceTree = "<group>"; };
 		7E74360B16FE641EF822A100 /* AvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarView.swift; sourceTree = "<group>"; };
 		7FFAF71DD68D804387F4780F /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		894E6CA94900C603DCBB49D2 /* GlyphZoom.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlyphZoom.swift; sourceTree = "<group>"; };
 		8C412DA5DF8A622C52585435 /* LogEntrySheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogEntrySheet.swift; sourceTree = "<group>"; };
 		8F1B81D3104891A556E1C638 /* PeopleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeopleView.swift; sourceTree = "<group>"; };
 		8F8EF8E4E8D90346B6023078 /* AppState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppState.swift; sourceTree = "<group>"; };
@@ -99,10 +104,11 @@
 		9EA86D05C25A60DFC4DE4A54 /* ProfilePickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePickerView.swift; sourceTree = "<group>"; };
 		A05B044394281AAD61209FB8 /* SettingsSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsSheet.swift; sourceTree = "<group>"; };
 		A8EB04CC7DEF8173816B8DCF /* WrappedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WrappedComponents.swift; sourceTree = "<group>"; };
-		A99CBE77B0965BDD09535BAC /* GymLate.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GymLate.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A99CBE77B0965BDD09535BAC /* GymLate.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GymLate.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA5EDBF2159AD236E683034B /* AdminLoginSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdminLoginSheet.swift; sourceTree = "<group>"; };
 		B7953922313C309DBD0A3DEA /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		BEFC3F6958CB814AA3C81A36 /* LaunchLoadingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchLoadingView.swift; sourceTree = "<group>"; };
+		C0CD72E309892B37A6E17D26 /* ChatModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatModels.swift; sourceTree = "<group>"; };
 		C405495A3F07C00A1D652611 /* JoinGroupSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JoinGroupSheet.swift; sourceTree = "<group>"; };
 		C7A8830F083C877C2E8466B0 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		CEDFBAAEAFB2735EE86D9ECE /* GroupSwitcherSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupSwitcherSheet.swift; sourceTree = "<group>"; };
@@ -166,6 +172,7 @@
 		150E35FE5DE81F813527D439 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				C0CD72E309892B37A6E17D26 /* ChatModels.swift */,
 				C7A8830F083C877C2E8466B0 /* Models.swift */,
 			);
 			path = Models;
@@ -208,9 +215,18 @@
 			children = (
 				24D32873253B99B3AE9C9280 /* Constants.swift */,
 				59E8E8A9C353B25C44D9B99E /* Extensions.swift */,
+				894E6CA94900C603DCBB49D2 /* GlyphZoom.swift */,
 				751C7F62AE124835E71E5345 /* Theme.swift */,
 			);
 			path = Utilities;
+			sourceTree = "<group>";
+		};
+		89719E458F095E35303A0818 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				7CBDB35F444970005F343817 /* ChatView.swift */,
+			);
+			path = Chat;
 			sourceTree = "<group>";
 		};
 		8A5EA2281E2AD79582A55BDE /* Shared */ = {
@@ -299,6 +315,7 @@
 				019A4C51B98CDE722629BFB7 /* AppHeader.swift */,
 				3CD7DB6E4687AB95C8ED4F04 /* AppRootView.swift */,
 				D76081DD1D44942ADCE0263A /* BottomNav.swift */,
+				89719E458F095E35303A0818 /* Chat */,
 				020ED0507B1C864C3CAE568B /* History */,
 				FDE0213AD1A27078520146EB /* People */,
 				E46D39F7011AD0DB04BDA421 /* Recap */,
@@ -355,6 +372,11 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
 				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					CD451D343518EB3F2B887386 = {
+						DevelopmentTeam = 885S8T9D2F;
+					};
+				};
 			};
 			buildConfigurationList = 58428EE515A6D4FBBF90A54D /* Build configuration list for PBXProject "GymLate" */;
 			developmentRegion = en;
@@ -408,6 +430,8 @@
 				9D2539B5BBD06F598230E1C4 /* BottomNav.swift in Sources */,
 				051794B009EF265647A02073 /* CalDayDetailSheet.swift in Sources */,
 				C4D918BFF545FAD26F2AA906 /* CeremonyOverlays.swift in Sources */,
+				0BE3AEA2CD39555E4699DD72 /* ChatModels.swift in Sources */,
+				67DA8BC316D7F01104D7FFA1 /* ChatView.swift in Sources */,
 				9515C89B38E15239712A53CF /* ConnectivityMonitor.swift in Sources */,
 				F228AE559EA6CDB3D352B93A /* Constants.swift in Sources */,
 				3B6F849833829D73E80F50E5 /* CreateGroupSheet.swift in Sources */,
@@ -416,6 +440,7 @@
 				3C56B694133AB78DC9B0A65C /* EntryBadge.swift in Sources */,
 				AC0734326D397049FEE08B2E /* Extensions.swift in Sources */,
 				14F0C0BF7BA155A6B4B04F4A /* GeoPromptView.swift in Sources */,
+				BEECF47BDDE7E1BC9EEF8E0D /* GlyphZoom.swift in Sources */,
 				73074BB36C15A50674093DF3 /* GroupDataCache.swift in Sources */,
 				BB4400104484F43B9238D44F /* GroupSwitcherSheet.swift in Sources */,
 				D2B6DF9AE4376F88227B3226 /* GymLateApp.swift in Sources */,

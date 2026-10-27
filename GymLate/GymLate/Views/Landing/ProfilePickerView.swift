@@ -6,6 +6,9 @@ import SwiftUI
 /// (website: switchToGroup); the "+" tile falls through to LandingView.
 struct ProfilePickerView: View {
     @EnvironmentObject var appState: AppState
+    @State private var appeared = false
+    /// Gewaehltes Profil: es waechst, die anderen weichen, dann beginnt der Gruppenwechsel.
+    @State private var selectedId: String?
 
     private var groups: [GroupInfo] { LocalStore.shared.allGroups }
     private let columns = [GridItem(.adaptive(minimum: 92), spacing: 20)]
@@ -18,23 +21,39 @@ struct ProfilePickerView: View {
                 VStack(spacing: 28) {
                     VStack(spacing: 12) {
                         Text("🏋️").font(.system(size: 56))
+                            .scaleEffect(appeared ? 1 : 0.6)
                         Text(K.L.pickerTitle)
                             .font(.system(size: 26, weight: .black))
                             .foregroundColor(.primary)
                     }
                     .padding(.top, 80)
+                    .opacity(selectedId == nil ? (appeared ? 1 : 0) : 0)
+                    .offset(y: appeared ? 0 : -16)
 
                     LazyVGrid(columns: columns, spacing: 20) {
-                        ForEach(groups) { g in
+                        ForEach(Array(groups.enumerated()), id: \.element.id) { index, g in
                             let profile = LocalStore.shared.userProfile(for: g.id)
+                            let chosen = selectedId == g.id
+                            let others = selectedId != nil && !chosen
                             ProfilePickerCard(
                                 emoji: profile?.avatarEmoji ?? "🏋️",
                                 color: profile?.avatarColor ?? "#7c3aed",
                                 img: profile?.avatarImg,
                                 name: g.name
                             ) {
-                                Task { await appState.switchGroup(g) }
+                                guard selectedId == nil else { return }
+                                hapticSuccess()
+                                withAnimation(.spring(response: 0.45, dampingFraction: 0.72)) { selectedId = g.id }
+                                Task {
+                                    try? await Task.sleep(nanoseconds: 380_000_000)
+                                    await appState.switchGroup(g)
+                                }
                             }
+                            .scaleEffect(chosen ? 1.35 : (others ? 0.7 : (appeared ? 1 : 0.6)))
+                            .opacity(others ? 0 : (appeared ? 1 : 0))
+                            .offset(y: appeared ? 0 : 28)
+                            .animation(.spring(response: 0.55, dampingFraction: 0.78).delay(selectedId == nil ? 0.08 + Double(index) * 0.07 : 0),
+                                       value: appeared)
                         }
 
                         // Add tile — website: .profile-card-add / .avatar-circle-add
@@ -56,6 +75,10 @@ struct ProfilePickerView: View {
                             }
                         }
                         .buttonStyle(.plain)
+                        .opacity(selectedId == nil ? (appeared ? 1 : 0) : 0)
+                        .scaleEffect(appeared ? 1 : 0.6)
+                        .animation(.spring(response: 0.55, dampingFraction: 0.78).delay(0.1 + Double(groups.count) * 0.07),
+                                   value: appeared)
                     }
                     .padding(.horizontal, 24)
 
@@ -63,6 +86,7 @@ struct ProfilePickerView: View {
                 }
             }
         }
+        .onAppear { appeared = true }
     }
 }
 

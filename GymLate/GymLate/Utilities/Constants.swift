@@ -19,7 +19,7 @@ enum K {
     // Shared cross-platform product version — mirrors public/js/core.js APP_VERSION.
     // Independent of the Xcode MARKETING_VERSION (App Store submission number);
     // bump both by hand together per CLAUDE.md's versioning policy.
-    static let appVersion = "0.2.13.2"
+    static let appVersion = "0.2.15.0"
 
     // Avatar options — same lists as the website
     static let avatarEmojis = ["🏋️"]
@@ -46,6 +46,7 @@ enum K {
         static var navHistory: String { de ? "Verlauf" : "History" }
         static var navRecap: String { de ? "Rückblick" : "Recap" }
         static var navPeople: String { de ? "Personen" : "People" }
+        static var navChat: String { de ? "Chat" : "Chat" }
         static var lblWeek: String { de ? "Diese Woche" : "This Week" }
         static var lblHistory: String { de ? "Wochenrückblick" : "Weekly Recap" }
         static var lblPeople: String { de ? "Mitglieder" : "Members" }

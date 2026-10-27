@@ -51,15 +51,21 @@ struct RootView: View {
                 // Netflix-style "Wer trainiert?" grid (website: #screen-profile-picker) —
                 // shown on every cold start with ≥1 saved group instead of silently
                 // re-entering the last-active one.
-                ProfilePickerView().transition(.opacity)
+                ProfilePickerView().transition(Self.screenTransition)
             } else if appState.activeGroup != nil && appState.userProfile != nil {
-                AppRootView().transition(.opacity)
+                AppRootView().transition(Self.screenTransition)
             } else {
-                LandingView().transition(.opacity)
+                LandingView().transition(Self.screenTransition)
             }
         }
         .animation(.easeInOut(duration: 0.4), value: appState.isBootLoading)
-        .animation(.easeInOut(duration: 0.3), value: appState.showLaunchPicker)
-        .animation(.easeInOut(duration: 0.3), value: appState.activeGroup?.id)
+        .animation(.smooth(duration: 0.55), value: appState.showLaunchPicker)
+        .animation(.smooth(duration: 0.55), value: appState.activeGroup?.id)
     }
+
+    /// Grosse Szenenwechsel (Profilwahl ↔ App ↔ Start): die neue Szene waechst sanft heran,
+    /// die alte ueberstrahlt leicht und verschwindet.
+    private static let screenTransition = AnyTransition.asymmetric(
+        insertion: .opacity.combined(with: .scale(scale: 0.93)),
+        removal: .opacity.combined(with: .scale(scale: 1.07)))
 }

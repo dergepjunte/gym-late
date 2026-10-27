@@ -128,7 +128,15 @@ private struct FullPageModifier<PageContent: View>: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     func body(content: Content) -> some View {
-        content.overlay {
+        content
+            // Die darunterliegende Seite weicht zurueck (kleiner, dunkler, abgerundet), waehrend die neue einfaehrt.
+            // mask statt clipShape: clipShape wuerde Hintergruende im Sicherheitsbereich abschneiden (schwarze Balken).
+            .mask(RoundedRectangle(cornerRadius: isPresented && !reduceMotion ? 30 : 0, style: .continuous).ignoresSafeArea())
+            .scaleEffect(isPresented && !reduceMotion ? 0.94 : 1)
+            .offset(x: isPresented && !reduceMotion ? -36 : 0)
+            .brightness(isPresented && !reduceMotion ? -0.14 : 0)
+            .animation(.spring(response: 0.42, dampingFraction: 0.86), value: isPresented)
+            .overlay {
             Group {
                 if isPresented {
                     pageContent()
@@ -297,22 +305,65 @@ extension View {
 
 struct GymBackground: View {
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
+    /// Lebendiger Hintergrund: die warmen Lichtflecken wandern langsam (ca. 10 s pro Schwung),
+    /// dazu eine leichte Vignette. Alle Instanzen laufen ueber dieselbe Uhr und bleiben deckungsgleich.
     var body: some View {
         let dark = scheme == .dark
-        ZStack {
-            Color(.systemBackground).ignoresSafeArea()
-            // All-warm palette: dominant amber, rosé counterpoint (ties into the
-            // Wrapped slide pinks), orange base glow near the nav bar.
-            RadialGradient(colors: [Color(hex: dark ? "#fbbf24" : "#f59e0b").opacity(dark ? 0.18 : 0.20), .clear],
-                          center: .init(x: 0.18, y: 0.10), startRadius: 0, endRadius: 340)
-            .ignoresSafeArea()
-            RadialGradient(colors: [Color(hex: dark ? "#f472b6" : "#fb7185").opacity(dark ? 0.09 : 0.08), .clear],
-                          center: .init(x: 0.86, y: 0.26), startRadius: 0, endRadius: 250)
-            .ignoresSafeArea()
-            RadialGradient(colors: [Color(hex: dark ? "#f97316" : "#fb923c").opacity(dark ? 0.11 : 0.10), .clear],
-                          center: .init(x: 0.55, y: 0.95), startRadius: 0, endRadius: 320)
-            .ignoresSafeArea()
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { ctx in
+            let t = reduceMotion ? 0 : ctx.date.timeIntervalSinceReferenceDate
+            ZStack {
+                Color(.systemBackground).ignoresSafeArea()
+                // All-warm palette: dominant amber, rosé counterpoint (ties into the
+                // Wrapped slide pinks), orange base glow near the nav bar.
+                RadialGradient(colors: [Color(hex: dark ? "#fbbf24" : "#f59e0b").opacity(dark ? 0.24 : 0.22), .clear],
+                              center: .init(x: 0.18 + 0.10 * sin(t / 7), y: 0.10 + 0.06 * cos(t / 9)),
+                              startRadius: 0, endRadius: 380)
+                .ignoresSafeArea()
+                RadialGradient(colors: [Color(hex: dark ? "#f472b6" : "#fb7185").opacity(dark ? 0.13 : 0.10), .clear],
+                              center: .init(x: 0.86 + 0.08 * cos(t / 8), y: 0.26 + 0.10 * sin(t / 10)),
+                              startRadius: 0, endRadius: 290)
+                .ignoresSafeArea()
+                RadialGradient(colors: [Color(hex: dark ? "#f97316" : "#fb923c").opacity(dark ? 0.16 : 0.12), .clear],
+                              center: .init(x: 0.55 + 0.12 * sin(t / 11), y: 0.95 - 0.05 * cos(t / 6)),
+                              startRadius: 0, endRadius: 360)
+                .ignoresSafeArea()
+                RadialGradient(colors: [Color(hex: "#ea580c").opacity(dark ? 0.09 : 0.06), .clear],
+                              center: .init(x: 0.05 + 0.06 * cos(t / 12), y: 0.62 + 0.10 * sin(t / 8)),
+                              startRadius: 0, endRadius: 260)
+                .ignoresSafeArea()
+                // Vignette: zieht den Blick in die Mitte.
+                RadialGradient(colors: [.clear, Color.black.opacity(dark ? 0.35 : 0.06)],
+                              center: .center, startRadius: 180, endRadius: 620)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
+            }
         }
     }
+}
+
+// MARK: - Screen entrance
+
+/// Weiches Einblenden beim Tab-/Seitenwechsel: Inhalt steigt leicht auf, wird sichtbar und
+/// "landet" mit einer Feder. Bei Bewegung reduzieren nur ein Einblenden.
+struct ScreenEntrance: ViewModifier {
+    @State private var shown = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(shown ? 1 : 0)
+            .offset(y: shown || reduceMotion ? 0 : 22)
+            .scaleEffect(shown || reduceMotion ? 1 : 0.985)
+            .onAppear {
+                shown = false
+                withAnimation(reduceMotion ? .easeOut(duration: 0.2)
+                                           : .spring(response: 0.55, dampingFraction: 0.86).delay(0.03)) { shown = true }
+            }
+    }
+}
+
+extension View {
+    func screenEntrance() -> some View { modifier(ScreenEntrance()) }
 }

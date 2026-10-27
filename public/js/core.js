@@ -5,7 +5,7 @@
 //  feature: smaller feature additions
 //  patch: bugfixes
 // ════════════════════════════════════════════════════════
-const APP_VERSION = '0.2.13.2';
+const APP_VERSION = '0.2.15.0';
 
 // ════════════════════════════════════════════════════════
 //  DATE HELPERS

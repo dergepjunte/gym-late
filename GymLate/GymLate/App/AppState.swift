@@ -26,6 +26,11 @@ final class AppState: ObservableObject {
     // Cold-start loading screen (LaunchLoadingView) — shown briefly on every
     // launch for the branded splash, independent of any network refresh.
     @Published var isBootLoading = false
+    // Zweite Phase des Starts: das Motiv der Ladeanimation flutet den Bildschirm
+    // in seiner Farbe, danach (isBootLoading = false) startet die App.
+    @Published var bootFilling = false
+    // Von der Hype-Ansicht: nach dem Zeitvorschlag direkt in den Chat wechseln.
+    @Published var openChatRequest = false
     // Netflix-style launch picker (website: #screen-profile-picker) — true on
     // cold start whenever ≥1 group is saved locally; set false once a saved
     // profile is tapped (switchGroup) or the user chooses "+" to add a new one.
@@ -106,9 +111,16 @@ final class AppState: ObservableObject {
         // stay nil until a saved profile is tapped (see switchGroup).
         isBootLoading = true
         Task {
-            try? await Task.sleep(nanoseconds: 900_000_000)
+            // Mindestens eine Sekunde pulsieren, dann Bildschirm in Motivfarbe fluten, dann App.
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            let reduce = UIAccessibility.isReduceMotionEnabled
+            bootFilling = true   // die Ladeansicht zoomt ins Motiv (siehe LaunchLoadingView.startZoom)
+            try? await Task.sleep(nanoseconds: reduce ? 450_000_000 : 1_100_000_000)
             showLaunchPicker = !store.allGroups.isEmpty
-            withAnimation(.easeInOut(duration: 0.4)) { isBootLoading = false }
+            withAnimation(.easeInOut(duration: 0.45)) { isBootLoading = false }
+            // Erst nach dem Ausblenden zuruecksetzen, sonst springt das Ladebild waehrenddessen zurueck.
+            try? await Task.sleep(nanoseconds: 600_000_000)
+            bootFilling = false
         }
 
         sync.$pendingCount

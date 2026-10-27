@@ -14,6 +14,7 @@ struct BottomNav: View {
             navItem(.week, icon: "house.fill", label: K.L.navHome)
             navItem(.history, icon: "calendar.badge.clock", label: K.L.navHistory)
             navItem(.recap, icon: "chart.bar.fill", label: K.L.navRecap)
+            navItem(.chat, icon: "bubble.left.and.bubble.right.fill", label: K.L.navChat)
             navItem(.people, icon: "person.2.fill", label: K.L.navPeople)
         }
         .padding(5)

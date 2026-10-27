@@ -1,6 +1,6 @@
 import SwiftUI
 
-enum AppTab { case week, history, recap, people }
+enum AppTab { case week, history, recap, chat, people }
 
 struct AppRootView: View {
     @EnvironmentObject var appState: AppState
@@ -9,6 +9,7 @@ struct AppRootView: View {
         switch ProcessInfo.processInfo.environment["GYMLATE_TAB"] {
         case "history": return .history
         case "recap":   return .recap
+        case "chat":    return .chat
         case "people":  return .people
         default:        return .week
         }
@@ -140,6 +141,11 @@ struct AppRootView: View {
             }
         }
         .toast($toast)
+        .onChange(of: appState.openChatRequest) { _, wanted in
+            guard wanted else { return }
+            appState.openChatRequest = false
+            withAnimation(.spring(response: 0.45, dampingFraction: 0.86)) { selectedTab = .chat }
+        }
     }
 
     /// iOS 18+: native TabView. On iOS 26 this renders the floating Liquid
@@ -150,34 +156,49 @@ struct AppRootView: View {
         TabView(selection: $selectedTab) {
             Tab(K.L.navHome, systemImage: "house.fill", value: AppTab.week) {
                 WeekView(showLogEntry: $showLogEntry, toast: $toast)
+                    .screenEntrance()
                     .background(GymBackground().ignoresSafeArea())
             }
             Tab(K.L.navHistory, systemImage: "calendar.badge.clock", value: AppTab.history) {
                 HistoryView()
+                    .screenEntrance()
                     .background(GymBackground().ignoresSafeArea())
             }
             Tab(K.L.navRecap, systemImage: "chart.bar.fill", value: AppTab.recap) {
                 RecapView()
+                    .screenEntrance()
+                    .background(GymBackground().ignoresSafeArea())
+            }
+            Tab(K.L.navChat, systemImage: "bubble.left.and.bubble.right.fill", value: AppTab.chat) {
+                ChatView()
+                    .screenEntrance()
                     .background(GymBackground().ignoresSafeArea())
             }
             Tab(K.L.navPeople, systemImage: "person.2.fill", value: AppTab.people) {
                 PeopleView()
+                    .screenEntrance()
                     .background(GymBackground().ignoresSafeArea())
             }
         }
         .tint(K.accentDeep)
     }
 
+    private static let tabTransition = AnyTransition.asymmetric(
+        insertion: .opacity.combined(with: .scale(scale: 0.97)).combined(with: .offset(y: 14)),
+        removal: .opacity.combined(with: .scale(scale: 1.02)))
+
     /// iOS 17 fallback: previous custom glass bar with the yellow sliding pill.
     private var legacyTabLayout: some View {
         ZStack {
             switch selectedTab {
-            case .week:    WeekView(showLogEntry: $showLogEntry, toast: $toast)
-            case .history: HistoryView()
-            case .recap:   RecapView()
-            case .people:  PeopleView()
+            case .week:    WeekView(showLogEntry: $showLogEntry, toast: $toast).transition(Self.tabTransition)
+            case .history: HistoryView().transition(Self.tabTransition)
+            case .recap:   RecapView().transition(Self.tabTransition)
+            case .chat:    ChatView().transition(Self.tabTransition)
+            case .people:  PeopleView().transition(Self.tabTransition)
             }
         }
+        .animation(.spring(response: 0.45, dampingFraction: 0.86), value: selectedTab)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // Floating glass bar: content scrolls underneath it.
         .safeAreaInset(edge: .bottom, spacing: 0) {

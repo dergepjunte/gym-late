@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 import MapKit
 import CoreLocation
 
@@ -43,6 +44,8 @@ struct SettingsSheet: View {
     @State private var showMigrateSheet = false
 
     // Notification preferences
+    @State private var notifStatus: UNAuthorizationStatus = .notDetermined
+    @Environment(\.scenePhase) private var scenePhase
     @State private var notifReminders = LocalStore.shared.notifReminders
     @State private var notifStreak    = LocalStore.shared.notifStreak
     @State private var notifActivity  = LocalStore.shared.notifActivity
@@ -185,6 +188,39 @@ struct SettingsSheet: View {
                     }
 
                     if tab == .notify {
+                        // Systemstatus: ohne Erlaubnis taucht GymLate auch nicht in iOS-Einstellungen → Mitteilungen auf.
+                        Section {
+                            HStack(spacing: 12) {
+                                Image(systemName: notifStatusIcon)
+                                    .font(.system(size: 22, weight: .semibold))
+                                    .foregroundColor(notifStatusColor)
+                                    .frame(width: 30)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(notifStatusTitle).font(Theme.body(15, .semibold))
+                                    Text(notifStatusHint).font(.caption).foregroundColor(.secondary)
+                                }
+                            }
+                            switch notifStatus {
+                            case .notDetermined:
+                                Button(K.L.de ? "Mitteilungen erlauben" : "Allow notifications") {
+                                    Task {
+                                        await NotificationManager.shared.requestPermission()
+                                        await refreshNotifStatus()
+                                    }
+                                }
+                                .foregroundColor(K.accentDark)
+                            case .denied:
+                                Button(K.L.de ? "In iOS-Einstellungen öffnen" : "Open iOS Settings") {
+                                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                                        UIApplication.shared.open(url)
+                                    }
+                                }
+                                .foregroundColor(K.accentDark)
+                            default:
+                                EmptyView()
+                            }
+                        } header: { Text(K.L.de ? "Systemstatus" : "System status") }
+
                         // Notifications
                         Section {
                             Toggle(K.L.msetNotifRemindersLbl, isOn: $notifReminders)
@@ -206,7 +242,7 @@ struct SettingsSheet: View {
                                 .tint(K.accentDeep)
                         } header: { Text(K.L.msetQuietLbl) }
 
-                        if notifActivity, let people = appState.groupData?.people.filter({ $0.id != appState.userProfile?.userId }) {
+                        if notifActivity, let people = appState.groupData?.people.filter({ $0.id != appState.userProfile?.userId }), !people.isEmpty {
                             Section {
                                 ForEach(people, id: \.id) { person in
                                     let isOn = Binding<Bool>(
@@ -287,6 +323,10 @@ struct SettingsSheet: View {
                 }
             }
             .onAppear { loadCurrentValues() }
+            .task { await refreshNotifStatus() }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active { Task { await refreshNotifStatus() } }
+            }
             .onChange(of: appState.adminMode) { _, _ in
                 if tab == .group && !isCreatorOrAdmin { tab = .you }
             }
@@ -445,8 +485,49 @@ struct SettingsSheet: View {
         }
     }
 
+    private func refreshNotifStatus() async {
+        notifStatus = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
+    }
+
+    private var notifStatusIcon: String {
+        switch notifStatus {
+        case .authorized, .provisional, .ephemeral: return "bell.badge.fill"
+        case .denied: return "bell.slash.fill"
+        default: return "bell.fill"
+        }
+    }
+    private var notifStatusColor: Color {
+        switch notifStatus {
+        case .authorized, .provisional, .ephemeral: return K.green
+        case .denied: return K.red
+        default: return K.accentDeep
+        }
+    }
+    private var notifStatusTitle: String {
+        switch notifStatus {
+        case .authorized, .provisional, .ephemeral: return K.L.de ? "Mitteilungen sind an" : "Notifications are on"
+        case .denied: return K.L.de ? "Mitteilungen sind aus" : "Notifications are off"
+        default: return K.L.de ? "Noch nicht erlaubt" : "Not allowed yet"
+        }
+    }
+    private var notifStatusHint: String {
+        switch notifStatus {
+        case .authorized, .provisional, .ephemeral:
+            return K.L.de ? "Erinnerungen und Streak-Warnungen kommen an." : "Reminders and streak warnings will arrive."
+        case .denied:
+            return K.L.de ? "Du hast sie in iOS abgelehnt. Dort lassen sie sich wieder einschalten." : "Turned off in iOS. Re-enable them there."
+        default:
+            return K.L.de ? "Erst nach der Erlaubnis erscheint GymLate in den iOS-Einstellungen." : "GymLate only shows up in iOS Settings after you allow."
+        }
+    }
+
     private func saveNotifPrefs() async {
         let store = LocalStore.shared
+        // Wer Mitteilungen einschaltet, soll auch gefragt werden (sonst fehlt der iOS-Eintrag).
+        if notifReminders || notifStreak || notifActivity {
+            await NotificationManager.shared.requestPermission()
+            await refreshNotifStatus()
+        }
         store.notifReminders = notifReminders
         store.notifStreak    = notifStreak
         store.notifActivity  = notifActivity

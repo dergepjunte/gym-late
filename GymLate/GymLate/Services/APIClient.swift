@@ -209,6 +209,43 @@ final class APIClient {
                                         body: Body(date: date, time: time))
     }
 
+    // MARK: - Group chat
+
+    private struct ChatBody: Encodable {
+        var userId: String
+        var recoveryCode: String?
+        var accountToken: String?
+        var text: String? = nil
+        var date: String? = nil
+        var time: String? = nil
+        var messageId: String? = nil
+        var vote: String? = nil
+    }
+
+    private func chatBody(_ auth: ChatAuth) -> ChatBody {
+        ChatBody(userId: auth.userId, recoveryCode: auth.recoveryCode, accountToken: auth.accountToken)
+    }
+
+    func chatList(groupId: String, auth: ChatAuth) async throws -> ChatSnapshot {
+        try await request("POST", path: "/api/groups/\(groupId)/chat/list", body: chatBody(auth))
+    }
+
+    func chatSend(groupId: String, auth: ChatAuth, text: String) async throws -> ChatSnapshot {
+        var b = chatBody(auth); b.text = text
+        return try await request("POST", path: "/api/groups/\(groupId)/chat/send", body: b)
+    }
+
+    /// Schlaegt eine Gym-Zeit fuer `date` vor; fest wird sie erst, wenn die Gruppe mehrheitlich zustimmt.
+    func chatPropose(groupId: String, auth: ChatAuth, date: String, time: String) async throws -> ChatSnapshot {
+        var b = chatBody(auth); b.date = date; b.time = time
+        return try await request("POST", path: "/api/groups/\(groupId)/chat/propose", body: b)
+    }
+
+    func chatVote(groupId: String, auth: ChatAuth, messageId: String, yes: Bool) async throws -> ChatSnapshot {
+        var b = chatBody(auth); b.messageId = messageId; b.vote = yes ? "yes" : "no"
+        return try await request("POST", path: "/api/groups/\(groupId)/chat/vote", body: b)
+    }
+
     // MARK: - Admin
 
     func createTestGroup(adminPassword: String) async throws -> (group: GroupInfo, user: RegisterResponse) {

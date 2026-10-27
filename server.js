@@ -1154,6 +1154,139 @@ app.post('/api/groups/:id/checkin-time', ah(async (req, res) => {
   res.json({ ok: true, date, time });
 }));
 
+// ── Gruppen-Chat + Zeitvorschlaege ───────────────────────────────────────────
+// Nachrichten (text), Zeitvorschlaege (time_proposal) und Systemmeldungen (system).
+// Ein Vorschlag wird erst zur festen Gym-Zeit des Tages, wenn die Mehrheit der
+// Gruppe zustimmt (der Vorschlagende zaehlt mit; bei 2 Personen stimmen beide zu).
+async function initChatSchema() {
+  await database.run(`
+    CREATE TABLE IF NOT EXISTS group_messages (
+      id VARCHAR(36) PRIMARY KEY,
+      group_id VARCHAR(36) NOT NULL,
+      user_id VARCHAR(36) NOT NULL,
+      kind VARCHAR(20) NOT NULL,
+      text TEXT NULL,
+      prop_date VARCHAR(10) NULL,
+      prop_time VARCHAR(5) NULL,
+      status VARCHAR(12) NULL,
+      created_at BIGINT NOT NULL
+    )`);
+  await database.run(`
+    CREATE TABLE IF NOT EXISTS message_votes (
+      message_id VARCHAR(36) NOT NULL,
+      user_id VARCHAR(36) NOT NULL,
+      vote VARCHAR(3) NOT NULL,
+      created_at BIGINT NOT NULL,
+      PRIMARY KEY (message_id, user_id)
+    )`);
+}
+
+async function chatUser(req, res) {
+  const { id } = req.params;
+  const userId = String(req.body?.userId ?? '');
+  const user = userId
+    ? await database.one('SELECT id, name, recovery_code, account_id FROM users WHERE id = ? AND group_id = ?', [userId, id])
+    : null;
+  if (!user) { res.status(404).json({ error: 'not_found' }); return null; }
+  if (!await authorizesAsUser(req, user, req.body?.recoveryCode)) {
+    res.status(401).json({ error: 'unauthorized' });
+    return null;
+  }
+  return user;
+}
+
+async function chatSnapshot(groupId) {
+  const rows = await database.all(
+    'SELECT id, user_id, kind, text, prop_date, prop_time, status, created_at FROM group_messages WHERE group_id = ? ORDER BY created_at DESC LIMIT 200',
+    [groupId]);
+  rows.reverse();
+  const votes = await database.all(
+    'SELECT v.message_id, v.user_id, v.vote FROM message_votes v JOIN group_messages m ON m.id = v.message_id WHERE m.group_id = ?',
+    [groupId]);
+  const byMsg = new Map();
+  for (const v of votes) {
+    if (!byMsg.has(v.message_id)) byMsg.set(v.message_id, { yes: [], no: [] });
+    byMsg.get(v.message_id)[v.vote === 'yes' ? 'yes' : 'no'].push(v.user_id);
+  }
+  const members = Number((await database.one('SELECT COUNT(*) AS n FROM users WHERE group_id = ?', [groupId]))?.n ?? 0);
+  return {
+    members,
+    messages: rows.map(m => ({
+      id: m.id, userId: m.user_id, kind: m.kind, text: m.text ?? null,
+      propDate: m.prop_date ?? null, propTime: m.prop_time ?? null, status: m.status ?? null,
+      createdAt: Number(m.created_at),
+      yes: byMsg.get(m.id)?.yes ?? [], no: byMsg.get(m.id)?.no ?? [],
+    })),
+  };
+}
+
+// Prueft nach jeder Stimme: Mehrheit dafuer → feste Zeit; Mehrheit dagegen → abgelehnt.
+async function evaluateProposal(groupId, messageId) {
+  const m = await database.one('SELECT id, user_id, kind, prop_date, prop_time, status FROM group_messages WHERE id = ? AND group_id = ?', [messageId, groupId]);
+  if (!m || m.kind !== 'time_proposal' || m.status !== 'open') return;
+  const members = Number((await database.one('SELECT COUNT(*) AS n FROM users WHERE group_id = ?', [groupId]))?.n ?? 1);
+  const yes = Number((await database.one("SELECT COUNT(*) AS n FROM message_votes WHERE message_id = ? AND vote = 'yes'", [messageId]))?.n ?? 0);
+  const no = Number((await database.one("SELECT COUNT(*) AS n FROM message_votes WHERE message_id = ? AND vote = 'no'", [messageId]))?.n ?? 0);
+  const accepted = yes * 2 > members || yes >= members;
+  const rejected = !accepted && no * 2 >= members;
+  if (accepted) {
+    await database.run("UPDATE group_messages SET status = 'accepted' WHERE id = ?", [messageId]);
+    await database.run('UPDATE `groups` SET checkin_time_date = ?, checkin_time = ? WHERE id = ?', [m.prop_date, m.prop_time, groupId]);
+    await database.run(
+      "INSERT INTO group_messages (id, group_id, user_id, kind, text, prop_date, prop_time, status, created_at) VALUES (?, ?, ?, 'system', ?, ?, ?, NULL, ?)",
+      [crypto.randomUUID(), groupId, m.user_id, `time_set`, m.prop_date, m.prop_time, Date.now()]);
+  } else if (rejected) {
+    await database.run("UPDATE group_messages SET status = 'rejected' WHERE id = ?", [messageId]);
+  }
+}
+
+app.post('/api/groups/:id/chat/list', ah(async (req, res) => {
+  const user = await chatUser(req, res); if (!user) return;
+  res.json(await chatSnapshot(req.params.id));
+}));
+
+app.post('/api/groups/:id/chat/send', ah(async (req, res) => {
+  const user = await chatUser(req, res); if (!user) return;
+  const text = String(req.body?.text ?? '').trim().slice(0, 500);
+  if (!text) return res.status(400).json({ error: 'empty' });
+  await database.run(
+    "INSERT INTO group_messages (id, group_id, user_id, kind, text, created_at) VALUES (?, ?, ?, 'text', ?, ?)",
+    [crypto.randomUUID(), req.params.id, user.id, text, Date.now()]);
+  res.json(await chatSnapshot(req.params.id));
+}));
+
+app.post('/api/groups/:id/chat/propose', ah(async (req, res) => {
+  const user = await chatUser(req, res); if (!user) return;
+  const date = String(req.body?.date ?? '').trim();
+  const time = String(req.body?.time ?? '').trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'invalid_date' });
+  if (!isValidTimeHHMM(time)) return res.status(400).json({ error: 'invalid_time' });
+  const gid = req.params.id;
+  // Aeltere offene Vorschlaege fuer denselben Tag sind damit ueberholt.
+  await database.run("UPDATE group_messages SET status = 'superseded' WHERE group_id = ? AND kind = 'time_proposal' AND status = 'open' AND prop_date = ?", [gid, date]);
+  const msgId = crypto.randomUUID();
+  await database.run(
+    "INSERT INTO group_messages (id, group_id, user_id, kind, text, prop_date, prop_time, status, created_at) VALUES (?, ?, ?, 'time_proposal', ?, ?, ?, 'open', ?)",
+    [msgId, gid, user.id, String(req.body?.text ?? '').trim().slice(0, 200) || null, date, time, Date.now()]);
+  await database.run("INSERT INTO message_votes (message_id, user_id, vote, created_at) VALUES (?, ?, 'yes', ?)", [msgId, user.id, Date.now()]);
+  await evaluateProposal(gid, msgId);
+  res.json(await chatSnapshot(gid));
+}));
+
+app.post('/api/groups/:id/chat/vote', ah(async (req, res) => {
+  const user = await chatUser(req, res); if (!user) return;
+  const messageId = String(req.body?.messageId ?? '');
+  const vote = req.body?.vote === 'no' ? 'no' : 'yes';
+  const gid = req.params.id;
+  const m = await database.one('SELECT id, kind, status FROM group_messages WHERE id = ? AND group_id = ?', [messageId, gid]);
+  if (!m || m.kind !== 'time_proposal') return res.status(404).json({ error: 'not_found' });
+  if (m.status !== 'open') return res.status(409).json({ error: 'closed' });
+  await database.run('DELETE FROM message_votes WHERE message_id = ? AND user_id = ?', [messageId, user.id]);
+  await database.run('INSERT INTO message_votes (message_id, user_id, vote, created_at) VALUES (?, ?, ?, ?)', [messageId, user.id, vote, Date.now()]);
+  await evaluateProposal(gid, messageId);
+  res.json(await chatSnapshot(gid));
+}));
+
 app.post('/api/test-group', ah(async (req, res) => {
   if (!isAdmin(req)) return res.status(401).json({ error: 'unauthorized' });
 
@@ -1812,6 +1945,7 @@ app.use((err, req, res, next) => {
 async function main() {
   database = USE_MYSQL ? await createMysqlDatabase() : createSqliteDatabase();
   await initSchema();
+  await initChatSchema();
   await startupMigration();
   app.listen(PORT, () => {
     console.log(`\n🏋️  GymLate läuft auf http://localhost:${PORT}\n`);

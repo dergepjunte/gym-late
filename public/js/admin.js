@@ -2,6 +2,8 @@
 //  ADMIN
 // ════════════════════════════════════════════════════════
 let adminTaps = 0, adminTapTimer;
+let maErrorActive = false;
+let maPrevValue = '';
 
 document.getElementById('header-icon').addEventListener('click', () => {
   if (!group) return;
@@ -17,6 +19,8 @@ document.getElementById('header-icon').addEventListener('click', () => {
 function openAdminLogin() {
   document.getElementById('ma-pwd').value = '';
   document.getElementById('ma-error').textContent = '';
+  maErrorActive = false;
+  maPrevValue = '';
   openPage('modal-admin');
   setTimeout(() => document.getElementById('ma-pwd').focus(), 350);
 }
@@ -58,11 +62,25 @@ document.getElementById('ma-submit').addEventListener('click', async () => {
     activateAdmin();
   } catch {
     errEl.textContent = T.maError;
+    maErrorActive = true;
+    maPrevValue = document.getElementById('ma-pwd').value;
   } finally {
     btn.disabled = false;
   }
 });
 document.getElementById('ma-pwd').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('ma-submit').click(); });
+document.getElementById('ma-pwd').addEventListener('input', e => {
+  const cur = e.target.value;
+  if (maErrorActive) {
+    maErrorActive = false;
+    document.getElementById('ma-error').textContent = '';
+    // Drop the stale rejected text, keep only what was just typed.
+    e.target.value = (cur.length > maPrevValue.length && cur.startsWith(maPrevValue))
+      ? cur.slice(maPrevValue.length)
+      : '';
+  }
+  maPrevValue = e.target.value;
+});
 
 // Admin panel page navigation
 document.getElementById('adm-page-back').addEventListener('click', () => closePage('modal-admin-panel'));
