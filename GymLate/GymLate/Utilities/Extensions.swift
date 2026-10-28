@@ -172,12 +172,12 @@ private struct FullPageModifier<PageContent: View>: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            // Die darunterliegende Seite weicht zurueck (kleiner, dunkler, abgerundet), waehrend die neue einfaehrt.
-            // mask statt clipShape: clipShape wuerde Hintergruende im Sicherheitsbereich abschneiden (schwarze Balken).
-            .mask(RoundedRectangle(cornerRadius: isPresented && !reduceMotion ? 30 : 0, style: .continuous).ignoresSafeArea())
-            .scaleEffect(isPresented && !reduceMotion ? 0.94 : 1)
-            .offset(x: isPresented && !reduceMotion ? -36 : 0)
-            .brightness(isPresented && !reduceMotion ? -0.14 : 0)
+            // Die darunterliegende Seite tritt zurueck (dunkler, weich), waehrend die neue einfaehrt.
+            // Bewusst ohne scale/offset: verschobene UIKit-Ansichten (TabView, ScrollView) berechnen
+            // ihren Sicherheitsabstand neu und behalten ihn nach dem Zurueckgehen manchmal falsch -
+            // dann rutscht alles unter Uhrzeit/Dynamic Island.
+            .blur(radius: isPresented && !reduceMotion ? 3 : 0)
+            .brightness(isPresented && !reduceMotion ? -0.18 : 0)
             .animation(.spring(response: 0.42, dampingFraction: 0.86), value: isPresented)
             .overlay {
             Group {
@@ -420,8 +420,8 @@ struct ScreenEntrance: ViewModifier {
     func body(content: Content) -> some View {
         content
             .opacity(shown ? 1 : 0)
-            .offset(y: shown || reduceMotion ? 0 : 22)
-            .scaleEffect(shown || reduceMotion ? 1 : 0.985)
+            // Kein offset/scale (siehe FullPageModifier): nur Einblenden mit kurzer Unschaerfe.
+            .blur(radius: shown || reduceMotion ? 0 : 6)
             .onAppear {
                 shown = false
                 withAnimation(reduceMotion ? .easeOut(duration: 0.2)

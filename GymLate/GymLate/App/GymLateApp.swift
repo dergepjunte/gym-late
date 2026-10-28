@@ -92,7 +92,13 @@ struct RootView: View {
 
     /// Grosse Szenenwechsel (Profilwahl ↔ App ↔ Start): die neue Szene waechst sanft heran,
     /// die alte ueberstrahlt leicht und verschwindet.
+    /// Ohne scale: verkleinerte UIKit-Ansichten verlieren sonst manchmal ihren Abstand zur Dynamic Island.
     private static let screenTransition = AnyTransition.asymmetric(
-        insertion: .opacity.combined(with: .scale(scale: 0.93)),
-        removal: .opacity.combined(with: .scale(scale: 1.07)))
+        insertion: .opacity.combined(with: .modifier(active: SceneBlur(radius: 12), identity: SceneBlur(radius: 0))),
+        removal: .opacity.combined(with: .modifier(active: SceneBlur(radius: 8), identity: SceneBlur(radius: 0))))
+}
+
+private struct SceneBlur: ViewModifier {
+    var radius: CGFloat
+    func body(content: Content) -> some View { content.blur(radius: radius) }
 }

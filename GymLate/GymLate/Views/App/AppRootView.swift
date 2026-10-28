@@ -128,7 +128,9 @@ struct AppRootView: View {
         .fullScreenCover(isPresented: $showMigrateSheet) {
             MigrationSheet { showMigrateSheet = false }
         }
-        .fullPageCover(isPresented: $appState.showMyProfile) {
+        // Nur oeffnen, wenn das eigene Profil in den Gruppendaten steht - sonst bliebe eine leere Seite haengen.
+        .fullPageCover(isPresented: Binding(get: { appState.showMyProfile && myPerson != nil },
+                                            set: { appState.showMyProfile = $0 })) {
             if let me = myPerson { ProfileView(person: me) }
         }
         .fullPageCover(isPresented: $appState.showAdminLogin) { AdminLoginSheet(toast: $toast) }
