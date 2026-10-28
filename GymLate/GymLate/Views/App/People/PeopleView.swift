@@ -16,7 +16,7 @@ struct PeopleView: View {
                 AppHeader(toast: $toast)
 
                 Text(K.L.lblPeople)
-                    .font(Theme.heading(24))
+                    .font(Theme.display(36)).textCase(.uppercase)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
 
@@ -118,7 +118,7 @@ struct PersonRow: View {
                        img: person.avatarImg, size: 48)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
-                    Text(person.name).font(Theme.body(15, .bold))
+                    Text(person.name).font(Theme.heading(19))
                     if person.isCreator {
                         Image(systemName: "star.fill").foregroundColor(K.gold).font(.system(size: 10))
                     }
@@ -158,9 +158,9 @@ struct GroupListRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text("🏋️").font(.system(size: 24))
+            Image(systemName: "dumbbell.fill").font(.system(size: 18, weight: .black)).foregroundColor(K.accent).frame(width: 28)
             VStack(alignment: .leading, spacing: 2) {
-                Text(group.name).font(Theme.body(14, .bold))
+                Text(group.name).font(Theme.heading(17))
                 Text(group.code)
                     .font(.system(size: 12, design: .monospaced))
                     .foregroundColor(.secondary)

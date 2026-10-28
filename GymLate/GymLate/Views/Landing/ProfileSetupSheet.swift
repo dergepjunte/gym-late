@@ -113,7 +113,7 @@ struct ProfileSetupSheet: View {
                     Button(K.L.de ? "Bereits registriert? Einloggen →" : "Already registered? Log in →") {
                         withAnimation { mode = .login }
                     }
-                    .foregroundColor(K.accentDark)
+                    .foregroundColor(K.accent)
                 }
             }
         }
@@ -132,7 +132,7 @@ struct ProfileSetupSheet: View {
                 Button(K.L.de ? "Neu hier? Profil erstellen →" : "New here? Create profile →") {
                     withAnimation { mode = .create }
                 }
-                .foregroundColor(K.accentDark)
+                .foregroundColor(K.accent)
             }
         }
     }
@@ -214,7 +214,7 @@ struct RecoveryCodeSheet: View {
                 Button(K.L.de ? "Ich hab's gespeichert! →" : "I've saved it! →") {
                     onDone()
                 }
-                .foregroundColor(K.accentDark)
+                .foregroundColor(K.accent)
                 .font(.system(size: 15, weight: .semibold))
             }
             .padding()

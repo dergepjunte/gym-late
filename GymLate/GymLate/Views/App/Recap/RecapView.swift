@@ -97,14 +97,9 @@ struct RecapView: View {
                                 appState.replayWrapped()
                             } label: {
                                 Label(K.L.recapReplayBtn, systemImage: "play.fill")
-                                    .font(Theme.body(13, .semibold))
-                                    .foregroundColor(K.accentDark)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 9)
-                                    .frame(maxWidth: .infinity)
-                                    .glassButton()
+                                    .accentButton()
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(SlabPress())
                             .padding(.horizontal, 16)
                             .padding(.top, 4)
 
@@ -132,19 +127,19 @@ struct RecapView: View {
                 // Hero: most-often-late or "all skipped"
                 if let top = block.byMins.first {
                     VStack(spacing: 6) {
-                        Text("★")
-                            .font(.system(size: 44))
+                        Image(systemName: "crown.fill")
+                            .font(.system(size: 40, weight: .black))
                             .foregroundStyle(LinearGradient(colors: Theme.accentGradient,
                                                             startPoint: .top, endPoint: .bottom))
-                        Text(top.name).font(Theme.heading(22))
-                        Text(K.L.lateKing).font(Theme.body(13)).foregroundColor(.secondary)
+                        Text(top.name.uppercased()).font(Theme.display(38))
+                        Text(K.L.lateKing).eyebrow()
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 20)
                 } else {
                     VStack(spacing: 6) {
-                        Text("⊘").font(.system(size: 36))
-                        Text(K.L.allSkippedTitle).font(Theme.heading(18))
+                        Image(systemName: "nosign").font(.system(size: 32, weight: .bold)).foregroundColor(K.gold)
+                        Text(K.L.allSkippedTitle.uppercased()).font(Theme.display(32))
                     }
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 18)

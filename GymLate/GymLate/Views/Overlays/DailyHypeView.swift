@@ -27,25 +27,20 @@ struct DailyHypeView: View {
 
     var body: some View {
         ZStack {
-            LinearGradient(
-                colors: [Color(hex: "#fbbf24"), Color(hex: "#f59e0b"), Color(hex: "#ea580c")],
-                startPoint: .top, endPoint: .bottom)
-            .ignoresSafeArea()
-
-            // Weiche, langsam wandernde Lichtflecken statt flacher Farbe.
+            // Gym-poster stage: black floor, swinging spotlight, hazard tape top and bottom.
+            GymBackground()
             GeometryReader { geo in
-                Circle().fill(Color.white.opacity(0.22)).frame(width: 340).blur(radius: 70)
-                    .offset(x: drift ? -60 : 40, y: drift ? -40 : 60)
-                Circle().fill(Color(hex: "#dc2626").opacity(0.35)).frame(width: 380).blur(radius: 90)
-                    .position(x: geo.size.width * 0.9, y: geo.size.height * (drift ? 0.88 : 0.78))
-                ForEach(0..<7, id: \.self) { i in
-                    Image(systemName: "sparkle")
-                        .font(.system(size: CGFloat(10 + (i * 5) % 14)))
-                        .foregroundColor(.white.opacity(pulse ? 0.85 : 0.2))
-                        .position(x: geo.size.width * [0.12, 0.84, 0.28, 0.7, 0.9, 0.08, 0.55][i],
-                                  y: geo.size.height * [0.2, 0.16, 0.34, 0.62, 0.48, 0.7, 0.1][i])
-                        .animation(.easeInOut(duration: 1.2 + Double(i) * 0.17).repeatForever(autoreverses: true), value: pulse)
+                RadialGradient(colors: [K.accent.opacity(0.32), .clear],
+                               center: .init(x: drift ? 0.38 : 0.62, y: 0.28),
+                               startRadius: 0, endRadius: geo.size.height * 0.45)
+                VStack {
+                    HazardStripes(stripe: 16).frame(height: 22)
+                        .offset(x: drift ? -32 : 0)
+                    Spacer()
+                    HazardStripes(stripe: 16).frame(height: 22)
+                        .offset(x: drift ? 0 : -32)
                 }
+                .frame(width: geo.size.width + 64)
             }
             .ignoresSafeArea()
             .allowsHitTesting(false)
@@ -54,25 +49,32 @@ struct DailyHypeView: View {
                 Spacer(minLength: 20)
 
                 ZStack {
-                    Circle().stroke(Color.white.opacity(0.35), lineWidth: 2)
-                        .frame(width: 190, height: 190)
-                        .scaleEffect(pulse ? 1.18 : 0.92).opacity(pulse ? 0 : 0.8)
-                    Circle().fill(.ultraThinMaterial).frame(width: 150, height: 150)
-                        .overlay(Circle().stroke(Color.white.opacity(0.5), lineWidth: 1.5))
-                        .shadow(color: Color(hex: "#7c2d12").opacity(0.35), radius: 24, y: 12)
-                    Text("🏋️").font(.system(size: 76))
+                    Circle().stroke(K.accent.opacity(0.5), lineWidth: 3)
+                        .frame(width: 200, height: 200)
+                        .scaleEffect(pulse ? 1.2 : 0.9).opacity(pulse ? 0 : 0.9)
+                    PlateFrame(size: 170) {
+                        Image(systemName: "figure.strengthtraining.traditional")
+                            .font(.system(size: 58, weight: .bold))
+                            .foregroundStyle(LinearGradient(colors: Theme.accentGradient,
+                                                            startPoint: .top, endPoint: .bottom))
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(K.iron1)
+                    }
+                    .rotationEffect(.degrees(appeared ? 0 : -90))
                 }
                 .scaleEffect(appeared ? 1 : 0.5).opacity(appeared ? 1 : 0)
 
-                VStack(spacing: 10) {
-                    Text(K.L.de ? "Heute ist Gym-Tag!" : "Today is Gym Day!")
-                        .font(Theme.display(38))
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.white)
-                        .shadow(color: Color(hex: "#7c2d12").opacity(0.35), radius: 8, y: 3)
-                    Text(K.L.de ? "Zeig, was du drauf hast. 💪" : "Show them what you've got. 💪")
-                        .font(Theme.body(18, .semibold))
-                        .foregroundColor(.white.opacity(0.9))
+                VStack(spacing: 6) {
+                    Text(K.L.de ? "GYM-TAG" : "GYM DAY")
+                        .font(Theme.display(86))
+                        .foregroundStyle(LinearGradient(colors: Theme.accentGradient,
+                                                        startPoint: .top, endPoint: .bottom))
+                        .shadow(color: K.accent.opacity(0.45), radius: 20)
+                        .scaleEffect(appeared ? 1 : 1.6)
+                    Text((K.L.de ? "Zeig, was du drauf hast." : "Show them what you've got.").uppercased())
+                        .font(.system(size: 17, weight: .heavy).width(.condensed))
+                        .tracking(1.5)
+                        .foregroundColor(.white.opacity(0.85))
                 }
                 .padding(.horizontal, 24)
                 .offset(y: appeared ? 0 : 24).opacity(appeared ? 1 : 0)
@@ -85,7 +87,7 @@ struct DailyHypeView: View {
                                 Text(K.L.de ? "Heutige Uhrzeit" : "Today's time")
                                     .font(Theme.body(13, .semibold)).foregroundColor(.white.opacity(0.8))
                                 Text(time)
-                                    .font(.system(size: 36, weight: .black, design: .rounded))
+                                    .font(Theme.display(56))
                                     .monospacedDigit()
                                     .foregroundColor(.white)
                                 Text(K.L.dhTimeWindowHint(time))
@@ -96,7 +98,7 @@ struct DailyHypeView: View {
                                 Text(K.L.de ? "Vorschlag gesendet" : "Proposal sent")
                                     .font(Theme.body(13, .semibold)).foregroundColor(.white.opacity(0.9))
                                 Text(sent)
-                                    .font(.system(size: 36, weight: .black, design: .rounded)).monospacedDigit()
+                                    .font(Theme.display(56)).monospacedDigit()
                                     .foregroundColor(.white)
                                 Text(K.L.de ? "Fest wird die Zeit, sobald die anderen im Chat zustimmen."
                                             : "It becomes fixed once the others agree in the chat.")
@@ -109,10 +111,11 @@ struct DailyHypeView: View {
                                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { onDismiss() }
                                 } label: {
                                     Text(K.L.de ? "Zum Chat" : "Open chat")
-                                        .font(Theme.body(14, .bold)).foregroundColor(.white)
-                                        .padding(.horizontal, 22).padding(.vertical, 10)
-                                        .background(Capsule().fill(Color.white.opacity(0.22)))
-                                        .overlay(Capsule().stroke(Color.white.opacity(0.4), lineWidth: 1))
+                                        .font(.system(size: 15, weight: .black).width(.condensed))
+                                        .textCase(.uppercase)
+                                        .foregroundColor(K.onAccent)
+                                        .padding(.horizontal, 22).padding(.vertical, 11)
+                                        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(K.accent))
                                 }
                                 .buttonStyle(.plain)
                             }
@@ -128,13 +131,15 @@ struct DailyHypeView: View {
                                     Task { await proposeTime() }
                                 } label: {
                                     Text(saving ? (K.L.de ? "Sende …" : "Sending …") : (K.L.de ? "Zeit vorschlagen" : "Propose time"))
-                                        .font(Theme.body(14, .bold))
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 22).padding(.vertical, 10)
-                                        .background(Capsule().fill(Color.white.opacity(0.22)))
-                                        .overlay(Capsule().stroke(Color.white.opacity(0.4), lineWidth: 1))
+                                        .font(.system(size: 15, weight: .black).width(.condensed))
+                                        .textCase(.uppercase)
+                                        .tracking(1)
+                                        .foregroundColor(K.accent)
+                                        .padding(.horizontal, 22).padding(.vertical, 11)
+                                        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(K.accent.opacity(0.12)))
+                                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).stroke(K.accent, lineWidth: 1.5))
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(SlabPress())
                                 .disabled(saving)
                                 Text(K.L.de ? "Die anderen stimmen im Chat ab." : "The others vote in the chat.")
                                     .font(Theme.body(12)).foregroundColor(.white.opacity(0.8))
@@ -147,8 +152,8 @@ struct DailyHypeView: View {
                     }
                     .padding(18)
                     .frame(maxWidth: 320)
-                    .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(.ultraThinMaterial))
-                    .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(Color.white.opacity(0.35), lineWidth: 1))
+                    .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(K.iron2))
+                    .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).stroke(K.accent.opacity(0.35), lineWidth: 1))
                     .opacity(appeared ? 1 : 0)
                 }
 
@@ -160,14 +165,9 @@ struct DailyHypeView: View {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { onDismiss() }
                 } label: {
                     Text(K.L.de ? "Los geht's!" : "Let's go!")
-                        .font(Theme.heading(19))
-                        .foregroundColor(K.accentDark)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 18)
-                        .background(Capsule().fill(Color.white))
-                        .shadow(color: Color(hex: "#7c2d12").opacity(0.3), radius: 16, y: 8)
+                        .accentButton()
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(SlabPress())
                 .padding(.horizontal, 32)
                 .padding(.bottom, 24)
                 .offset(y: appeared ? 0 : 40).opacity(appeared ? 1 : 0)

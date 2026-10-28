@@ -11,7 +11,7 @@ struct ProfilePickerView: View {
     @State private var selectedId: String?
 
     private var groups: [GroupInfo] { LocalStore.shared.allGroups }
-    private let columns = [GridItem(.adaptive(minimum: 92), spacing: 20)]
+    private let columns = [GridItem(.adaptive(minimum: 104), spacing: 18)]
 
     var body: some View {
         ZStack {
@@ -20,11 +20,20 @@ struct ProfilePickerView: View {
             ScrollView {
                 VStack(spacing: 28) {
                     VStack(spacing: 12) {
-                        Text("🏋️").font(.system(size: 56))
+                        Image(systemName: "dumbbell.fill")
+                            .font(.system(size: 44, weight: .black))
+                            .foregroundStyle(LinearGradient(colors: Theme.accentGradient,
+                                                            startPoint: .top, endPoint: .bottom))
+                            .rotationEffect(.degrees(appeared ? -18 : -60))
                             .scaleEffect(appeared ? 1 : 0.6)
-                        Text(K.L.pickerTitle)
-                            .font(.system(size: 26, weight: .black))
-                            .foregroundColor(.primary)
+                            .shadow(color: K.accent.opacity(0.4), radius: 16)
+                        Text(K.L.pickerTitle.uppercased())
+                            .font(Theme.display(46))
+                            .foregroundColor(.white)
+                            .multilineTextAlignment(.center)
+                        HazardStripes(stripe: 7)
+                            .frame(width: 120, height: 7)
+                            .clipShape(Capsule())
                     }
                     .padding(.top, 80)
                     .opacity(selectedId == nil ? (appeared ? 1 : 0) : 0)
@@ -61,16 +70,16 @@ struct ProfilePickerView: View {
                             appState.showLaunchPicker = false
                         } label: {
                             VStack(spacing: 8) {
-                                Circle()
-                                    .strokeBorder(Color.secondary.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [5]))
-                                    .frame(width: 84, height: 84)
-                                    .overlay(
-                                        Image(systemName: "plus")
-                                            .font(.system(size: 28, weight: .light))
-                                            .foregroundColor(.secondary)
-                                    )
-                                Text(K.L.pickerAdd)
-                                    .font(.system(size: 13, weight: .semibold))
+                                PlateFrame(size: 100, lit: false) {
+                                    Image(systemName: "plus")
+                                        .font(.system(size: 30, weight: .black))
+                                        .foregroundColor(K.accent)
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                        .background(Color.white.opacity(0.04))
+                                }
+                                Text(K.L.pickerAdd.uppercased())
+                                    .font(.system(size: 14, weight: .heavy).width(.condensed))
+                                    .tracking(1.2)
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -100,13 +109,16 @@ private struct ProfilePickerCard: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 8) {
-                AvatarView(emoji: emoji, color: color, img: img, size: 84)
-                Text(name)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.primary)
+                PlateFrame(size: 100) {
+                    AvatarView(emoji: emoji, color: color, img: img, size: 72)
+                }
+                Text(name.uppercased())
+                    .font(.system(size: 14, weight: .heavy).width(.condensed))
+                    .tracking(1)
+                    .foregroundColor(.white)
                     .lineLimit(1)
                     .truncationMode(.tail)
-                    .frame(maxWidth: 92)
+                    .frame(maxWidth: 104)
             }
         }
         .buttonStyle(.plain)

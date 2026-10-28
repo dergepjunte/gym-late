@@ -11,11 +11,11 @@ struct BottomNav: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            navItem(.week, icon: "house.fill", label: K.L.navHome)
-            navItem(.history, icon: "calendar.badge.clock", label: K.L.navHistory)
-            navItem(.recap, icon: "chart.bar.fill", label: K.L.navRecap)
+            navItem(.week, icon: "dumbbell.fill", label: K.L.navHome)
+            navItem(.history, icon: "calendar", label: K.L.navHistory)
+            navItem(.recap, icon: "trophy.fill", label: K.L.navRecap)
             navItem(.chat, icon: "bubble.left.and.bubble.right.fill", label: K.L.navChat)
-            navItem(.people, icon: "person.2.fill", label: K.L.navPeople)
+            navItem(.people, icon: "figure.strengthtraining.traditional", label: K.L.navPeople)
         }
         .padding(5)
         .background(NavGlassCapsule())
@@ -68,7 +68,7 @@ private struct NavGlassCapsule: View {
             if #available(iOS 26.0, *) {
                 Color.clear.glassEffect(.regular.interactive(), in: .capsule)
             } else {
-                Capsule().fill(.ultraThinMaterial)
+                Capsule().fill(K.iron2)
             }
         }
         .overlay(

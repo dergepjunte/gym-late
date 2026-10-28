@@ -157,7 +157,7 @@ struct ChatView: View {
                     }
                     .foregroundColor(K.amberText)
                     .padding(.horizontal, 12).padding(.vertical, 7)
-                    .background(Capsule().fill(.ultraThinMaterial))
+                    .background(Capsule().fill(K.iron2))
                     .overlay(Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
                 }
                 Spacer()
@@ -203,7 +203,7 @@ struct ChatView: View {
                                 RoundedRectangle(cornerRadius: 20, style: .continuous)
                                     .fill(LinearGradient(colors: Theme.accentGradient, startPoint: .topLeading, endPoint: .bottomTrailing))
                             } else {
-                                RoundedRectangle(cornerRadius: 20, style: .continuous).fill(.ultraThinMaterial)
+                                RoundedRectangle(cornerRadius: 20, style: .continuous).fill(K.iron2)
                                     .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
                                         .strokeBorder(Color.white.opacity(0.12), lineWidth: 1))
                             }
@@ -229,7 +229,7 @@ struct ChatView: View {
 
     private var emptyState: some View {
         VStack(spacing: 10) {
-            Text("💬").font(.system(size: 44))
+            Image(systemName: "bubble.left.and.bubble.right.fill").font(.system(size: 40, weight: .bold)).foregroundColor(K.accent)
             Text(K.L.de ? "Noch nichts los hier" : "Nothing here yet")
                 .font(Theme.heading(18))
             Text(K.L.de ? "Schreib was oder schlag eine Gym-Zeit für heute vor – sie gilt, wenn die Gruppe zustimmt."
@@ -248,7 +248,7 @@ struct ChatView: View {
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(K.amberText)
                     .frame(width: 44, height: 44)
-                    .background(Circle().fill(.ultraThinMaterial))
+                    .background(Circle().fill(K.iron2))
                     .overlay(Circle().strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
             }
             .accessibilityLabel(K.L.de ? "Gym-Zeit vorschlagen" : "Propose gym time")
@@ -257,7 +257,7 @@ struct ChatView: View {
                 .lineLimit(1...4)
                 .focused($focused)
                 .padding(.horizontal, 14).padding(.vertical, 11)
-                .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(.ultraThinMaterial))
+                .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(K.iron2))
                 .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous)
                     .strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
 

@@ -57,13 +57,16 @@ struct HistoryView: View {
                 haptic(.medium)
             } label: {
                 Image(systemName: "plus")
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(.system(size: 26, weight: .black))
                     .foregroundColor(K.onAccent)
-                    .frame(width: 56, height: 56)
+                    .frame(width: 60, height: 60)
                     .background(
-                        Circle().fill(LinearGradient(colors: Theme.accentGradient,
-                                                     startPoint: .topLeading, endPoint: .bottomTrailing)))
-                    .shadow(color: K.accentDeep.opacity(0.4), radius: 12, y: 4)
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(LinearGradient(colors: Theme.accentGradient,
+                                                 startPoint: .top, endPoint: .bottom)))
+                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(.white.opacity(0.5), lineWidth: 1))
+                    .shadow(color: K.accent.opacity(0.45), radius: 16, y: 6)
             }
             .padding(.trailing, 20)
             .padding(.bottom, 16)
@@ -85,18 +88,22 @@ struct HistoryView: View {
         HStack {
             Button { shiftMonth(-1) } label: {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 20, weight: .light))
-                    .padding(.horizontal, 16).padding(.vertical, 6)
+                    .font(.system(size: 17, weight: .black))
+                    .foregroundColor(K.accent)
+                    .frame(width: 40, height: 40)
+                    .glassCard(radius: 10)
             }
             .buttonStyle(.plain)
             Spacer()
-            Text(monthLabel)
-                .font(Theme.heading(18))
+            Text(monthLabel.uppercased())
+                .font(Theme.display(30))
             Spacer()
             Button { shiftMonth(1) } label: {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 20, weight: .light))
-                    .padding(.horizontal, 16).padding(.vertical, 6)
+                    .font(.system(size: 17, weight: .black))
+                    .foregroundColor(K.accent)
+                    .frame(width: 40, height: 40)
+                    .glassCard(radius: 10)
             }
             .buttonStyle(.plain)
         }
@@ -178,7 +185,7 @@ struct HistoryView: View {
         } label: {
             VStack(spacing: 2) {
                 Text("\(day)")
-                    .font(Theme.body(14, isToday ? .bold : .regular))
+                    .font(.system(size: 18, weight: isToday ? .black : .bold).width(.condensed))
                     .foregroundColor(restPast ? .secondary : (isToday ? K.amberText : .primary))
                     .strikethrough(restPast, color: .secondary)
                     .opacity(restPast ? 0.6 : 1)

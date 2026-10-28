@@ -141,6 +141,12 @@ struct AppRootView: View {
             }
         }
         .toast($toast)
+        .onAppear {
+            // Screenshot hook: SIMCTL_CHILD_GYMLATE_HYPE=1 shows the daily hype right away.
+            if ProcessInfo.processInfo.environment["GYMLATE_HYPE"] == "1" {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { appState.forceDailyHype() }
+            }
+        }
         .onChange(of: appState.openChatRequest) { _, wanted in
             guard wanted else { return }
             appState.openChatRequest = false
@@ -154,17 +160,17 @@ struct AppRootView: View {
     @available(iOS 18.0, *)
     private var nativeTabView: some View {
         TabView(selection: $selectedTab) {
-            Tab(K.L.navHome, systemImage: "house.fill", value: AppTab.week) {
+            Tab(K.L.navHome, systemImage: "dumbbell.fill", value: AppTab.week) {
                 WeekView(showLogEntry: $showLogEntry, toast: $toast)
                     .screenEntrance()
                     .background(GymBackground().ignoresSafeArea())
             }
-            Tab(K.L.navHistory, systemImage: "calendar.badge.clock", value: AppTab.history) {
+            Tab(K.L.navHistory, systemImage: "calendar", value: AppTab.history) {
                 HistoryView()
                     .screenEntrance()
                     .background(GymBackground().ignoresSafeArea())
             }
-            Tab(K.L.navRecap, systemImage: "chart.bar.fill", value: AppTab.recap) {
+            Tab(K.L.navRecap, systemImage: "trophy.fill", value: AppTab.recap) {
                 RecapView()
                     .screenEntrance()
                     .background(GymBackground().ignoresSafeArea())
@@ -174,13 +180,13 @@ struct AppRootView: View {
                     .screenEntrance()
                     .background(GymBackground().ignoresSafeArea())
             }
-            Tab(K.L.navPeople, systemImage: "person.2.fill", value: AppTab.people) {
+            Tab(K.L.navPeople, systemImage: "figure.strengthtraining.traditional", value: AppTab.people) {
                 PeopleView()
                     .screenEntrance()
                     .background(GymBackground().ignoresSafeArea())
             }
         }
-        .tint(K.accentDeep)
+        .tint(K.accent)
     }
 
     private static let tabTransition = AnyTransition.asymmetric(

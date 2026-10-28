@@ -2,15 +2,22 @@ import SwiftUI
 import UIKit
 
 enum K {
-    static let accent      = Color(hex: "#facc15")   // yellow-400
-    static let accentLight = Color(hex: "#fde047")   // yellow-300
-    static let accentDeep  = Color(hex: "#f59e0b")   // amber-500
-    static let accentDark  = Color(hex: "#b45309")   // amber-700
-    static let onAccent    = Color(hex: "#422006")   // text on yellow surfaces (white fails contrast)
-    static let red         = Color(hex: "#ef4444")
-    static let green       = Color(hex: "#22c55e")
-    static let gold        = Color(hex: "#f59e0b")   // == accentDeep; status-gold stays the deep end of the accent family
-    static let amberText   = Color(light: "#b45309", dark: "#fbbf24")  // readable amber for labels on glass
+    // "Iron" palette (v0.3): safety-yellow on graphite steel — the gym's hazard-tape yellow.
+    static let accent      = Color(hex: "#ffd60a")   // safety yellow
+    static let accentLight = Color(hex: "#ffe55c")
+    static let accentDeep  = Color(hex: "#f5b400")   // deep plate yellow
+    static let accentDark  = Color(hex: "#a87b00")
+    static let onAccent    = Color(hex: "#0d0d0d")   // black lettering on yellow, like plate stencils
+    static let red         = Color(hex: "#ff453a")
+    static let green       = Color(hex: "#30d158")
+    static let gold        = Color(hex: "#f5b400")
+    static let amberText   = Color(light: "#8a6400", dark: "#ffd60a")  // readable yellow for labels on steel
+
+    // Steel surfaces (app is dark-only since v0.3)
+    static let iron0       = Color(hex: "#0a0a0b")   // floor
+    static let iron1       = Color(hex: "#141416")   // plate
+    static let iron2       = Color(hex: "#1d1d20")   // raised plate
+    static let iron3       = Color(hex: "#2a2a2e")   // edges / knurl
 
     // Deployed server URL (NAS, seit 27.10.2026; Railway-App war weg)
     static let apiBaseURL  = "https://nas.taild006d5.ts.net/gymlate"
@@ -19,7 +26,7 @@ enum K {
     // Shared cross-platform product version — mirrors public/js/core.js APP_VERSION.
     // Independent of the Xcode MARKETING_VERSION (App Store submission number);
     // bump both by hand together per CLAUDE.md's versioning policy.
-    static let appVersion = "0.2.15.0"
+    static let appVersion = "0.3.0.0"
 
     // Avatar options — same lists as the website
     static let avatarEmojis = ["🏋️"]

@@ -13,13 +13,19 @@ struct AppHeader: View {
         ZStack {
             // Center: GYMLATE wordmark + optional admin badge
             HStack(spacing: 6) {
-                Text("GYMLATE")
-                    .font(Font.system(size: 28, weight: .black).width(.expanded))
-                    .textCase(.uppercase)
-                    .foregroundStyle(LinearGradient(
-                        colors: Theme.accentGradient,
-                        startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .onTapGesture { registerLogoTap() }
+                VStack(spacing: 3) {
+                    Text("GYMLATE")
+                        .font(.system(size: 34, weight: .black).width(.compressed).italic())
+                        .tracking(1)
+                        .foregroundStyle(LinearGradient(
+                            colors: Theme.accentGradient,
+                            startPoint: .top, endPoint: .bottom))
+                        .shadow(color: K.accent.opacity(0.35), radius: 10)
+                    HazardStripes(stripe: 5)
+                        .frame(width: 92, height: 5)
+                        .clipShape(Capsule())
+                }
+                .onTapGesture { registerLogoTap() }
 
                 if appState.adminMode {
                     Button { appState.showAdminPanel = true } label: {
@@ -27,7 +33,7 @@ struct AppHeader: View {
                             .font(.system(size: 9, weight: .black))
                             .foregroundColor(K.onAccent)
                             .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(Capsule().fill(K.accent))
+                            .background(RoundedRectangle(cornerRadius: 3).fill(K.accent))
                     }
                     .buttonStyle(.plain)
                 }
@@ -58,11 +64,9 @@ struct AppHeader: View {
                         .overlay(
                             Circle().strokeBorder(
                                 LinearGradient(
-                                    colors: [.white.opacity(0.55),
-                                             Color(hex: "#fcd34d").opacity(0.40),
-                                             .white.opacity(0.15)],
-                                    startPoint: .topLeading, endPoint: .bottomTrailing),
-                                lineWidth: 3.5)
+                                    colors: [K.accentLight, K.accentDeep],
+                                    startPoint: .top, endPoint: .bottom),
+                                lineWidth: 2.5)
                         )
                 }
                 .buttonStyle(.plain)

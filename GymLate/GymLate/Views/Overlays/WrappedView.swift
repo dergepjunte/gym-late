@@ -137,7 +137,7 @@ struct WrappedView: View {
                         Button { onDismiss() } label: {
                             ZStack {
                                 Circle()
-                                    .fill(.ultraThinMaterial)
+                                    .fill(K.iron2)
                                     .frame(width: 36, height: 36)
                                 Image(systemName: "xmark")
                                     .font(.system(size: 14, weight: .bold))

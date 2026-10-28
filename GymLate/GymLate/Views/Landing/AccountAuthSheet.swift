@@ -46,7 +46,7 @@ struct AccountAuthSheet: View {
                         withAnimation { mode = mode == .register ? .login : .register }
                         error = ""
                     }
-                    .foregroundColor(K.accentDark)
+                    .foregroundColor(K.accent)
                 }
             }
             .scrollContentBackground(.hidden)
@@ -216,7 +216,7 @@ struct MigrationSheet: View {
             .padding(.horizontal)
 
             Button(K.L.de ? "Später" : "Later") { onDone() }
-                .foregroundColor(K.accentDark)
+                .foregroundColor(K.accent)
                 .font(.system(size: 15, weight: .semibold))
         }
         .padding()
@@ -273,7 +273,7 @@ struct MigrateBannerView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
-        .background(Capsule().fill(.ultraThinMaterial))
+        .background(Capsule().fill(K.iron2))
         .overlay(Capsule().strokeBorder(Color(hex: "#818cf8").opacity(0.45), lineWidth: 1))
         // Deliberately more attention-grabbing than the ceremony bubbles: a
         // slow pulsing glow, since this banner reappears every app open

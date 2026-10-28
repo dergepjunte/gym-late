@@ -31,7 +31,7 @@ struct GroupSwitcherSheet: View {
                             if g.id == appState.activeGroup?.id {
                                 Text(K.L.mgsActive)
                                     .font(.system(size: 11, weight: .semibold))
-                                    .foregroundColor(K.accentDark)
+                                    .foregroundColor(K.accent)
                             } else {
                                 Text(K.L.mgsSwitch)
                                     .font(.system(size: 11))
@@ -45,11 +45,11 @@ struct GroupSwitcherSheet: View {
                 Section {
                     Button { showJoin = true } label: {
                         Label(K.L.mgsJoin, systemImage: "link")
-                            .foregroundColor(K.accentDark)
+                            .foregroundColor(K.accent)
                     }
                     Button { showCreate = true } label: {
                         Label(K.L.mgsCreate, systemImage: "plus.circle")
-                            .foregroundColor(K.accentDark)
+                            .foregroundColor(K.accent)
                     }
                 }
             }

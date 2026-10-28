@@ -7,10 +7,33 @@ struct GymLateApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState.shared
 
+    init() {
+        // v0.3 "Iron": navigation titles in condensed black caps, like gym-wall signage.
+        let big = UIFont.systemFont(ofSize: 34, weight: .black, width: .compressed)
+        let small = UIFont.systemFont(ofSize: 19, weight: .heavy, width: .condensed)
+        let nav = UINavigationBarAppearance()
+        nav.configureWithTransparentBackground()
+        nav.largeTitleTextAttributes = [.font: big, .foregroundColor: UIColor.white]
+        nav.titleTextAttributes = [.font: small, .foregroundColor: UIColor.white]
+        UINavigationBar.appearance().standardAppearance = nav
+        UINavigationBar.appearance().scrollEdgeAppearance = nav
+        UINavigationBar.appearance().compactAppearance = nav
+        // Segmented pickers: yellow slab for the selected segment, black stencil text.
+        let seg = UISegmentedControl.appearance()
+        seg.selectedSegmentTintColor = UIColor(K.accent)
+        seg.setTitleTextAttributes([.foregroundColor: UIColor.black,
+                                    .font: UIFont.systemFont(ofSize: 14, weight: .heavy, width: .condensed)], for: .selected)
+        seg.setTitleTextAttributes([.foregroundColor: UIColor.white.withAlphaComponent(0.75),
+                                    .font: UIFont.systemFont(ofSize: 14, weight: .semibold, width: .condensed)], for: .normal)
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView()
                 .environmentObject(appState)
+                // v0.3 "Iron": the gym is dark — one tuned look instead of a light/dark pair.
+                .preferredColorScheme(.dark)
+                .tint(K.accent)
         }
     }
 }

@@ -126,11 +126,11 @@ struct LaunchLoadingView: View {
     // MARK: - Wordmark / Label
 
     private var wordmarkText: some View {
-        Text("GymLate")
-            .font(Theme.heading(style == .wordmark ? 34 : 20))
+        Text("GYMLATE")
+            .font(Theme.display(style == .wordmark ? 64 : 34))
             .foregroundStyle(
                 LinearGradient(colors: Theme.accentGradient,
-                               startPoint: .topLeading, endPoint: .bottomTrailing))
+                               startPoint: .top, endPoint: .bottom))
     }
 
     @ViewBuilder

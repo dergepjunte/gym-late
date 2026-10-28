@@ -67,7 +67,7 @@ struct CalDayDetailSheet: View {
                             } label: {
                                 Label(K.L.admCalAddEntry, systemImage: "plus.circle.fill")
                                     .font(Theme.body(14, .semibold))
-                                    .foregroundColor(K.accentDark)
+                                    .foregroundColor(K.accent)
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 12)
                             }

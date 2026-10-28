@@ -95,13 +95,13 @@ struct ProfileView: View {
                                     } label: {
                                         Image(systemName: "doc.on.doc")
                                             .font(.system(size: 14))
-                                            .foregroundColor(K.accentDark)
+                                            .foregroundColor(K.accent)
                                     }
                                 }
                                 Button(revealRC ? K.L.pvHide : K.L.pvReveal) {
                                     revealRC.toggle()
                                 }
-                                .font(.system(size: 13)).foregroundColor(K.accentDark)
+                                .font(.system(size: 13)).foregroundColor(K.accent)
                             }
                         }
                         .padding(16)

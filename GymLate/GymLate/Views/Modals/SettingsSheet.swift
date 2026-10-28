@@ -87,7 +87,7 @@ struct SettingsSheet: View {
                                 set: { availDays = $0 }
                             ))
                             Button(K.L.save) { Task { await saveAvailDays() } }
-                                .foregroundColor(K.accentDark)
+                                .foregroundColor(K.accent)
                         } header: { sectionHeader(K.L.msetAvailLbl, K.L.msetAvailDesc) }
 
                         // Geo check-in toggle (all users)
@@ -98,7 +98,7 @@ struct SettingsSheet: View {
                                     LocalStore.shared.geoEnabled = on
                                 }
                             Button(K.L.msetGeoTestBtn) { Task { await testLocation() } }
-                                .foregroundColor(K.accentDark)
+                                .foregroundColor(K.accent)
                         } header: { sectionHeader(K.L.msetGeoLbl, K.L.msetGeoDesc) }
 
                         // Launch loading animation
@@ -120,7 +120,7 @@ struct SettingsSheet: View {
                         Section {
                             dayPickerRow(days: $gymDays)
                             Button(K.L.msetGymSave) { Task { await saveGymDays() } }
-                                .foregroundColor(K.accentDark)
+                                .foregroundColor(K.accent)
                         } header: { sectionHeader(K.L.msetGymDaysLbl, K.L.msetGymdaysDesc) }
 
                         // Fixed check-in time (beta)
@@ -139,7 +139,7 @@ struct SettingsSheet: View {
                                     // visually compete with primary CTAs).
                                     Text("BETA")
                                         .font(.system(size: 9, weight: .black))
-                                        .foregroundColor(K.accentDark)
+                                        .foregroundColor(K.accent)
                                         .padding(.horizontal, 5).padding(.vertical, 1)
                                         .background(Capsule().fill(K.accentDeep.opacity(0.12)))
                                         .overlay(Capsule().strokeBorder(K.accentDeep.opacity(0.28), lineWidth: 1))
@@ -180,9 +180,9 @@ struct SettingsSheet: View {
                                     .frame(width: 48, alignment: .trailing)
                             }
                             Button(K.L.msetLocateBtn) { Task { await locateMe() } }
-                                .foregroundColor(K.accentDark)
+                                .foregroundColor(K.accent)
                             Button(K.L.msetLocationSave) { Task { await saveLocation() } }
-                                .foregroundColor(K.accentDark)
+                                .foregroundColor(K.accent)
                                 .disabled(pin == nil)
                         } header: { sectionHeader(K.L.msetLocationLbl, K.L.msetLocationDesc) }
                     }
@@ -208,14 +208,14 @@ struct SettingsSheet: View {
                                         await refreshNotifStatus()
                                     }
                                 }
-                                .foregroundColor(K.accentDark)
+                                .foregroundColor(K.accent)
                             case .denied:
                                 Button(K.L.de ? "In iOS-Einstellungen öffnen" : "Open iOS Settings") {
                                     if let url = URL(string: UIApplication.openSettingsURLString) {
                                         UIApplication.shared.open(url)
                                     }
                                 }
-                                .foregroundColor(K.accentDark)
+                                .foregroundColor(K.accent)
                             default:
                                 EmptyView()
                             }
@@ -261,7 +261,7 @@ struct SettingsSheet: View {
 
                         Section {
                             Button(K.L.save) { Task { await saveNotifPrefs() } }
-                                .foregroundColor(K.accentDark)
+                                .foregroundColor(K.accent)
                         }
                     }
 
@@ -282,7 +282,7 @@ struct SettingsSheet: View {
                                 Button(K.L.de ? "E-Mail & Passwort einrichten" : "Set email & password") {
                                     showMigrateSheet = true
                                 }
-                                .foregroundColor(K.accentDark)
+                                .foregroundColor(K.accent)
                             }
                         } header: { sectionHeader(K.L.de ? "Konto" : "Account", K.L.msetAccountDesc) }
 

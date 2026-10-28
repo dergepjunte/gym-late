@@ -23,15 +23,15 @@ struct NotificationBubbleView: View {
                 .font(.system(size: 22))
                 .frame(width: 50, height: 50)
                 .background(
-                    Circle().fill(LinearGradient(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous).fill(LinearGradient(
                         colors: Theme.accentGradient,
-                        startPoint: .topLeading, endPoint: .bottomTrailing))
+                        startPoint: .top, endPoint: .bottom))
                 )
 
             // Text stack
             VStack(alignment: .leading, spacing: 2) {
-                Text(bubble.title)
-                    .font(Theme.heading(15))
+                Text(bubble.title.uppercased())
+                    .font(Theme.heading(17))
                     .foregroundColor(.primary)
                     .lineLimit(1)
                 Text(bubble.subtitle)
@@ -68,28 +68,16 @@ struct NotificationBubbleView: View {
     }
 
     private var bubbleBackground: some View {
-        let g = Theme.Glass.tokens(for: scheme)
-        return Group {
-            if #available(iOS 26.0, *) {
-                Color.clear.glassEffect(.regular, in: .capsule)
-            } else {
-                Capsule().fill(.ultraThinMaterial)
+        // v0.3 "Iron": steel bar with a yellow load-stripe on the left.
+        RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .fill(LinearGradient(colors: [K.iron2, K.iron1], startPoint: .top, endPoint: .bottom))
+            .overlay(alignment: .leading) {
+                UnevenRoundedRectangle(topLeadingRadius: 18, bottomLeadingRadius: 18, style: .continuous)
+                    .fill(K.accent).frame(width: 5)
             }
-        }
-        .overlay(
-            Capsule().fill(LinearGradient(
-                stops: [.init(color: g.sheen, location: 0),
-                        .init(color: .clear, location: 0.45)],
-                startPoint: .topLeading, endPoint: .bottom))
-            .allowsHitTesting(false)
-        )
-        .overlay(
-            Capsule().strokeBorder(LinearGradient(
-                colors: [g.borderTop, g.border],
-                startPoint: .top, endPoint: .bottom), lineWidth: 1)
-            .allowsHitTesting(false)
-        )
-        .shadow(color: g.shadow, radius: 12, x: 0, y: 6)
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(K.accent.opacity(0.35), lineWidth: 1))
+            .shadow(color: .black.opacity(0.6), radius: 14, x: 0, y: 8)
     }
 }
 

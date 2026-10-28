@@ -82,39 +82,30 @@ struct WeekView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 6)
 
-                HStack(spacing: 0) {
-                    VStack(spacing: 2) {
-                        Text("\(lateEntries.count)")
-                            .font(Theme.display(28))
-                            .foregroundColor(lateEntries.isEmpty ? .primary : K.red)
-                        Text(K.L.sCountLbl)
-                            .font(Theme.body(11)).foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    Divider().frame(height: 36)
-                    VStack(spacing: 2) {
-                        Text("\(totalMins)")
-                            .font(Theme.display(28))
-                        Text(K.L.sMinLbl)
-                            .font(Theme.body(11)).foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
+                HStack(spacing: 10) {
+                    ScoreTile(value: lateEntries.count, label: K.L.sCountLbl,
+                              hot: !lateEntries.isEmpty, color: K.red)
+                    ScoreTile(value: totalMins, label: K.L.sMinLbl,
+                              hot: totalMins > 0, color: K.accent)
                 }
-                .padding(.vertical, 12)
-                .glassCard()
                 .padding(.horizontal, 16)
 
                 if !skipEntries.isEmpty {
-                    Text("⊘ \(skipEntries.count) \(K.L.skipped)")
-                        .font(Theme.body(12, .bold)).foregroundColor(K.gold)
-                        .padding(.horizontal, 12).padding(.vertical, 5)
-                        .background(Capsule().fill(K.gold.opacity(0.14)))
+                    Text("⊘ \(skipEntries.count) \(K.L.skipped)".uppercased())
+                        .font(.system(size: 13, weight: .heavy).width(.condensed))
+                        .tracking(1)
+                        .foregroundColor(K.onAccent)
+                        .padding(.horizontal, 12).padding(.vertical, 6)
+                        .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(K.accent))
+                        .rotationEffect(.degrees(-2))
                 }
 
                 // Full week: entry blocks for days with entries, rest blocks for rest days.
                 if visibleWeekDates.isEmpty {
                     VStack(spacing: 8) {
-                        Text("🏃").font(.system(size: 48))
+                        Image(systemName: "figure.strengthtraining.traditional")
+                            .font(.system(size: 46, weight: .bold))
+                            .foregroundStyle(K.accent)
                         Text(K.L.emptyWeek)
                             .font(Theme.body(15))
                             .foregroundColor(.secondary)
@@ -147,16 +138,18 @@ struct WeekView: View {
                                 .glassCard()
                             } else {
                                 HStack(spacing: 12) {
-                                    Text("🌙").font(.system(size: 20))
+                                    Image(systemName: "bed.double.fill")
+                                        .font(.system(size: 18, weight: .semibold))
+                                        .foregroundColor(.secondary)
                                     VStack(alignment: .leading, spacing: 1) {
                                         Text(fmtFull(date))
-                                            .font(Theme.body(11, .bold))
+                                            .font(.system(size: 12, weight: .heavy).width(.condensed))
                                             .foregroundColor(.secondary)
                                             .textCase(.uppercase)
-                                            .tracking(0.7)
-                                        Text(K.L.restDay)
-                                            .font(Theme.body(13))
-                                            .foregroundColor(.secondary)
+                                            .tracking(1.2)
+                                        Text(K.L.restDay.uppercased())
+                                            .font(Theme.heading(17))
+                                            .foregroundColor(.white.opacity(0.7))
                                     }
                                     Spacer()
                                 }
@@ -200,64 +193,135 @@ struct StreakHero: View {
     let onTap: () -> Void
 
     @State private var scale: CGFloat = 1.0
-    @State private var glowRadius: CGFloat = 12
+    @State private var glowRadius: CGFloat = 14
     @State private var didAnimate = false
+    @State private var pulse = false
 
     var body: some View {
         Button { onTap() } label: {
-            HStack(spacing: 14) {
-                Image(systemName: "flame.fill")
-                    .font(.system(size: 40))
-                    .foregroundStyle(
-                        extendedToday
-                        ? AnyShapeStyle(LinearGradient(
-                            colors: [Color(hex: "#fde047"), Color(hex: "#fb923c"), Color(hex: "#dc2626")],
-                            startPoint: .top, endPoint: .bottom))
-                        : AnyShapeStyle(Color.secondary.opacity(0.45)))
-                    .shadow(color: extendedToday ? Color(hex: "#fb923c").opacity(0.55) : .clear,
-                            radius: glowRadius)
-                    .animation(UIAccessibility.isReduceMotionEnabled
-                               ? .easeInOut(duration: 0.4) : nil, value: extendedToday)
-                    .scaleEffect(scale)
-
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("\(streak)")
-                        .font(Theme.display(44))
-                        .lineLimit(1)
-                        .fixedSize()
-                        .foregroundColor(extendedToday ? Color(hex: "#f97316") : .secondary)
-                    Text(K.L.shDays(streak))
-                        .font(Theme.body(14, .semibold))
-                        .foregroundColor(.secondary)
+            VStack(spacing: 0) {
+                // Hazard strip while today's session is still open; solid yellow once done.
+                Group {
+                    if extendedToday {
+                        K.accent
+                    } else {
+                        HazardStripes(stripe: 9)
+                    }
                 }
+                .frame(height: 7)
 
-                Spacer()
+                HStack(alignment: .center, spacing: 14) {
+                    ZStack {
+                        Circle()
+                            .fill(extendedToday ? K.accent.opacity(0.16) : Color.white.opacity(0.04))
+                            .frame(width: 74, height: 74)
+                        Circle()
+                            .strokeBorder(extendedToday ? K.accent.opacity(0.55) : Color.white.opacity(0.08),
+                                          lineWidth: 2)
+                            .frame(width: 74, height: 74)
+                        Image(systemName: "flame.fill")
+                            .font(.system(size: 38, weight: .bold))
+                            .foregroundStyle(
+                                extendedToday
+                                ? AnyShapeStyle(LinearGradient(
+                                    colors: [K.accentLight, K.accent, Color(hex: "#ff7a00")],
+                                    startPoint: .top, endPoint: .bottom))
+                                : AnyShapeStyle(Color.white.opacity(0.22)))
+                            .shadow(color: extendedToday ? K.accent.opacity(0.7) : .clear, radius: glowRadius)
+                            .scaleEffect(scale)
+                    }
 
-                Text(extendedToday ? K.L.shHintDone : K.L.shHintOpen)
-                    .font(Theme.body(12, .bold))
-                    .foregroundColor(K.amberText)
-                    .multilineTextAlignment(.trailing)
-                    .frame(maxWidth: 130, alignment: .trailing)
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack(alignment: .lastTextBaseline, spacing: 6) {
+                            Text("\(streak)")
+                                .font(Theme.display(64))
+                                .lineLimit(1)
+                                .fixedSize()
+                                .foregroundStyle(extendedToday
+                                    ? AnyShapeStyle(LinearGradient(colors: Theme.accentGradient,
+                                                                   startPoint: .top, endPoint: .bottom))
+                                    : AnyShapeStyle(Color.white.opacity(0.85)))
+                                .contentTransition(.numericText())
+                            Text(K.L.shDays(streak).uppercased())
+                                .font(.system(size: 15, weight: .heavy).width(.condensed))
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                        }
+                    }
+
+                    Spacer(minLength: 4)
+
+                    VStack(alignment: .trailing, spacing: 6) {
+                        Image(systemName: extendedToday ? "checkmark.seal.fill" : "plus")
+                            .font(.system(size: extendedToday ? 22 : 18, weight: .black))
+                            .foregroundColor(extendedToday ? K.green : K.onAccent)
+                            .frame(width: 40, height: 40)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                    .fill(extendedToday ? K.green.opacity(0.15) : K.accent)
+                            )
+                            .scaleEffect(!extendedToday && pulse ? 1.07 : 1)
+                        Text(extendedToday ? K.L.shHintDone : K.L.shHintOpen)
+                            .font(.system(size: 11, weight: .bold).width(.condensed))
+                            .textCase(.uppercase)
+                            .foregroundColor(extendedToday ? K.green : K.amberText)
+                            .multilineTextAlignment(.trailing)
+                            .frame(maxWidth: 110, alignment: .trailing)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 16)
             }
-            .padding(16)
-            .glassCard()
+            .glassCard(radius: 18)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(SlabPress())
         .accessibilityLabel("\(streak) \(K.L.shDays(streak))\(extendedToday ? ", \(K.L.shHintDone)" : ", \(K.L.shHintOpen)")")
+        .onAppear {
+            guard !UIAccessibility.isReduceMotionEnabled else { return }
+            withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { pulse = true }
+        }
         .onChange(of: extendedToday) { _, newValue in
             guard newValue, !didAnimate, !UIAccessibility.isReduceMotionEnabled else { return }
             didAnimate = true
             withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
-                scale = 1.18
-                glowRadius = 28
+                scale = 1.25
+                glowRadius = 30
             }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
                     scale = 1.0
-                    glowRadius = 12
+                    glowRadius = 14
                 }
             }
         }
+    }
+}
+
+// MARK: - Scoreboard tile (week stats)
+
+struct ScoreTile: View {
+    let value: Int
+    let label: String
+    var hot: Bool
+    var color: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label.uppercased())
+                .font(.system(size: 11, weight: .heavy).width(.condensed))
+                .tracking(1.6)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+            Text("\(value)")
+                .font(Theme.display(44))
+                .foregroundColor(hot ? color : .white.opacity(0.85))
+                .contentTransition(.numericText())
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 14).padding(.vertical, 12)
+        .ironCard(radius: 14, accent: hot ? color : K.iron3)
     }
 }
 
@@ -273,7 +337,9 @@ struct CheckinTimeHero: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Text("⏰").font(.system(size: 22))
+            Image(systemName: "alarm.fill")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(K.accent)
             if editing {
                 DatePicker("", selection: $pickedTime, displayedComponents: .hourAndMinute)
                     .labelsHidden()
@@ -286,7 +352,7 @@ struct CheckinTimeHero: View {
                     Text(K.L.checkinTimeChipLbl)
                         .font(Theme.body(12)).foregroundColor(.secondary)
                     Text(time)
-                        .font(Theme.body(17, .heavy))
+                        .font(Theme.display(30))
                         .foregroundColor(K.amberText)
                 }
                 Spacer()
@@ -299,7 +365,7 @@ struct CheckinTimeHero: View {
             }
         }
         .padding(.horizontal, 16).padding(.vertical, 12)
-        .glassCard()
+        .ironCard()
     }
 
     /// "Ändern" ist jetzt ein Vorschlag: fest wird die neue Zeit erst, wenn die Gruppe im Chat zustimmt.

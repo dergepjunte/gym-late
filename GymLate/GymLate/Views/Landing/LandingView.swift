@@ -30,14 +30,25 @@ struct LandingView: View {
                 VStack(spacing: 32) {
                     // Hero
                     VStack(spacing: 12) {
-                        Text("🏋️").font(.system(size: 64))
-                        Text(K.L.appName)
-                            .font(.system(size: 36, weight: .black))
-                            .foregroundStyle(
-                                LinearGradient(colors: [K.accentDeep, K.accent],
-                                              startPoint: .topLeading, endPoint: .bottomTrailing))
+                        PlateFrame(size: 120) {
+                            Image(systemName: "dumbbell.fill")
+                                .font(.system(size: 40, weight: .black))
+                                .foregroundStyle(LinearGradient(colors: Theme.accentGradient,
+                                                                startPoint: .top, endPoint: .bottom))
+                                .rotationEffect(.degrees(-20))
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .background(K.iron1)
+                        }
+                        Text(K.L.appName.uppercased())
+                            .font(Theme.display(64))
+                            .foregroundStyle(LinearGradient(colors: Theme.accentGradient,
+                                                            startPoint: .top, endPoint: .bottom))
+                            .shadow(color: K.accent.opacity(0.35), radius: 14)
+                        HazardStripes(stripe: 8)
+                            .frame(width: 160, height: 8)
+                            .clipShape(Capsule())
                         Text(K.L.tagline)
-                            .font(.system(size: 15))
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 16)
@@ -59,11 +70,13 @@ struct LandingView: View {
                         }
                         Button { showJoin = true } label: {
                             Label(K.L.join, systemImage: "link")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(K.accentDark)
+                                .font(.system(size: 17, weight: .black).width(.condensed))
+                                .textCase(.uppercase)
+                                .tracking(1.2)
+                                .foregroundColor(K.accent)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 52)
-                                .glassButton(radius: 16)
+                                .frame(height: 54)
+                                .glassCard(radius: 12)
                         }
                     }
                     .padding(.horizontal, 24)
@@ -74,7 +87,7 @@ struct LandingView: View {
                         showSignIn = true
                     }
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(K.accentDark)
+                    .foregroundColor(K.accent)
 
                     Spacer(minLength: 40)
                 }
@@ -95,9 +108,9 @@ struct FeaturePill: View {
     var body: some View {
         HStack(spacing: 6) {
             Image(systemName: icon).foregroundColor(K.accentDeep).font(.system(size: 12))
-            Text(label).font(.system(size: 12, weight: .semibold)).foregroundColor(.primary)
+            Text(label).font(.system(size: 12, weight: .heavy).width(.condensed)).textCase(.uppercase).foregroundColor(.primary)
         }
-        .padding(.horizontal, 12).padding(.vertical, 8)
-        .glassCard(radius: 20)
+        .padding(.horizontal, 10).padding(.vertical, 8)
+        .glassCard(radius: 8)
     }
 }
