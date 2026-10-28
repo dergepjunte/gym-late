@@ -78,12 +78,13 @@ function switchTab(name) {
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('pane-'+name).classList.add('active');
   document.querySelectorAll(`.nav-btn[data-tab="${name}"]`).forEach(b=>b.classList.add('active'));
-  document.getElementById('fab').classList.toggle('hidden', name==='people' || name==='recap');
+  document.getElementById('fab').classList.toggle('hidden', name==='people' || name==='recap' || name==='chat');
   updateNavIndicator();
   const inner = document.querySelector('.app-inner');
   if (inner) inner.scrollTop = 0;
   if (name === 'history') renderCalendar();
   if (name === 'recap') renderHistory();
+  if (name === 'chat') { chat.lastKey=''; chatStart(); } else chatStop();
 }
 document.querySelectorAll('.nav-btn').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
 // ════════════════════════════════════════════════════════

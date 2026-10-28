@@ -34,9 +34,10 @@ document.getElementById('dh-time-save').addEventListener('click', async () => {
   const btn = document.getElementById('dh-time-save');
   btn.disabled = true;
   try {
-    await api.setCheckinTime(data.id, { date: todayStr(), time: val });
-    await refresh();
-    updateDailyHypeTimeUI();
+    await proposeGymTime(todayStr(), val);
+    showToast(CT.proposed);
+    hideFsOverlay('daily-hype');
+    switchTab('chat');
   } catch { showToast(T.errServer); }
   finally { btn.disabled = false; }
 });

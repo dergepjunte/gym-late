@@ -7,8 +7,8 @@ self.addEventListener('push', e => {
   e.waitUntil(
     self.registration.showNotification(payload.title || 'GymLate', {
       body: payload.body || '',
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
+      icon: 'icon-192.png',
+      badge: 'icon-192.png',
       tag: payload.tag || 'gymlate',
       renotify: true,
     })
@@ -22,7 +22,7 @@ self.addEventListener('notificationclick', e => {
       for (const c of list) {
         if (c.url.includes(self.location.origin) && 'focus' in c) return c.focus();
       }
-      return clients.openWindow('/');
+      return clients.openWindow('./');
     })
   );
 });

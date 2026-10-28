@@ -27,11 +27,11 @@ document.getElementById('notif-primer-later').addEventListener('click', () => {
 async function initPush() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
   if (!userProfile || !group) return;
-  const reg = await navigator.serviceWorker.register('/sw.js');
+  const reg = await navigator.serviceWorker.register('sw.js');
   await navigator.serviceWorker.ready;
 
   let keyRes;
-  try { keyRes = await fetch('/api/push/vapid-public-key'); } catch { return; }
+  try { keyRes = await fetch('api/push/vapid-public-key'); } catch { return; }
   if (!keyRes.ok) return;
   const { key } = await keyRes.json();
 
@@ -44,7 +44,7 @@ async function initPush() {
     applicationServerKey: urlBase64ToUint8Array(key),
   });
 
-  await fetch('/api/push/subscribe', {
+  await fetch('api/push/subscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -77,7 +77,7 @@ function saveNotifPrefs(prefs) {
 
 async function saveNotifPrefsToServer(prefs) {
   if (!userProfile || !group) return;
-  await fetch(`/api/groups/${group.id}/users/${userProfile.userId}/notif`, {
+  await fetch(`api/groups/${group.id}/users/${userProfile.userId}/notif`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ recoveryCode: userProfile.recoveryCode, ...prefs }),

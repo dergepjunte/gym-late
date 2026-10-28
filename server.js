@@ -1187,8 +1187,9 @@ async function chatUser(req, res) {
   const user = userId
     ? await database.one('SELECT id, name, recovery_code, account_id FROM users WHERE id = ? AND group_id = ?', [userId, id])
     : null;
-  if (!user) { res.status(404).json({ error: 'not_found' }); return null; }
+  if (!user) { console.log('chat 404 user', userId, 'group', id); res.status(404).json({ error: 'not_found' }); return null; }
   if (!await authorizesAsUser(req, user, req.body?.recoveryCode)) {
+    console.log('chat 401', user.name, 'rc:', !!req.body?.recoveryCode, 'token:', !!req.body?.accountToken);
     res.status(401).json({ error: 'unauthorized' });
     return null;
   }

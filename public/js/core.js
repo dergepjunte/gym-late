@@ -34,7 +34,7 @@ const api = {
   async req(method, path, body) {
     const opts = { method, headers:{'Content-Type':'application/json'} };
     if (body !== undefined) opts.body = JSON.stringify(body);
-    const res = await fetch('/api'+path, opts);
+    const res = await fetch('api'+path, opts);
     const d   = await res.json();
     if (!res.ok) { const e=new Error(d.error||'error'); e.status=res.status; throw e; }
     return d;

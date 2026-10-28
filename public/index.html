@@ -13,7 +13,7 @@
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 
   <!-- PWA -->
-  <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#f0e9da" media="(prefers-color-scheme: light)">
   <meta name="theme-color" content="#0e0903" media="(prefers-color-scheme: dark)">
 
@@ -21,8 +21,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="GymLate">
-  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
@@ -242,6 +242,9 @@
         <button class="nav-btn" data-tab="recap">
           <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="13" width="4" height="8"/></svg></span><span class="nav-lbl"></span>
         </button>
+        <button class="nav-btn" data-tab="chat">
+          <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.3A8 8 0 1 1 21 12z"/></svg></span><span class="nav-lbl"></span>
+        </button>
         <button class="nav-btn" data-tab="people">
           <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg></span><span class="nav-lbl"></span>
         </button>
@@ -313,6 +316,17 @@
       <div id="week-recap"></div>
     </div>
 
+    <!-- ── CHAT TAB ── -->
+    <div class="tab-pane" id="pane-chat">
+      <div class="sec-label" id="chat-title"></div>
+      <div class="chat-list" id="chat-list"></div>
+      <div class="chat-composer">
+        <button class="chat-alarm" id="chat-alarm" aria-label="⏰">⏰</button>
+        <input type="text" id="chat-input" class="form-ctrl" maxlength="500" autocomplete="off">
+        <button class="chat-send" id="chat-send" aria-label="Send">↑</button>
+      </div>
+    </div>
+
     <!-- ── PEOPLE TAB ── -->
     <div class="tab-pane" id="pane-people">
       <div class="sec-label" id="lbl-people"></div>
@@ -357,6 +371,9 @@
       </button>
       <button class="nav-btn" data-tab="recap">
         <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><rect x="3" y="3" width="4" height="18"/><rect x="10" y="8" width="4" height="13"/><rect x="17" y="13" width="4" height="8"/></svg></span><span class="nav-lbl" id="nav-recap"></span>
+      </button>
+      <button class="nav-btn" data-tab="chat">
+        <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.3A8 8 0 1 1 21 12z"/></svg></span><span class="nav-lbl" id="nav-chat"></span>
       </button>
       <button class="nav-btn" data-tab="people">
         <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:block"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.85"/></svg></span><span class="nav-lbl" id="nav-people"></span>
@@ -1076,22 +1093,33 @@
 <!-- ══════════════════════════════════════════════════════ -->
 <!--  SCRIPT                                              -->
 <!-- ══════════════════════════════════════════════════════ -->
-<script src="/js/i18n.js"></script>
-<script src="/js/core.js"></script>
-<script src="/js/render.js"></script>
-<script src="/js/app.js"></script>
-<script src="/js/admin.js"></script>
-<script src="/js/modals.js"></script>
-<script src="/js/groups.js"></script>
-<script src="/js/profile.js"></script>
-<script src="/js/account.js"></script>
-<script src="/js/sso.js"></script>
-<script src="/js/settings.js"></script>
-<script src="/js/profile-edit.js"></script>
-<script src="/js/streak.js"></script>
-<script src="/js/opening.js"></script>
-<script src="/js/wrapped.js"></script>
-<script src="/js/init.js"></script>
+<div class="chat-prop-overlay" id="chat-prop-overlay">
+  <div class="chat-prop-sheet glass">
+    <div class="cps-title" id="chat-prop-title"></div>
+    <div class="cps-days" id="chat-prop-days"><button data-day="today" class="sel"></button><button data-day="tomorrow"></button></div>
+    <input type="time" id="chat-prop-time" class="form-ctrl cps-time" value="18:00">
+    <div class="cps-note" id="chat-prop-note"></div>
+    <button class="btn btn-primary btn-full btn-xl" id="chat-prop-go"></button>
+  </div>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/core.js"></script>
+<script src="js/render.js"></script>
+<script src="js/app.js"></script>
+<script src="js/admin.js"></script>
+<script src="js/modals.js"></script>
+<script src="js/groups.js"></script>
+<script src="js/profile.js"></script>
+<script src="js/account.js"></script>
+<script src="js/sso.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/profile-edit.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/streak.js"></script>
+<script src="js/opening.js"></script>
+<script src="js/wrapped.js"></script>
+<script src="js/init.js"></script>
 
 
 </body>

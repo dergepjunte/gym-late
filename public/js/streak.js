@@ -67,10 +67,9 @@ document.getElementById('checkin-time-save-btn').addEventListener('click', async
   const btn = e.target;
   btn.disabled = true;
   try {
-    await api.setCheckinTime(data.id, { date: todayStr(), time: val });
-    await refresh();
-    updateDailyHypeTimeUI();
+    await proposeGymTime(todayStr(), val);
     closeCheckinTimeEditor();
+    showToast(CT.proposed);
   } catch { showToast(T.errServer); }
   finally { btn.disabled = false; }
 });

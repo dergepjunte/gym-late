@@ -18,7 +18,9 @@ final class ChatModel: ObservableObject {
                                accountToken: app.account?.accountToken))
     }
 
-    var myId: String? { AppState.shared.userProfile?.userId }
+    /// Vorschau: Chat aus Sicht eines anderen Mitglieds (nur ansehen, nichts senden/abstimmen).
+    @Published var viewAs: String?
+    var myId: String? { viewAs ?? AppState.shared.userProfile?.userId }
 
     func refresh() async {
         guard let c = context else { return }
@@ -50,7 +52,7 @@ final class ChatModel: ObservableObject {
     }
 
     func vote(_ message: ChatMessage, yes: Bool) async {
-        guard let c = context else { return }
+        guard viewAs == nil, let c = context else { return }
         do { apply(try await APIClient.shared.chatVote(groupId: c.groupId, auth: c.auth, messageId: message.id, yes: yes)) }
         catch { await refresh() }   // z. B. schon entschieden
     }
@@ -83,6 +85,8 @@ struct ChatView: View {
             AppHeader(toast: $toast)
                 .padding(.bottom, 4)
 
+            viewAsBar
+
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 10) {
@@ -106,7 +110,7 @@ struct ChatView: View {
                 .onAppear { proxy.scrollTo("bottom", anchor: .bottom) }
             }
 
-            composer
+            if model.viewAs == nil { composer } else { previewNote }
         }
         .task {
             await model.refresh()
@@ -123,6 +127,50 @@ struct ChatView: View {
             Button("OK", role: .cancel) { model.error = nil }
         } message: { Text(model.error ?? "") }
         .toast($toast)
+    }
+
+    // MARK: Ansicht als anderes Mitglied
+
+    private var others: [Person] {
+        (appState.groupData?.people ?? []).filter { $0.id != appState.userProfile?.userId }
+    }
+
+    @ViewBuilder
+    private var viewAsBar: some View {
+        if !others.isEmpty {
+            HStack {
+                Menu {
+                    Button { withAnimation { model.viewAs = nil } } label: {
+                        Label(K.L.de ? "Meine Ansicht" : "My view", systemImage: model.viewAs == nil ? "checkmark" : "person")
+                    }
+                    ForEach(others, id: \.id) { p in
+                        Button { withAnimation { model.viewAs = p.id } } label: {
+                            Label(p.name, systemImage: model.viewAs == p.id ? "checkmark" : "eye")
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "eye").font(.system(size: 13, weight: .semibold))
+                        Text(model.viewAs.flatMap { person($0)?.name }.map { (K.L.de ? "Ansicht: " : "View: ") + $0 }
+                             ?? (K.L.de ? "Ansicht der anderen" : "See others' view"))
+                            .font(Theme.body(13, .semibold))
+                    }
+                    .foregroundColor(K.amberText)
+                    .padding(.horizontal, 12).padding(.vertical, 7)
+                    .background(Capsule().fill(.ultraThinMaterial))
+                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 14).padding(.bottom, 4)
+        }
+    }
+
+    private var previewNote: some View {
+        Text(K.L.de ? "Nur Vorschau – so sieht \(person(model.viewAs ?? "")?.name ?? "die Person") den Chat."
+                    : "Preview only – this is how \(person(model.viewAs ?? "")?.name ?? "they") see the chat.")
+            .font(Theme.body(13, .semibold)).foregroundColor(.secondary)
+            .frame(maxWidth: .infinity).padding(.vertical, 18)
     }
 
     // MARK: Rows
