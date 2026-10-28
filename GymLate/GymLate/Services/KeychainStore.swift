@@ -1,7 +1,8 @@
 import Foundation
 import Security
 
-/// Minimal Keychain wrapper — used ONLY for the global account bearer token
+/// Minimal Keychain wrapper — used for the global account bearer token and
+/// (since V0.3.2.0) the remembered admin password. Originally only the bearer token
 /// (a real password-equivalent secret). Everything else in this app
 /// (recovery codes, group list, profiles) stays in UserDefaults via
 /// LocalStore, matching existing convention; this one credential is the

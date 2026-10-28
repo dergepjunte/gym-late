@@ -182,9 +182,17 @@ final class LocalStore {
         }
     }
 
-    // MARK: - Admin (in-memory only — never persisted)
+    // MARK: - Admin (im Keychain gemerkt, seit V0.3.2.0)
 
-    var adminPassword: String? = nil
+    /// Nach einem erfolgreichen Admin-Login bleibt das Passwort im Keychain dieses Geraets,
+    /// damit der Admin-Modus beim naechsten Start ohne erneute Eingabe an ist.
+    /// "Admin beenden" loescht es wieder.
+    var adminPassword: String? = KeychainStore.read(key: "adminPassword") {
+        didSet {
+            if let adminPassword { KeychainStore.save(adminPassword, key: "adminPassword") }
+            else { KeychainStore.delete(key: "adminPassword") }
+        }
+    }
     var adminMode: Bool { adminPassword != nil }
 
     // MARK: - Private helpers

@@ -71,8 +71,8 @@ final class AppState: ObservableObject {
 
     enum ReplayHint: Equatable { case recap, checkin }
 
-    // Admin mode (password lives in memory only, mirroring the website)
-    @Published var adminMode = false
+    // Admin mode (Passwort im Keychain gemerkt, siehe LocalStore.adminPassword)
+    @Published var adminMode = LocalStore.shared.adminMode
     @Published var adminShowCurrentWeek = false
     var adminPassword: String? {
         get { store.adminPassword }
@@ -115,7 +115,7 @@ final class AppState: ObservableObject {
             try? await Task.sleep(nanoseconds: 1_000_000_000)
             let reduce = UIAccessibility.isReduceMotionEnabled
             bootFilling = true   // die Ladeansicht zoomt ins Motiv (siehe LaunchLoadingView.startZoom)
-            try? await Task.sleep(nanoseconds: reduce ? 450_000_000 : 1_100_000_000)
+            try? await Task.sleep(nanoseconds: reduce ? 450_000_000 : 1_300_000_000)
             showLaunchPicker = !store.allGroups.isEmpty
             withAnimation(.easeInOut(duration: 0.45)) { isBootLoading = false }
             // Erst nach dem Ausblenden zuruecksetzen, sonst springt das Ladebild waehrenddessen zurueck.

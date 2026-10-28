@@ -108,9 +108,9 @@ struct LaunchLoadingView: View {
             return
         }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
-            // Starkes Ease-in: erst langsam, dann rasant wachsend (wirkt wie gleichmaessiger Zoom).
-            withAnimation(.timingCurve(0.75, 0.0, 0.9, 0.35, duration: 0.8)) { zoom = true }
-            withAnimation(.easeIn(duration: 0.15).delay(0.68)) { cover = true }
+            // Ease-in-out: sanft anfahren, sanft auslaufen (vorher reines Ease-in, wirkte linear/abgehackt).
+            withAnimation(.timingCurve(0.65, 0.0, 0.35, 1.0, duration: 1.0)) { zoom = true }
+            withAnimation(.easeInOut(duration: 0.25).delay(0.7)) { cover = true }
         }
     }
 
