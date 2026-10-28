@@ -77,6 +77,14 @@ struct ChatView: View {
     @State private var showPropose = false
     @State private var toast: String?
     @FocusState private var focused: Bool
+    /// Filter: nur heutige Nachrichten oder alle (gemerkt).
+    @AppStorage("gymChatTodayOnly") private var todayOnly = true
+
+    private var visible: [ChatMessage] {
+        guard todayOnly else { return model.messages }
+        let start = Calendar.current.startOfDay(for: Date()).timeIntervalSince1970 * 1000
+        return model.messages.filter { $0.createdAt >= start }
+    }
 
     private func person(_ id: String) -> Person? { appState.groupData?.people.first { $0.id == id } }
 
@@ -85,15 +93,15 @@ struct ChatView: View {
             AppHeader(toast: $toast)
                 .padding(.bottom, 4)
 
-            viewAsBar
+            topBar
 
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 10) {
-                        if model.messages.isEmpty {
+                        if visible.isEmpty {
                             emptyState.padding(.top, 60)
                         }
-                        ForEach(model.messages) { m in
+                        ForEach(visible) { m in
                             row(m).id(m.id)
                                 .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity),
                                                         removal: .opacity))
@@ -104,10 +112,11 @@ struct ChatView: View {
                     .padding(.top, 6)
                 }
                 .scrollDismissesKeyboard(.interactively)
-                .onChange(of: model.messages.count) { _, _ in
+                .onChange(of: visible.count) { _, _ in
                     withAnimation(.easeOut(duration: 0.3)) { proxy.scrollTo("bottom", anchor: .bottom) }
                 }
                 .onAppear { proxy.scrollTo("bottom", anchor: .bottom) }
+                .onChange(of: todayOnly) { _, _ in proxy.scrollTo("bottom", anchor: .bottom) }
             }
 
             if model.viewAs == nil { composer } else { previewNote }
@@ -135,34 +144,44 @@ struct ChatView: View {
         (appState.groupData?.people ?? []).filter { $0.id != appState.userProfile?.userId }
     }
 
-    @ViewBuilder
-    private var viewAsBar: some View {
-        if !others.isEmpty {
-            HStack {
-                Menu {
-                    Button { withAnimation { model.viewAs = nil } } label: {
-                        Label(K.L.de ? "Meine Ansicht" : "My view", systemImage: model.viewAs == nil ? "checkmark" : "person")
-                    }
-                    ForEach(others, id: \.id) { p in
-                        Button { withAnimation { model.viewAs = p.id } } label: {
-                            Label(p.name, systemImage: model.viewAs == p.id ? "checkmark" : "eye")
-                        }
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "eye").font(.system(size: 13, weight: .semibold))
-                        Text(model.viewAs.flatMap { person($0)?.name }.map { (K.L.de ? "Ansicht: " : "View: ") + $0 }
-                             ?? (K.L.de ? "Ansicht der anderen" : "See others' view"))
-                            .font(Theme.body(13, .semibold))
-                    }
-                    .foregroundColor(K.amberText)
-                    .padding(.horizontal, 12).padding(.vertical, 7)
-                    .background(Capsule().fill(K.iron2))
-                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
-                }
-                Spacer()
+    private var topBar: some View {
+        HStack(spacing: 8) {
+            viewAsMenu
+            Spacer()
+            Picker("", selection: $todayOnly.animation(.spring(response: 0.35, dampingFraction: 0.85))) {
+                Text(K.L.de ? "Heute" : "Today").tag(true)
+                Text(K.L.de ? "Alle" : "All time").tag(false)
             }
-            .padding(.horizontal, 14).padding(.bottom, 4)
+            .pickerStyle(.segmented)
+            .frame(width: 150)
+        }
+        .padding(.horizontal, 14).padding(.bottom, 4)
+    }
+
+    @ViewBuilder
+    private var viewAsMenu: some View {
+        if !others.isEmpty {
+            Menu {
+                Button { withAnimation { model.viewAs = nil } } label: {
+                    Label(K.L.de ? "Meine Ansicht" : "My view", systemImage: model.viewAs == nil ? "checkmark" : "person")
+                }
+                ForEach(others, id: \.id) { p in
+                    Button { withAnimation { model.viewAs = p.id } } label: {
+                        Label(p.name, systemImage: model.viewAs == p.id ? "checkmark" : "eye")
+                    }
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "eye").font(.system(size: 13, weight: .semibold))
+                    Text(model.viewAs.flatMap { person($0)?.name }.map { (K.L.de ? "Ansicht: " : "View: ") + $0 }
+                         ?? (K.L.de ? "Ansicht der anderen" : "See others' view"))
+                        .font(Theme.body(13, .semibold)).lineLimit(1)
+                }
+                .foregroundColor(K.amberText)
+                .padding(.horizontal, 12).padding(.vertical, 7)
+                .background(Capsule().fill(K.iron2))
+                .overlay(Capsule().strokeBorder(Color.white.opacity(0.14), lineWidth: 1))
+            }
         }
     }
 
@@ -230,7 +249,9 @@ struct ChatView: View {
     private var emptyState: some View {
         VStack(spacing: 10) {
             Image(systemName: "bubble.left.and.bubble.right.fill").font(.system(size: 40, weight: .bold)).foregroundColor(K.accent)
-            Text(K.L.de ? "Noch nichts los hier" : "Nothing here yet")
+            Text(todayOnly && !model.messages.isEmpty
+                 ? (K.L.de ? "Heute noch nichts los" : "Nothing yet today")
+                 : (K.L.de ? "Noch nichts los hier" : "Nothing here yet"))
                 .font(Theme.heading(18))
             Text(K.L.de ? "Schreib was oder schlag eine Gym-Zeit für heute vor – sie gilt, wenn die Gruppe zustimmt."
                         : "Say something or propose today's gym time – it counts once the group agrees.")

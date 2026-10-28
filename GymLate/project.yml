@@ -35,6 +35,8 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: GymLate
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait"
+        INFOPLIST_KEY_UIRequiresFullScreen: YES  # nur Hochformat -> App Store verlangt dann Vollbild auf dem iPad
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO  # nur HTTPS, keine Exportfrage bei jedem TestFlight-Build
         # Location-Berechtigung für den Geo-Check-in:
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "GymLate nutzt deinen Standort für den automatischen Check-in im Gym."
         TARGETED_DEVICE_FAMILY: "1,2"  # iPhone + iPad

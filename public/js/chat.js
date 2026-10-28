@@ -6,6 +6,7 @@ const CHAT_DE = {
   placeholder:'Nachricht …', proposes:n=>`${n} schlägt vor`, today:'Heute', tomorrow:'Morgen', open:'Offen', accepted:'Angenommen', rejected:'Abgelehnt', superseded:'Überholt',
   inN:(y,m)=>`${y} von ${m} dabei`, imIn:'Ich bin dabei ✓', no:'Nein', youIn:'Du bist dabei ✓', youNo:'Du bist raus',
   timeSet:(d,t)=>`${d} · Gym-Zeit steht: ${t}`, proposeTitle:'Gym-Zeit vorschlagen', propose:'Vorschlagen', note:'Die Zeit gilt erst, wenn die Mehrheit der Gruppe zustimmt.',
+  scopeToday:'Heute', scopeAll:'Alle', emptyToday:'Heute noch nichts los',
   proposed:'Vorschlag im Chat – wird fix, sobald die Gruppe zustimmt.', toChat:'Zum Chat', sendErr:'Senden fehlgeschlagen.', someone:'Jemand',
 };
 const CHAT_EN = {
@@ -13,11 +14,27 @@ const CHAT_EN = {
   placeholder:'Message …', proposes:n=>`${n} proposes`, today:'Today', tomorrow:'Tomorrow', open:'Open', accepted:'Accepted', rejected:'Rejected', superseded:'Superseded',
   inN:(y,m)=>`${y} of ${m} in`, imIn:"I'm in ✓", no:'No', youIn:"You're in ✓", youNo:"You're out",
   timeSet:(d,t)=>`${d} · gym time set: ${t}`, proposeTitle:'Propose gym time', propose:'Propose', note:'The time becomes fixed once most of the group agrees.',
+  scopeToday:'Today', scopeAll:'All time', emptyToday:'Nothing yet today',
   proposed:'Proposed in chat – becomes fixed once the group agrees.', toChat:'Open chat', sendErr:'Could not send.', someone:'Someone',
 };
 const CT = (navigator.language||'').toLowerCase().startsWith('de') ? CHAT_DE : CHAT_EN;
 
-const chat = { msgs:[], members:0, timer:null, lastKey:'', sheetDay:'today' };
+const chat = { msgs:[], members:0, timer:null, lastKey:'', sheetDay:'today', todayOnly:true };
+try { chat.todayOnly = localStorage.getItem('gymChatScope') !== 'all'; } catch {}
+
+// Filter: only today's messages, or all of them.
+function chatVisible() {
+  if (!chat.todayOnly) return chat.msgs;
+  const d = new Date(); d.setHours(0,0,0,0);
+  return chat.msgs.filter(m => m.createdAt >= d.getTime());
+}
+function setChatScope(todayOnly) {
+  chat.todayOnly = todayOnly;
+  try { localStorage.setItem('gymChatScope', todayOnly ? 'today' : 'all'); } catch {}
+  document.querySelectorAll('#chat-scope button').forEach(b => b.classList.toggle('sel', (b.dataset.scope === 'today') === todayOnly));
+  renderChat();
+  const l = document.getElementById('chat-list'); if (l) l.scrollTop = l.scrollHeight;
+}
 
 function chatAuth() {
   return { userId: userProfile?.userId, recoveryCode: userProfile?.recoveryCode, accountToken: account?.accountToken };
@@ -43,10 +60,12 @@ function renderChat() {
   if (!list) return;
   const me = userProfile?.userId;
   const stick = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
-  if (!chat.msgs.length) {
-    list.innerHTML = `<div class="empty"><div class="empty-ico">💬</div><div class="empty-txt">${esc(CT.empty)}</div><div class="empty-sub">${esc(CT.emptySub)}</div></div>`;
+  const msgs = chatVisible();
+  if (!msgs.length) {
+    const title = chat.todayOnly && chat.msgs.length ? CT.emptyToday : CT.empty;
+    list.innerHTML = `<div class="empty"><div class="empty-ico">💬</div><div class="empty-txt">${esc(title)}</div><div class="empty-sub">${esc(CT.emptySub)}</div></div>`;
   } else {
-    list.innerHTML = chat.msgs.map(m => {
+    list.innerHTML = msgs.map(m => {
       const mine = m.userId === me;
       const name = chatPerson(m.userId)?.name || CT.someone;
       if (m.kind === 'system') {
@@ -141,6 +160,10 @@ function initChatUI() {
     finally { btn.disabled = false; }
   });
   document.getElementById('chat-title').textContent = CT.title;
+  document.querySelector('#chat-scope [data-scope="today"]').textContent = CT.scopeToday;
+  document.querySelector('#chat-scope [data-scope="all"]').textContent = CT.scopeAll;
+  document.querySelectorAll('#chat-scope button').forEach(b => b.addEventListener('click', () => setChatScope(b.dataset.scope === 'today')));
+  setChatScope(chat.todayOnly);
   document.getElementById('chat-input').placeholder = CT.placeholder;
   document.getElementById('chat-prop-title').textContent = CT.proposeTitle;
   document.getElementById('chat-prop-note').textContent = CT.note;

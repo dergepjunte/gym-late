@@ -26,7 +26,7 @@ enum K {
     // Shared cross-platform product version — mirrors public/js/core.js APP_VERSION.
     // Independent of the Xcode MARKETING_VERSION (App Store submission number);
     // bump both by hand together per CLAUDE.md's versioning policy.
-    static let appVersion = "0.3.0.0"
+    static let appVersion = "0.3.1.0"
 
     // Avatar options — same lists as the website
     static let avatarEmojis = ["🏋️"]
