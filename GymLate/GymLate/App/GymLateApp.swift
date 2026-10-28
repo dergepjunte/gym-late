@@ -81,6 +81,10 @@ struct RootView: View {
                 LandingView().transition(Self.screenTransition)
             }
         }
+        // Fester Boden hinter allen Szenen: beim Heranwachsen/Zurueckweichen (scale) blitzt
+        // sonst das schwarze Fenster als Balken oben/unten durch.
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(GymBackground())
         .animation(.easeInOut(duration: 0.4), value: appState.isBootLoading)
         .animation(.smooth(duration: 0.55), value: appState.showLaunchPicker)
         .animation(.smooth(duration: 0.55), value: appState.activeGroup?.id)

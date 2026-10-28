@@ -146,6 +146,10 @@ struct AppRootView: View {
             if ProcessInfo.processInfo.environment["GYMLATE_HYPE"] == "1" {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { appState.forceDailyHype() }
             }
+            // Screenshot hook: SIMCTL_CHILD_GYMLATE_LOG=1 opens the log-entry page.
+            if ProcessInfo.processInfo.environment["GYMLATE_LOG"] == "1" {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { showLogEntry = true }
+            }
         }
         .onChange(of: appState.openChatRequest) { _, wanted in
             guard wanted else { return }

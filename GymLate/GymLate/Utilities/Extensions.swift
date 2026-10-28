@@ -190,7 +190,10 @@ private struct FullPageModifier<PageContent: View>: ViewModifier {
                             withAnimation(anim) { isPresented = false }
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .ignoresSafeArea()
+                        // Nur der Hintergrund reicht unter Statusleiste/Home-Indicator; der Inhalt
+                        // (Toolbar mit Zurueck/Speichern) bleibt im sicheren Bereich, sonst rutscht
+                        // er unter die Uhrzeit und springt beim Einblenden (schwarze Balken).
+                        .background(GymBackground())
                         .transition(reduceMotion ? .opacity : .move(edge: .trailing))
                 }
             }
